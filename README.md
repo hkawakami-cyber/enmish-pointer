@@ -22,6 +22,9 @@ python3 -m http.server 8000          # → http://localhost:8000
 > スクリーンショット保存（html2canvas）は `file://` でも動きますが、
 > 一部ブラウザの制約を避けるためローカルサーバ経由を推奨します。
 
+`enmish-focus-prototype.html` は CSS/JS/html2canvas を 1 ファイルに同梱した
+**依存ゼロの単一ファイル版**です。ダブルクリックで開くだけ、共有にも便利です。
+
 ---
 
 ## 操作方法
