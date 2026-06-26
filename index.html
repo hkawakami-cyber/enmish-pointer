@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Enmish Focus — 画面共有支援プロトタイプ</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='30' fill='none' stroke='%232f6bff' stroke-width='10'/%3E%3Ccircle cx='50' cy='50' r='6' fill='%23ff3b4e'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <!-- ============ デモ用「共有画面」 ============ -->
+  <!-- 実機では任意のアプリ上に透明オーバーレイを重ねる。Webプロトタイプでは -->
+  <!-- 疑似共有画面を用意し、その上に注釈・カーソル強調・スポットライト等を再現する。 -->
+  <div id="stage" class="stage">
+    <!-- ズーム対象（コンテンツ＋注釈レイヤー）をまとめてズームできるようにする -->
+    <div id="zoomable" class="zoomable">
+      <div id="scene-root" class="scene-root"><!-- シーンはJSで描画 --></div>
+      <!-- 注釈描画レイヤー -->
+      <canvas id="annot-canvas" class="annot-canvas"></canvas>
+    </div>
+
+    <!-- スポットライト用の暗転レイヤー -->
+    <canvas id="spotlight-canvas" class="overlay-canvas"></canvas>
+
+    <!-- カーソル強調リング -->
+    <div id="cursor-ring" class="cursor-ring" hidden></div>
+
+    <!-- ズームレンズ枠の縁取り -->
+    <div id="zoom-frame" class="zoom-frame" hidden></div>
+
+    <!-- スタンプ（営業テンプレ注釈）配置を待つときのヒント -->
+    <div id="stamp-hint" class="stamp-hint" hidden>クリックした位置にラベルを配置します（Escで取消）</div>
+  </div>
+
+  <!-- ============ 常駐ミニツールバー ============ -->
+  <div id="toolbar" class="toolbar" data-collapsed="false">
+    <button class="tb-handle" id="tb-handle" title="ツールバーを展開/収納">⋮</button>
+    <div class="tb-body">
+      <div class="tb-brand">Enmish<b>Focus</b></div>
+
+      <button class="tool" data-action="toggle-app" id="btn-app" title="アプリ ON/OFF (⌘⇧E)">
+        <span class="ico">⏻</span><span class="lbl">起動</span>
+      </button>
+
+      <div class="tb-sep"></div>
+
+      <button class="tool" data-tool="cursor" id="btn-cursor" title="カーソル強調">
+        <span class="ico">◎</span><span class="lbl">カーソル</span>
+      </button>
+      <button class="tool" data-tool="pen" title="ペン (⌘⇧1)">
+        <span class="ico">✎</span><span class="lbl">ペン</span>
+      </button>
+      <button class="tool" data-tool="highlighter" title="蛍光ペン">
+        <span class="ico">▰</span><span class="lbl">蛍光</span>
+      </button>
+      <button class="tool" data-tool="arrow" title="矢印 (⌘⇧2)">
+        <span class="ico">↗</span><span class="lbl">矢印</span>
+      </button>
+      <button class="tool" data-tool="ellipse" title="丸囲み (⌘⇧3)">
+        <span class="ico">◯</span><span class="lbl">丸</span>
+      </button>
+      <button class="tool" data-tool="rect" title="四角囲み (⌘⇧4)">
+        <span class="ico">▢</span><span class="lbl">四角</span>
+      </button>
+      <button class="tool" data-tool="text" title="テキスト注釈">
+        <span class="ico">T</span><span class="lbl">文字</span>
+      </button>
+
+      <div class="tb-sep"></div>
+
+      <button class="tool" data-toggle="spotlight" id="btn-spotlight" title="スポットライト (⌘⇧5)">
+        <span class="ico">☀</span><span class="lbl">注目</span>
+      </button>
+      <button class="tool" data-toggle="zoom" id="btn-zoom" title="ズーム (⌘⇧6)">
+        <span class="ico">🔍</span><span class="lbl">ズーム</span>
+      </button>
+      <button class="tool" data-action="whiteboard" id="btn-wb" title="ホワイトボード (⌘⇧W)">
+        <span class="ico">▤</span><span class="lbl">WB</span>
+      </button>
+
+      <div class="tb-sep"></div>
+
+      <!-- カラーパレット -->
+      <div class="tb-colors" id="tb-colors"></div>
+
+      <div class="tb-sep"></div>
+
+      <button class="tool" data-action="undo" title="元に戻す (⌘Z)">
+        <span class="ico">↶</span><span class="lbl">戻す</span>
+      </button>
+      <button class="tool" data-action="clear" title="全消去 (⌘⇧⌫)">
+        <span class="ico">🗑</span><span class="lbl">全消去</span>
+      </button>
+      <button class="tool" data-action="screenshot" title="注釈付きスクショ保存">
+        <span class="ico">📷</span><span class="lbl">保存</span>
+      </button>
+      <button class="tool" data-action="settings" title="設定 / プリセット">
+        <span class="ico">⚙</span><span class="lbl">設定</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ 営業テンプレ注釈バー ============ -->
+  <div id="stamp-bar" class="stamp-bar">
+    <div class="stamp-bar-title">営業テンプレ</div>
+    <div class="stamp-chips" id="stamp-chips"></div>
+    <div class="stamp-bar-title">KPIマーカー</div>
+    <div class="stamp-chips" id="kpi-chips"></div>
+  </div>
+
+  <!-- ============ シーン切替（デモ用） ============ -->
+  <div id="scene-switch" class="scene-switch">
+    <span class="ss-label">共有画面:</span>
+    <button class="ss-btn" data-scene="proposal">提案資料</button>
+    <button class="ss-btn" data-scene="kpi">KPI表</button>
+    <button class="ss-btn" data-scene="salesforce">商談画面</button>
+  </div>
+
+  <!-- ============ クイックパレット (⌘⇧E のオーバーレイ) ============ -->
+  <div id="quick-palette" class="quick-palette" hidden>
+    <div class="qp-card">
+      <div class="qp-title">Enmish Focus — クイックパレット</div>
+      <div class="qp-grid">
+        <button class="qp-item" data-tool="pen"><kbd>1</kbd><span>ペン</span></button>
+        <button class="qp-item" data-tool="arrow"><kbd>2</kbd><span>矢印</span></button>
+        <button class="qp-item" data-tool="ellipse"><kbd>3</kbd><span>丸囲み</span></button>
+        <button class="qp-item" data-tool="rect"><kbd>4</kbd><span>四角囲み</span></button>
+        <button class="qp-item" data-toggle="spotlight"><kbd>5</kbd><span>スポットライト</span></button>
+        <button class="qp-item" data-toggle="zoom"><kbd>6</kbd><span>ズーム</span></button>
+        <button class="qp-item" data-action="clear"><kbd>⌫</kbd><span>全消去</span></button>
+        <button class="qp-item" data-action="close-palette"><kbd>Esc</kbd><span>終了</span></button>
+      </div>
+      <div class="qp-hint">数字キーで選択 / Escで閉じる</div>
+    </div>
+  </div>
+
+  <!-- ============ ミニホワイトボード ============ -->
+  <div id="whiteboard" class="whiteboard" hidden>
+    <div class="wb-header">
+      <span class="wb-title">▤ ミニホワイトボード</span>
+      <div class="wb-tools">
+        <button class="wb-tool" data-wb-tool="pen" title="ペン">✎</button>
+        <button class="wb-tool" data-wb-tool="arrow" title="矢印">↗</button>
+        <button class="wb-tool" data-wb-tool="ellipse" title="丸">◯</button>
+        <button class="wb-tool" data-wb-tool="rect" title="四角">▢</button>
+        <span class="wb-spacer"></span>
+        <button class="wb-tool" data-wb-action="bg" title="背景色切替">◐</button>
+        <button class="wb-tool" data-wb-action="clear" title="全消去">🗑</button>
+        <button class="wb-tool" data-wb-action="close" title="閉じる">✕</button>
+      </div>
+    </div>
+    <canvas id="wb-canvas" class="wb-canvas"></canvas>
+  </div>
+
+  <!-- ============ 設定 / プリセット ============ -->
+  <div id="settings" class="modal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>設定 / プリセット</h2>
+        <button class="modal-close" data-action="close-settings">✕</button>
+      </div>
+
+      <section class="modal-section">
+        <h3>プリセット</h3>
+        <div class="preset-grid" id="preset-grid"></div>
+      </section>
+
+      <section class="modal-section">
+        <h3>カーソル強調</h3>
+        <label class="field">リングの太さ
+          <input type="range" id="set-ring-width" min="2" max="14" step="1" />
+          <output id="out-ring-width"></output>
+        </label>
+        <label class="field">リングのサイズ
+          <input type="range" id="set-ring-size" min="20" max="90" step="2" />
+          <output id="out-ring-size"></output>
+        </label>
+        <label class="field">透明度
+          <input type="range" id="set-ring-opacity" min="20" max="100" step="5" />
+          <output id="out-ring-opacity"></output>
+        </label>
+        <label class="checkfield">
+          <input type="checkbox" id="set-click-ripple" /> クリック時に波紋を表示
+        </label>
+      </section>
+
+      <section class="modal-section">
+        <h3>注釈の自動消去</h3>
+        <div class="seg" id="autoerase-seg">
+          <button data-autoerase="0">残す</button>
+          <button data-autoerase="3">3秒</button>
+          <button data-autoerase="5">5秒</button>
+          <button data-autoerase="10">10秒</button>
+        </div>
+      </section>
+
+      <section class="modal-section">
+        <h3>線の太さ</h3>
+        <label class="field">
+          <input type="range" id="set-stroke-width" min="2" max="20" step="1" />
+          <output id="out-stroke-width"></output>
+        </label>
+      </section>
+
+      <section class="modal-section">
+        <h3>ショートカット</h3>
+        <table class="shortcut-table">
+          <tr><td>アプリ ON/OFF</td><td><kbd>⌘⇧E</kbd></td></tr>
+          <tr><td>ペン / 矢印 / 丸 / 四角</td><td><kbd>⌘⇧1</kbd>〜<kbd>⌘⇧4</kbd></td></tr>
+          <tr><td>スポットライト / ズーム</td><td><kbd>⌘⇧5</kbd> / <kbd>⌘⇧6</kbd></td></tr>
+          <tr><td>ホワイトボード</td><td><kbd>⌘⇧W</kbd></td></tr>
+          <tr><td>元に戻す / 全消去</td><td><kbd>⌘Z</kbd> / <kbd>⌘⇧⌫</kbd></td></tr>
+          <tr><td>注釈終了 / パレット</td><td><kbd>Esc</kbd></td></tr>
+        </table>
+        <p class="note">※ Webプロトタイプではブラウザ予約のショートカット競合を避けるため、<kbd>Ctrl/⌘ + ⇧ + キー</kbd> を内部で横取りします。実機(macOSネイティブ)ではグローバルショートカットになります。</p>
+      </section>
+    </div>
+  </div>
+
+  <!-- 状態バッジ（現在のツール/モード表示） -->
+  <div id="status-badge" class="status-badge" hidden></div>
+
+  <!-- トースト -->
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="js/vendor/html2canvas.min.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/scenes.js"></script>
+  <script src="js/drawing.js"></script>
+  <script src="js/cursor.js"></script>
+  <script src="js/spotlight.js"></script>
+  <script src="js/zoom.js"></script>
+  <script src="js/whiteboard.js"></script>
+  <script src="js/stamps.js"></script>
+  <script src="js/toolbar.js"></script>
+  <script src="js/shortcuts.js"></script>
+  <script src="js/screenshot.js"></script>
+  <script src="js/presets.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

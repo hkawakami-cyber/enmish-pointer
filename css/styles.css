@@ -1,0 +1,384 @@
+/* ============================================================
+   Enmish Focus — プロトタイプ スタイル
+   画面共有支援アプリ（カーソル強調・注釈・スポットライト・ズーム）
+   ============================================================ */
+
+:root {
+  --ef-blue: #2f6bff;
+  --ef-red: #ff3b4e;
+  --ef-green: #18b56a;
+  --ef-amber: #ffb020;
+  --ef-ink: #1c2230;
+  --tb-bg: rgba(24, 28, 38, 0.92);
+  --tb-fg: #e8ecf4;
+  --tb-muted: #97a0b5;
+  --radius: 12px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+
+/* hidden 属性は常に最優先で非表示（.modal 等の display 指定に負けないように） */
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #0c0f16;
+  color: var(--ef-ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI",
+    "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ============ ステージ（疑似共有画面） ============ */
+.stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  /* 注釈ドラッグ中に共有画面のテキストが選択されないように */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.zoomable {
+  position: absolute;
+  inset: 0;
+  transform-origin: 50% 50%;
+  transition: transform 90ms ease-out;
+  will-change: transform;
+}
+
+.scene-root {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 64px 96px;
+  background:
+    radial-gradient(1200px 700px at 70% -10%, #20304f 0%, transparent 60%),
+    linear-gradient(160deg, #0f1626 0%, #131a2b 100%);
+}
+
+.annot-canvas,
+.overlay-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* 注釈中はステージがイベントを拾う（カーソル/描画用） */
+.stage.armed { cursor: crosshair; }
+.stage.tool-cursor { cursor: none; }
+
+/* ============ 疑似共有画面：共通カード ============ */
+.surface {
+  width: min(1000px, 92%);
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  color: #1c2230;
+}
+.surface-bar {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  background: #eef1f6;
+  border-bottom: 1px solid #dce1ea;
+  font-size: 12.5px;
+  color: #5b6478;
+}
+.dot { width: 11px; height: 11px; border-radius: 50%; }
+.dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
+.surface-url { margin-left: 10px; background:#fff; border:1px solid #dce1ea; border-radius:7px; padding:3px 10px; }
+
+/* ---- 提案資料スライド ---- */
+.slide { padding: 44px 54px; }
+.slide .eyebrow { color: var(--ef-blue); font-weight: 700; letter-spacing: .08em; font-size: 13px; }
+.slide h1 { font-size: 34px; margin: 8px 0 22px; line-height: 1.25; }
+.slide ul { font-size: 18px; line-height: 1.9; color: #2c3550; padding-left: 22px; }
+.price-box {
+  margin-top: 26px; display: flex; gap: 18px; flex-wrap: wrap;
+}
+.price-card {
+  flex: 1 1 200px; border: 1.5px solid #e3e7f0; border-radius: 12px; padding: 18px 20px;
+}
+.price-card .pc-name { font-size: 13px; color: #6b7488; }
+.price-card .pc-amt { font-size: 28px; font-weight: 800; margin-top: 6px; }
+.price-card.feature { border-color: var(--ef-blue); background: #f4f7ff; }
+
+/* ---- KPI スプレッドシート ---- */
+.sheet { padding: 0; }
+.sheet table { width: 100%; border-collapse: collapse; font-size: 15px; }
+.sheet th, .sheet td { padding: 11px 14px; border: 1px solid #e6e9f0; text-align: right; }
+.sheet th { background: #f5f7fb; color: #5b6478; font-weight: 600; }
+.sheet td:first-child, .sheet th:first-child { text-align: left; }
+.sheet tr:nth-child(even) td { background: #fafbfe; }
+.sheet .bad { color: var(--ef-red); font-weight: 700; }
+.sheet .good { color: var(--ef-green); font-weight: 700; }
+
+/* ---- Salesforce風 商談 ---- */
+.sf { padding: 0; }
+.sf-top { background: linear-gradient(90deg,#0b5cab,#1278d4); color:#fff; padding: 16px 24px; }
+.sf-top .sf-kicker { font-size: 12.5px; opacity: .85; }
+.sf-top h2 { margin: 4px 0 0; font-size: 24px; }
+.sf-stage { display: flex; gap: 4px; padding: 16px 24px; background: #f3f6fb; }
+.sf-step { flex:1; text-align:center; font-size:12px; padding:9px 4px; background:#e3eaf4; color:#5b6478; clip-path: polygon(0 0, 92% 0, 100% 50%, 92% 100%, 0 100%, 8% 50%); }
+.sf-step.done { background:#1278d4; color:#fff; }
+.sf-step.curr { background:#0b3d91; color:#fff; font-weight:700; }
+.sf-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 8px 24px 22px; }
+.sf-field { padding: 12px 0; border-bottom: 1px solid #eef1f6; }
+.sf-field .k { font-size: 12px; color: #8a93a7; }
+.sf-field .v { font-size: 16px; margin-top: 3px; font-weight: 600; }
+
+/* ============ ツールバー ============ */
+.toolbar {
+  position: fixed;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  background: var(--tb-bg);
+  color: var(--tb-fg);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 10px 8px;
+  z-index: 9000;
+  border: 1px solid rgba(255,255,255,.08);
+  transition: transform .25s ease, opacity .25s ease;
+}
+.toolbar[data-collapsed="true"] .tb-body { display: none; }
+.toolbar[data-collapsed="true"] { padding: 6px; }
+.tb-handle {
+  display: none;
+  width: 32px; height: 32px; border-radius: 9px;
+  border: none; background: rgba(255,255,255,.08); color: var(--tb-fg);
+  font-size: 18px; cursor: pointer;
+}
+.toolbar[data-collapsed="true"] .tb-handle { display: block; }
+
+.tb-body { display: flex; flex-direction: column; gap: 3px; width: 78px; }
+.tb-brand { font-size: 12px; text-align:center; color: var(--tb-muted); padding: 2px 0 6px; letter-spacing: .02em; }
+.tb-brand b { color: var(--ef-blue); font-weight: 800; }
+.tb-sep { height: 1px; background: rgba(255,255,255,.10); margin: 5px 4px; }
+
+.tool {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  border: none; background: transparent; color: var(--tb-fg);
+  padding: 7px 4px; border-radius: 9px; cursor: pointer;
+  font-size: 10.5px; line-height: 1; transition: background .12s, transform .08s;
+}
+.tool:hover { background: rgba(255,255,255,.10); }
+.tool:active { transform: scale(.94); }
+.tool .ico { font-size: 17px; }
+.tool .lbl { color: var(--tb-muted); }
+.tool.active { background: var(--ef-blue); }
+.tool.active .lbl { color: #fff; }
+.tool.toggled { background: rgba(47,107,255,.28); outline: 1.5px solid var(--ef-blue); }
+
+.tb-colors { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 2px; }
+.swatch { width: 15px; height: 15px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+.swatch.active { border-color: #fff; box-shadow: 0 0 0 1.5px rgba(0,0,0,.4); }
+
+/* アプリOFF時はツール群を無効化 */
+.toolbar.app-off .tool[data-tool],
+.toolbar.app-off .tool[data-toggle],
+.toolbar.app-off .tool[data-action="whiteboard"],
+.toolbar.app-off .tb-colors { opacity: .35; pointer-events: none; }
+
+/* ============ 営業テンプレ / KPIマーカー バー ============ */
+.stamp-bar {
+  position: fixed; left: 14px; top: 50%; transform: translateY(-50%);
+  background: var(--tb-bg); color: var(--tb-fg);
+  border-radius: 14px; box-shadow: var(--shadow); backdrop-filter: blur(14px);
+  padding: 12px 12px; z-index: 9000; width: 150px;
+  border: 1px solid rgba(255,255,255,.08);
+  transition: opacity .25s, transform .25s;
+}
+.stamp-bar-title { font-size: 11px; color: var(--tb-muted); margin: 4px 2px 6px; letter-spacing: .04em; }
+.stamp-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
+.chip {
+  font-size: 11.5px; padding: 4px 9px; border-radius: 999px; cursor: pointer;
+  border: 1px solid transparent; color: #fff; font-weight: 600; line-height: 1.3;
+  transition: transform .08s, filter .12s;
+}
+.chip:hover { filter: brightness(1.12); }
+.chip:active { transform: scale(.93); }
+.chip.armed { outline: 2px solid #fff; }
+
+.stamp-bar.hidden-off { opacity: .3; pointer-events: none; }
+
+/* ============ シーン切替 ============ */
+.scene-switch {
+  position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+  background: var(--tb-bg); color: var(--tb-fg); padding: 7px 10px;
+  border-radius: 999px; box-shadow: var(--shadow); z-index: 9000;
+  display: flex; align-items: center; gap: 6px; font-size: 13px;
+  border: 1px solid rgba(255,255,255,.08);
+}
+.ss-label { color: var(--tb-muted); padding: 0 4px; }
+.ss-btn {
+  border: none; background: rgba(255,255,255,.08); color: var(--tb-fg);
+  padding: 6px 13px; border-radius: 999px; cursor: pointer; font-size: 13px;
+}
+.ss-btn:hover { background: rgba(255,255,255,.16); }
+.ss-btn.active { background: var(--ef-blue); }
+
+/* ============ カーソルリング ============ */
+.cursor-ring {
+  position: absolute; left: 0; top: 0; pointer-events: none; z-index: 8000;
+  border-radius: 50%; transform: translate(-50%, -50%);
+  border-style: solid; border-color: var(--ef-blue);
+}
+.ripple {
+  position: absolute; pointer-events: none; z-index: 7999;
+  border-radius: 50%; transform: translate(-50%, -50%);
+  border: 3px solid var(--ef-blue); animation: ripple .55s ease-out forwards;
+}
+@keyframes ripple {
+  from { width: 8px; height: 8px; opacity: .85; }
+  to   { width: 90px; height: 90px; opacity: 0; }
+}
+
+/* ============ ズーム枠 ============ */
+.zoom-frame {
+  position: absolute; pointer-events: none; z-index: 7000;
+  border: 2.5px solid rgba(255,255,255,.85);
+  box-shadow: 0 0 0 9999px rgba(0,0,0,.001), 0 8px 24px rgba(0,0,0,.4);
+  border-radius: 12px; transform: translate(-50%, -50%);
+}
+
+/* ============ スタンプ配置ヒント ============ */
+.stamp-hint {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: var(--ef-blue); color: #fff; padding: 9px 18px;
+  border-radius: 999px; font-size: 13px; z-index: 9500; box-shadow: var(--shadow);
+}
+
+/* ============ クイックパレット ============ */
+.quick-palette {
+  position: fixed; inset: 0; z-index: 9600;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(10,12,18,.45); backdrop-filter: blur(3px);
+}
+.qp-card {
+  background: var(--tb-bg); color: var(--tb-fg); border-radius: 18px;
+  padding: 22px 26px; box-shadow: var(--shadow); width: 360px;
+  border: 1px solid rgba(255,255,255,.10);
+}
+.qp-title { text-align: center; font-size: 14px; color: var(--tb-muted); margin-bottom: 16px; }
+.qp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.qp-item {
+  display: flex; align-items: center; gap: 10px; padding: 11px 14px;
+  border: none; background: rgba(255,255,255,.07); color: var(--tb-fg);
+  border-radius: 11px; cursor: pointer; font-size: 14px; text-align: left;
+}
+.qp-item:hover { background: var(--ef-blue); }
+.qp-item kbd {
+  background: rgba(255,255,255,.16); border-radius: 6px; padding: 2px 8px;
+  font-size: 13px; min-width: 22px; text-align: center;
+}
+.qp-hint { text-align: center; color: var(--tb-muted); font-size: 12px; margin-top: 14px; }
+
+/* ============ ホワイトボード ============ */
+.whiteboard {
+  position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: min(820px, 86vw); height: min(540px, 74vh);
+  background: #fff; border-radius: 16px; box-shadow: var(--shadow);
+  z-index: 9200; display: flex; flex-direction: column; overflow: hidden;
+  border: 1px solid rgba(0,0,0,.1);
+}
+.wb-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 14px; background: #1b2130; color: #fff;
+}
+.wb-title { font-size: 14px; font-weight: 600; }
+.wb-tools { display: flex; gap: 5px; align-items: center; }
+.wb-tool {
+  width: 32px; height: 32px; border-radius: 8px; border: none;
+  background: rgba(255,255,255,.10); color: #fff; cursor: pointer; font-size: 15px;
+}
+.wb-tool:hover { background: rgba(255,255,255,.22); }
+.wb-tool.active { background: var(--ef-blue); }
+.wb-spacer { width: 10px; }
+.wb-canvas { flex: 1; width: 100%; cursor: crosshair; background: #fff; }
+.whiteboard[data-bg="dark"] .wb-canvas { background: #11151f; }
+
+/* ============ 設定モーダル ============ */
+.modal {
+  position: fixed; inset: 0; z-index: 9700; display: flex;
+  align-items: center; justify-content: center;
+  background: rgba(10,12,18,.5); backdrop-filter: blur(3px);
+}
+.modal-card {
+  background: #fff; color: var(--ef-ink); width: min(540px, 92vw);
+  max-height: 88vh; overflow-y: auto; border-radius: 18px; box-shadow: var(--shadow);
+}
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px; border-bottom: 1px solid #eef1f6; position: sticky; top: 0; background: #fff;
+}
+.modal-head h2 { margin: 0; font-size: 19px; }
+.modal-close { border: none; background: #f0f2f7; width: 32px; height: 32px; border-radius: 9px; cursor: pointer; font-size: 15px; }
+.modal-section { padding: 18px 24px; border-bottom: 1px solid #f3f5f9; }
+.modal-section h3 { margin: 0 0 12px; font-size: 14px; color: #5b6478; }
+.field { display: flex; align-items: center; gap: 12px; font-size: 13.5px; margin-bottom: 12px; color: #2c3550; }
+.field input[type="range"] { flex: 1; }
+.field output { min-width: 42px; text-align: right; color: #5b6478; font-variant-numeric: tabular-nums; }
+.checkfield { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #2c3550; }
+
+.preset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.preset {
+  text-align: left; border: 1.5px solid #e3e7f0; border-radius: 12px; padding: 12px 14px;
+  background: #fff; cursor: pointer; transition: border-color .12s, background .12s;
+}
+.preset:hover { border-color: var(--ef-blue); }
+.preset.active { border-color: var(--ef-blue); background: #f4f7ff; }
+.preset .p-name { font-weight: 700; font-size: 14px; }
+.preset .p-desc { font-size: 11.5px; color: #6b7488; margin-top: 3px; line-height: 1.5; }
+
+.seg { display: inline-flex; border: 1px solid #dfe3ec; border-radius: 10px; overflow: hidden; }
+.seg button { border: none; background: #fff; padding: 8px 16px; cursor: pointer; font-size: 13px; color: #2c3550; }
+.seg button + button { border-left: 1px solid #dfe3ec; }
+.seg button.active { background: var(--ef-blue); color: #fff; }
+
+.shortcut-table { width: 100%; font-size: 13px; border-collapse: collapse; }
+.shortcut-table td { padding: 6px 4px; border-bottom: 1px solid #f3f5f9; color: #2c3550; }
+.shortcut-table td:last-child { text-align: right; }
+.note { font-size: 11.5px; color: #8a93a7; line-height: 1.6; margin-top: 12px; }
+
+kbd {
+  font-family: inherit; background: #eef1f6; border: 1px solid #dce1ea;
+  border-bottom-width: 2px; border-radius: 6px; padding: 1px 7px; font-size: 12px; color: #2c3550;
+}
+
+/* ============ ステータスバッジ / トースト ============ */
+.status-badge {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: var(--tb-bg); color: #fff; padding: 7px 16px; border-radius: 999px;
+  font-size: 13px; z-index: 8500; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,.08);
+}
+.status-badge .dotc { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
+
+.toast {
+  position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%) translateY(10px);
+  background: #1b2130; color: #fff; padding: 11px 20px; border-radius: 12px;
+  font-size: 13.5px; z-index: 9999; box-shadow: var(--shadow); opacity: 0;
+  transition: opacity .2s, transform .2s;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* レスポンシブ：狭い画面ではツールバーを横下に */
+@media (max-width: 680px) {
+  .stamp-bar { display: none; }
+  .tb-body { width: 64px; }
+}
