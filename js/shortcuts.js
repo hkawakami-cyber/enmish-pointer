@@ -20,13 +20,21 @@
           if (map[ev.key]) { EF.app.setTool(map[ev.key]); EF.app.closePalette(); ev.preventDefault(); return; }
           if (ev.key === "5") { EF.app.toggle("spotlight"); EF.app.closePalette(); ev.preventDefault(); return; }
           if (ev.key === "6") { EF.app.toggle("zoom"); EF.app.closePalette(); ev.preventDefault(); return; }
-          if (ev.key === "Backspace" || ev.key === "Delete") { EF.app.action("clear"); EF.app.closePalette(); ev.preventDefault(); return; }
+          if (ev.key === "Backspace" || ev.key === "Delete") { EF.annot.engine.undo(); EF.app.closePalette(); ev.preventDefault(); return; }
           return;
         }
 
         // Esc: 注釈ツール解除→カーソルへ / 配置待ち解除 / WB閉じる / モーダル閉じる
         if (ev.key === "Escape") {
           if (EF.app.handleEscape()) ev.preventDefault();
+          return;
+        }
+
+        // Delete / Backspace 単体で「1つ戻る」（直感操作）。入力欄では無効。
+        if ((ev.key === "Backspace" || ev.key === "Delete") && !mod && !ev.shiftKey) {
+          const ae = document.activeElement;
+          if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
+          if (EF.state.appOn) { ev.preventDefault(); EF.annot.engine.undo(); EF.toast("1つ戻しました"); }
           return;
         }
 

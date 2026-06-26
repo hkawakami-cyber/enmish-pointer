@@ -56,6 +56,9 @@
       <button class="tool" data-tool="arrow" title="矢印 (⌘⇧2)">
         <span class="ico">↗</span><span class="lbl">矢印</span>
       </button>
+      <button class="tool" data-tool="hline" title="横線（高さ固定・アンダーライン）">
+        <span class="ico">—</span><span class="lbl">横線</span>
+      </button>
       <button class="tool" data-tool="ellipse" title="丸囲み (⌘⇧3)">
         <span class="ico">◯</span><span class="lbl">丸</span>
       </button>
@@ -102,11 +105,14 @@
 
   <!-- ============ 営業テンプレ注釈バー ============ -->
   <div id="stamp-bar" class="stamp-bar">
+    <button class="sb-hide" id="sb-hide" title="このバーを隠す">✕</button>
     <div class="stamp-bar-title">営業テンプレ</div>
     <div class="stamp-chips" id="stamp-chips"></div>
     <div class="stamp-bar-title">KPIマーカー</div>
     <div class="stamp-chips" id="kpi-chips"></div>
   </div>
+  <!-- 折りたたみ時の再表示タブ -->
+  <button id="sb-reopen" class="sb-reopen" hidden title="営業テンプレを表示">営業テンプレ ▸</button>
 
   <!-- ============ シーン切替（デモ用） ============ -->
   <div id="scene-switch" class="scene-switch">
@@ -127,7 +133,7 @@
         <button class="qp-item" data-tool="rect"><kbd>4</kbd><span>四角囲み</span></button>
         <button class="qp-item" data-toggle="spotlight"><kbd>5</kbd><span>スポットライト</span></button>
         <button class="qp-item" data-toggle="zoom"><kbd>6</kbd><span>ズーム</span></button>
-        <button class="qp-item" data-action="clear"><kbd>⌫</kbd><span>全消去</span></button>
+        <button class="qp-item" data-action="undo"><kbd>⌫</kbd><span>1つ戻る</span></button>
         <button class="qp-item" data-action="close-palette"><kbd>Esc</kbd><span>終了</span></button>
       </div>
       <div class="qp-hint">数字キーで選択 / Escで閉じる</div>

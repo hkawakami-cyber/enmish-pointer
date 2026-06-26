@@ -47,6 +47,7 @@
   DrawingEngine.prototype.move = function (x, y) {
     if (!this.current) return;
     const c = this.current;
+    if (c.tool === "hline") y = c.a.y; // 高さ固定（水平に引く）
     c.b = { x, y };
     if (c.tool === "pen" || c.tool === "highlighter") c.points.push({ x, y });
   };
@@ -130,7 +131,7 @@
       ctx.globalAlpha = alpha * 0.35;
       ctx.lineWidth = (s.width || 6) * 3;
       this._poly(ctx, s.points);
-    } else if (s.tool === "line") {
+    } else if (s.tool === "line" || s.tool === "hline") {
       ctx.beginPath(); ctx.moveTo(s.a.x, s.a.y); ctx.lineTo(s.b.x, s.b.y); ctx.stroke();
     } else if (s.tool === "arrow") {
       this._arrow(ctx, s.a, s.b, s.width || 6);

@@ -22,6 +22,18 @@
     init() {
       buildChips("stamp-chips", EF.SALES_TEMPLATES);
       buildChips("kpi-chips", EF.KPI_MARKERS);
+
+      // 左バーの表示/非表示
+      const bar = document.getElementById("stamp-bar");
+      const reopen = document.getElementById("sb-reopen");
+      document.getElementById("sb-hide").addEventListener("click", () => {
+        bar.classList.add("collapsed");
+        reopen.hidden = false;
+      });
+      reopen.addEventListener("click", () => {
+        bar.classList.remove("collapsed");
+        reopen.hidden = true;
+      });
     },
 
     arm(item, chipEl) {

@@ -119,7 +119,7 @@
     if (!EF.state.appOn) { el.hidden = true; return; }
     const names = {
       cursor: "カーソル強調", pen: "ペン", highlighter: "蛍光ペン",
-      arrow: "矢印", ellipse: "丸囲み", rect: "四角囲み", text: "テキスト",
+      arrow: "矢印", hline: "横線", ellipse: "丸囲み", rect: "四角囲み", text: "テキスト",
     };
     const extras = [];
     if (EF.state.spotlight) extras.push("スポットライト");

@@ -200,10 +200,26 @@ html, body {
   position: fixed; left: 14px; top: 50%; transform: translateY(-50%);
   background: var(--tb-bg); color: var(--tb-fg);
   border-radius: 14px; box-shadow: var(--shadow); backdrop-filter: blur(14px);
-  padding: 12px 12px; z-index: 9000; width: 150px;
+  padding: 30px 12px 12px; z-index: 9000; width: 150px;
   border: 1px solid rgba(255,255,255,.08);
   transition: opacity .25s, transform .25s;
 }
+.stamp-bar.collapsed { display: none !important; }
+.sb-hide {
+  position: absolute; top: 7px; right: 7px; width: 22px; height: 22px;
+  border: none; border-radius: 6px; background: rgba(255,255,255,.10);
+  color: var(--tb-fg); cursor: pointer; font-size: 11px; line-height: 1;
+}
+.sb-hide:hover { background: rgba(255,255,255,.22); }
+.sb-reopen {
+  position: fixed; left: 0; top: 50%; transform: translateY(-50%);
+  writing-mode: vertical-rl; background: var(--tb-bg); color: var(--tb-fg);
+  border: 1px solid rgba(255,255,255,.08); border-left: none;
+  border-radius: 0 11px 11px 0; padding: 16px 7px; cursor: pointer;
+  z-index: 9000; font-size: 12px; box-shadow: var(--shadow);
+  letter-spacing: .05em;
+}
+.sb-reopen:hover { background: rgba(255,255,255,.14); }
 .stamp-bar-title { font-size: 11px; color: var(--tb-muted); margin: 4px 2px 6px; letter-spacing: .04em; }
 .stamp-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
 .chip {

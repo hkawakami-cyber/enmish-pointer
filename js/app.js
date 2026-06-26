@@ -6,7 +6,7 @@
 (function () {
   const EF = (window.EF = window.EF || {});
 
-  const DRAW_TOOLS = ["pen", "highlighter", "arrow", "ellipse", "rect", "text"];
+  const DRAW_TOOLS = ["pen", "highlighter", "arrow", "hline", "ellipse", "rect", "text"];
 
   // 注釈レイヤー（ステージ上の描画）
   EF.annot = {

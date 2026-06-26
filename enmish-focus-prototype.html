@@ -203,10 +203,26 @@ html, body {
   position: fixed; left: 14px; top: 50%; transform: translateY(-50%);
   background: var(--tb-bg); color: var(--tb-fg);
   border-radius: 14px; box-shadow: var(--shadow); backdrop-filter: blur(14px);
-  padding: 12px 12px; z-index: 9000; width: 150px;
+  padding: 30px 12px 12px; z-index: 9000; width: 150px;
   border: 1px solid rgba(255,255,255,.08);
   transition: opacity .25s, transform .25s;
 }
+.stamp-bar.collapsed { display: none !important; }
+.sb-hide {
+  position: absolute; top: 7px; right: 7px; width: 22px; height: 22px;
+  border: none; border-radius: 6px; background: rgba(255,255,255,.10);
+  color: var(--tb-fg); cursor: pointer; font-size: 11px; line-height: 1;
+}
+.sb-hide:hover { background: rgba(255,255,255,.22); }
+.sb-reopen {
+  position: fixed; left: 0; top: 50%; transform: translateY(-50%);
+  writing-mode: vertical-rl; background: var(--tb-bg); color: var(--tb-fg);
+  border: 1px solid rgba(255,255,255,.08); border-left: none;
+  border-radius: 0 11px 11px 0; padding: 16px 7px; cursor: pointer;
+  z-index: 9000; font-size: 12px; box-shadow: var(--shadow);
+  letter-spacing: .05em;
+}
+.sb-reopen:hover { background: rgba(255,255,255,.14); }
 .stamp-bar-title { font-size: 11px; color: var(--tb-muted); margin: 4px 2px 6px; letter-spacing: .04em; }
 .stamp-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
 .chip {
@@ -435,6 +451,9 @@ kbd {
       <button class="tool" data-tool="arrow" title="矢印 (⌘⇧2)">
         <span class="ico">↗</span><span class="lbl">矢印</span>
       </button>
+      <button class="tool" data-tool="hline" title="横線（高さ固定・アンダーライン）">
+        <span class="ico">—</span><span class="lbl">横線</span>
+      </button>
       <button class="tool" data-tool="ellipse" title="丸囲み (⌘⇧3)">
         <span class="ico">◯</span><span class="lbl">丸</span>
       </button>
@@ -481,11 +500,14 @@ kbd {
 
   <!-- ============ 営業テンプレ注釈バー ============ -->
   <div id="stamp-bar" class="stamp-bar">
+    <button class="sb-hide" id="sb-hide" title="このバーを隠す">✕</button>
     <div class="stamp-bar-title">営業テンプレ</div>
     <div class="stamp-chips" id="stamp-chips"></div>
     <div class="stamp-bar-title">KPIマーカー</div>
     <div class="stamp-chips" id="kpi-chips"></div>
   </div>
+  <!-- 折りたたみ時の再表示タブ -->
+  <button id="sb-reopen" class="sb-reopen" hidden title="営業テンプレを表示">営業テンプレ ▸</button>
 
   <!-- ============ シーン切替（デモ用） ============ -->
   <div id="scene-switch" class="scene-switch">
@@ -506,7 +528,7 @@ kbd {
         <button class="qp-item" data-tool="rect"><kbd>4</kbd><span>四角囲み</span></button>
         <button class="qp-item" data-toggle="spotlight"><kbd>5</kbd><span>スポットライト</span></button>
         <button class="qp-item" data-toggle="zoom"><kbd>6</kbd><span>ズーム</span></button>
-        <button class="qp-item" data-action="clear"><kbd>⌫</kbd><span>全消去</span></button>
+        <button class="qp-item" data-action="undo"><kbd>⌫</kbd><span>1つ戻る</span></button>
         <button class="qp-item" data-action="close-palette"><kbd>Esc</kbd><span>終了</span></button>
       </div>
       <div class="qp-hint">数字キーで選択 / Escで閉じる</div>
@@ -745,7 +767,7 @@ kbd {
     if (!EF.state.appOn) { el.hidden = true; return; }
     const names = {
       cursor: "カーソル強調", pen: "ペン", highlighter: "蛍光ペン",
-      arrow: "矢印", ellipse: "丸囲み", rect: "四角囲み", text: "テキスト",
+      arrow: "矢印", hline: "横線", ellipse: "丸囲み", rect: "四角囲み", text: "テキスト",
     };
     const extras = [];
     if (EF.state.spotlight) extras.push("スポットライト");
@@ -900,6 +922,7 @@ kbd {
   DrawingEngine.prototype.move = function (x, y) {
     if (!this.current) return;
     const c = this.current;
+    if (c.tool === "hline") y = c.a.y; // 高さ固定（水平に引く）
     c.b = { x, y };
     if (c.tool === "pen" || c.tool === "highlighter") c.points.push({ x, y });
   };
@@ -983,7 +1006,7 @@ kbd {
       ctx.globalAlpha = alpha * 0.35;
       ctx.lineWidth = (s.width || 6) * 3;
       this._poly(ctx, s.points);
-    } else if (s.tool === "line") {
+    } else if (s.tool === "line" || s.tool === "hline") {
       ctx.beginPath(); ctx.moveTo(s.a.x, s.a.y); ctx.lineTo(s.b.x, s.b.y); ctx.stroke();
     } else if (s.tool === "arrow") {
       this._arrow(ctx, s.a, s.b, s.width || 6);
@@ -1338,6 +1361,18 @@ kbd {
     init() {
       buildChips("stamp-chips", EF.SALES_TEMPLATES);
       buildChips("kpi-chips", EF.KPI_MARKERS);
+
+      // 左バーの表示/非表示
+      const bar = document.getElementById("stamp-bar");
+      const reopen = document.getElementById("sb-reopen");
+      document.getElementById("sb-hide").addEventListener("click", () => {
+        bar.classList.add("collapsed");
+        reopen.hidden = false;
+      });
+      reopen.addEventListener("click", () => {
+        bar.classList.remove("collapsed");
+        reopen.hidden = true;
+      });
     },
 
     arm(item, chipEl) {
@@ -1463,13 +1498,21 @@ kbd {
           if (map[ev.key]) { EF.app.setTool(map[ev.key]); EF.app.closePalette(); ev.preventDefault(); return; }
           if (ev.key === "5") { EF.app.toggle("spotlight"); EF.app.closePalette(); ev.preventDefault(); return; }
           if (ev.key === "6") { EF.app.toggle("zoom"); EF.app.closePalette(); ev.preventDefault(); return; }
-          if (ev.key === "Backspace" || ev.key === "Delete") { EF.app.action("clear"); EF.app.closePalette(); ev.preventDefault(); return; }
+          if (ev.key === "Backspace" || ev.key === "Delete") { EF.annot.engine.undo(); EF.app.closePalette(); ev.preventDefault(); return; }
           return;
         }
 
         // Esc: 注釈ツール解除→カーソルへ / 配置待ち解除 / WB閉じる / モーダル閉じる
         if (ev.key === "Escape") {
           if (EF.app.handleEscape()) ev.preventDefault();
+          return;
+        }
+
+        // Delete / Backspace 単体で「1つ戻る」（直感操作）。入力欄では無効。
+        if ((ev.key === "Backspace" || ev.key === "Delete") && !mod && !ev.shiftKey) {
+          const ae = document.activeElement;
+          if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
+          if (EF.state.appOn) { ev.preventDefault(); EF.annot.engine.undo(); EF.toast("1つ戻しました"); }
           return;
         }
 
@@ -1666,7 +1709,7 @@ kbd {
 (function () {
   const EF = (window.EF = window.EF || {});
 
-  const DRAW_TOOLS = ["pen", "highlighter", "arrow", "ellipse", "rect", "text"];
+  const DRAW_TOOLS = ["pen", "highlighter", "arrow", "hline", "ellipse", "rect", "text"];
 
   // 注釈レイヤー（ステージ上の描画）
   EF.annot = {
