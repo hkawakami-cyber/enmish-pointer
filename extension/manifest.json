@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Enmish Focus",
+  "version": "0.1.0",
+  "description": "商談・社内MTGの画面共有で、Webページ上に注釈・カーソル強調・スポットライトを重ねて視線を誘導する画面共有支援ツール。",
+  "permissions": ["activeTab", "tabs", "downloads", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_title": "Enmish Focus ON/OFF (⌘⇧E)" },
+  "commands": {
+    "toggle-app": {
+      "suggested_key": { "default": "Ctrl+Shift+E", "mac": "Command+Shift+E" },
+      "description": "Enmish Focus ON/OFF"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["lib/drawing.js", "content.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ]
+}
