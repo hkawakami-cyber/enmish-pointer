@@ -59,6 +59,7 @@
       EF.toolbar.sync();
       EF.options.render();
       EF.setStatus();
+      EF.cursor.update();
     },
 
     // インラインのテキスト入力欄。hit を渡すと既存テキストの再編集。

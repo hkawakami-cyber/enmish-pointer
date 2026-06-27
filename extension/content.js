@@ -496,7 +496,8 @@
   }
 
   function updateRing() {
-    if (!state.appOn) { ring.hidden = true; return; }
+    // リング（カーソル強調）は「カーソル」ツールのときだけ表示。他ツールでは消す。
+    if (!state.appOn || state.tool !== "cursor") { ring.hidden = true; return; }
     const r = state.ring, color = state.color, style = state.cursorStyle || "ring";
     const dot = ring.querySelector(".cdot"), arrow = ring.querySelector(".carrow");
     ring.hidden = false;
@@ -600,7 +601,7 @@
   const app = {
     setTool(t) {
       if (!state.appOn) app.toggle(true);
-      state.tool = t; syncUI(); renderOptions(); setBadge();
+      state.tool = t; syncUI(); renderOptions(); setBadge(); updateRing();
     },
     setColor(c) { state.color = c; syncUI(); updateRing(); setBadge(); saveSettings(); },
     toggleMode(what) {

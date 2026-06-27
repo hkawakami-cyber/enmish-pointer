@@ -45,7 +45,8 @@
     },
 
     update() {
-      const on = EF.state.appOn && EF.state.mouse.inStage;
+      // リング（カーソル強調）は「カーソル」ツールのときだけ表示。他ツールでは消す。
+      const on = EF.state.appOn && EF.state.mouse.inStage && EF.state.tool === "cursor";
       if (!on) { ring.hidden = true; return; }
       const r = EF.state.ring, color = EF.state.color, style = EF.state.cursorStyle || "ring";
       const dot = ring.querySelector(".cr-dot");
