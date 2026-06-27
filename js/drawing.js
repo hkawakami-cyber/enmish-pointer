@@ -36,9 +36,9 @@
   // --- ポインタ操作 ---
   DrawingEngine.prototype.start = function (x, y) {
     const s = this.getStyle();
-    if (s.tool === "text") { return this._placeText(x, y, s); }
+    if (s.tool === "text") { return; } // テキストはインライン入力で別途処理
     this.current = {
-      tool: s.tool, color: s.color, width: s.width,
+      tool: s.tool, color: s.color, width: s.width, head: s.head || "end",
       points: [{ x, y }], a: { x, y }, b: { x, y },
     };
     this.redo.length = 0;
@@ -61,11 +61,10 @@
     this.current = null;
   };
 
-  DrawingEngine.prototype._placeText = function (x, y, s) {
-    const txt = window.prompt("注釈テキストを入力");
-    if (txt && txt.trim()) {
-      this.strokes.push({ tool: "text", text: txt.trim(), a: { x, y }, color: s.color, width: s.width, born: performance.now() });
-    }
+  DrawingEngine.prototype.addText = function (x, y, text, color, width) {
+    if (!text || !text.trim()) return;
+    this.strokes.push({ tool: "text", text: text.trim(), a: { x, y }, color: color, width: width, born: performance.now() });
+    this.redo.length = 0;
   };
 
   DrawingEngine.prototype.addStamp = function (x, y, label, color) {
@@ -134,7 +133,7 @@
     } else if (s.tool === "line" || s.tool === "hline") {
       ctx.beginPath(); ctx.moveTo(s.a.x, s.a.y); ctx.lineTo(s.b.x, s.b.y); ctx.stroke();
     } else if (s.tool === "arrow") {
-      this._arrow(ctx, s.a, s.b, s.width || 6);
+      this._arrow(ctx, s.a, s.b, s.width || 6, s.head || "end");
     } else if (s.tool === "rect") {
       const x = Math.min(s.a.x, s.b.x), y = Math.min(s.a.y, s.b.y);
       this._roundRect(ctx, x, y, Math.abs(s.b.x - s.a.x), Math.abs(s.b.y - s.a.y), 8);
@@ -174,15 +173,19 @@
     ctx.stroke();
   };
 
-  DrawingEngine.prototype._arrow = function (ctx, a, b, w) {
-    const ang = Math.atan2(b.y - a.y, b.x - a.x);
-    const head = Math.max(14, w * 3.2);
+  DrawingEngine.prototype._arrow = function (ctx, a, b, w, head) {
+    const size = Math.max(14, w * 3.2);
     ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(b.x, b.y);
-    ctx.lineTo(b.x - head * Math.cos(ang - Math.PI / 7), b.y - head * Math.sin(ang - Math.PI / 7));
-    ctx.lineTo(b.x - head * Math.cos(ang + Math.PI / 7), b.y - head * Math.sin(ang + Math.PI / 7));
-    ctx.closePath(); ctx.fill();
+    const drawHead = (tip, from) => {
+      const ang = Math.atan2(tip.y - from.y, tip.x - from.x);
+      ctx.beginPath();
+      ctx.moveTo(tip.x, tip.y);
+      ctx.lineTo(tip.x - size * Math.cos(ang - Math.PI / 7), tip.y - size * Math.sin(ang - Math.PI / 7));
+      ctx.lineTo(tip.x - size * Math.cos(ang + Math.PI / 7), tip.y - size * Math.sin(ang + Math.PI / 7));
+      ctx.closePath(); ctx.fill();
+    };
+    if (head === "end" || head === "both") drawHead(b, a);
+    if (head === "start" || head === "both") drawHead(a, b);
   };
 
   DrawingEngine.prototype._roundRect = function (ctx, x, y, w, h, r) {

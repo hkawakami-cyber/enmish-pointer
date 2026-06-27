@@ -42,7 +42,9 @@
   const state = {
     appOn: false, tool: "cursor", color: "#6cbba5", strokeWidth: 6,
     ring: { width: 6, size: 64, opacity: 0.9, ripple: true },
-    autoErase: 0, spotlight: false, zoom: false, zoomScale: 2.0,
+    cursorStyle: "ring", arrowHead: "end",
+    autoErase: 0, spotlight: false, spotShape: "band", spotBand: 0.5,
+    zoom: false, zoomScale: 2.0,
     preset: "proposal", armedStamp: null,
     mouse: { x: -999, y: -999 },
   };
@@ -63,6 +65,7 @@
     #annot.live { pointer-events: auto; cursor: crosshair; }
     #annot.tool-cursor { cursor: none; }
     .ring { border-radius: 50%; transform: translate(-50%,-50%); border-style: solid; border-color: #6cbba5; pointer-events: none; }
+    .ring .cdot { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); border-radius: 50%; display: none; }
     .ripple { position: fixed; border-radius: 50%; transform: translate(-50%,-50%); border: 3px solid #6cbba5; pointer-events: none; animation: rip .55s ease-out forwards; }
     @keyframes rip { from { width: 8px; height: 8px; opacity: .85; } to { width: 90px; height: 90px; opacity: 0; } }
 
@@ -115,6 +118,14 @@
     .toast { bottom: 64px; left: 50%; transform: translateX(-50%) translateY(8px); background: #1b2130; color: #fff; padding: 10px 18px; border-radius: 11px; font-size: 13px; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .hint { bottom: 20px; left: 50%; transform: translateX(-50%); background: #6cbba5; color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 13px; pointer-events: none; }
+    .ef-text { position: fixed; transform: translateY(-4px); z-index: 10; pointer-events: auto; border: none; border-bottom: 2px solid currentColor; background: rgba(255,255,255,.92); font-weight: 700; padding: 2px 6px; border-radius: 4px; min-width: 120px; outline: none; }
+    .tool-options { position: fixed; right: 92px; top: 50%; transform: translateY(-50%); background: rgba(3,40,65,.94); color: #e8ecf4; border-radius: 14px; padding: 11px; width: 158px; box-shadow: 0 10px 30px rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(14px); display: flex; flex-direction: column; gap: 11px; pointer-events: auto; }
+    .to-group { display: flex; flex-direction: column; gap: 5px; }
+    .to-title { font-size: 10.5px; color: #9fc6bb; }
+    .to-btns { display: flex; flex-wrap: wrap; gap: 5px; }
+    .to-btn { display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); color: #e8ecf4; border-radius: 8px; padding: 5px 8px; font-size: 11px; cursor: pointer; line-height: 1; }
+    .to-btn:hover { background: rgba(255,255,255,.12); }
+    .to-btn.on { background: #6cbba5; border-color: #6cbba5; color: #06251c; font-weight: 700; }
     [hidden] { display: none !important; }
   `;
 
@@ -159,7 +170,7 @@
     <style>${CSS}</style>
     <canvas id="annot" class="layer"></canvas>
     <canvas id="spot" class="layer"></canvas>
-    <div id="ring" class="ring" hidden></div>
+    <div id="ring" class="ring" hidden><i class="cdot"></i></div>
     <div id="tb" class="toolbar app-off">${buildToolbar()}</div>
     <div id="sb" class="stamp-bar">
       <button class="sb-hide" id="sb-hide" title="このバーを隠す">✕</button>
@@ -169,6 +180,7 @@
       <div class="chips" id="chips-kpi">${chipHtml(KPI_MARKERS)}</div>
     </div>
     <button id="reopen" class="reopen" hidden title="営業テンプレを表示">営業テンプレ ▸</button>
+    <div id="tool-options" class="tool-options" hidden></div>
     <div id="badge" class="badge" hidden></div>
     <div id="toast" class="toast" hidden></div>
     <div id="hint" class="hint" hidden>クリックした位置にラベルを配置（Escで取消）</div>
@@ -177,7 +189,7 @@
   const $ = (sel) => root.querySelector(sel);
   const annot = $("#annot"), spot = $("#spot"), ring = $("#ring");
   const tb = $("#tb"), sb = $("#sb"), reopen = $("#reopen");
-  const badgeEl = $("#badge"), toastEl = $("#toast"), hintEl = $("#hint");
+  const badgeEl = $("#badge"), toastEl = $("#toast"), hintEl = $("#hint"), optEl = $("#tool-options");
 
   // ---------- ユーティリティ ----------
   let toastT;
@@ -199,7 +211,7 @@
 
   // ---------- 描画エンジン ----------
   const engine = new EF.DrawingEngine(annot, {
-    getStyle: () => ({ tool: state.tool, color: state.color, width: state.strokeWidth }),
+    getStyle: () => ({ tool: state.tool, color: state.color, width: state.strokeWidth, head: state.arrowHead }),
     getAutoErase: () => state.autoErase,
   });
   window.addEventListener("resize", () => { engine.resize(); sizeSpot(); });
@@ -220,7 +232,9 @@
   annot.addEventListener("mousedown", (ev) => {
     if (!state.appOn || ev.button !== 0) return;
     if (state.armedStamp) { engine.addStamp(ev.clientX, ev.clientY, state.armedStamp[0], state.armedStamp[1]); disarmStamp(); return; }
-    if (state.zoom || DRAW_TOOLS.indexOf(state.tool) === -1) return;
+    if (state.zoom) return;
+    if (state.tool === "text") { showTextInput(ev.clientX, ev.clientY); ev.preventDefault(); return; }
+    if (DRAW_TOOLS.indexOf(state.tool) === -1) return;
     drawing = true; engine.start(ev.clientX, ev.clientY); ev.preventDefault();
   });
   window.addEventListener("mouseup", () => { if (drawing) { drawing = false; engine.end(); } }, true);
@@ -233,13 +247,69 @@
     root.appendChild(r); setTimeout(() => r.remove(), 600);
   }, true);
 
+  // インラインのテキスト入力
+  function showTextInput(x, y) {
+    const old = root.querySelector(".ef-text"); if (old) old.remove();
+    const inp = document.createElement("input");
+    inp.className = "ef-text"; inp.type = "text";
+    inp.style.left = x + "px"; inp.style.top = y + "px";
+    inp.style.color = state.color; inp.style.fontSize = Math.max(16, state.strokeWidth * 3) + "px";
+    root.appendChild(inp); requestAnimationFrame(() => inp.focus());
+    let done = false;
+    const close = (keep) => {
+      if (done) return; done = true;
+      inp.removeEventListener("blur", onBlur);
+      const v = inp.value;
+      if (inp.isConnected) inp.remove();
+      if (keep && v && v.trim()) engine.addText(x, y, v, state.color, state.strokeWidth);
+    };
+    const onBlur = () => close(true);
+    inp.addEventListener("keydown", (e) => {
+      e.stopPropagation();
+      if (e.key === "Enter") close(true);
+      else if (e.key === "Escape") close(false);
+    });
+    inp.addEventListener("blur", onBlur);
+  }
+
+  // ツール別オプション（カーソル形状 / 矢じり向き / 注目の帯）
+  function optGroup(title, opt, cur, items) {
+    const btns = items.map((it) =>
+      `<button class="to-btn${String(it[0]) === String(cur) ? " on" : ""}" data-opt="${opt}" data-val="${it[0]}">` +
+      (it[1] ? `<span>${it[1]}</span>` : "") + `<span>${it[2]}</span></button>`).join("");
+    return `<div class="to-group"><div class="to-title">${title}</div><div class="to-btns">${btns}</div></div>`;
+  }
+  function renderOptions() {
+    const groups = [];
+    if (state.appOn && state.tool === "cursor")
+      groups.push(optGroup("カーソル", "cursorStyle", state.cursorStyle, [["ring", "◎", "リング"], ["dot", "●", "ドット"], ["ringdot", "◉", "両方"], ["halo", "✦", "ハロー"]]));
+    else if (state.appOn && state.tool === "arrow")
+      groups.push(optGroup("矢じり", "arrowHead", state.arrowHead, [["end", "→", "終点"], ["start", "←", "始点"], ["both", "↔", "両方"]]));
+    if (state.appOn && state.spotlight) {
+      groups.push(optGroup("注目の形", "spotShape", state.spotShape, [["band", "▭", "帯"], ["circle", "◯", "丸"]]));
+      if (state.spotShape === "band")
+        groups.push(optGroup("帯の高さ", "spotBand", state.spotBand, [[0.25, "", "25%"], [0.5, "", "50%"], [0.75, "", "75%"]]));
+    }
+    if (!groups.length) { optEl.hidden = true; return; }
+    optEl.innerHTML = groups.join(""); optEl.hidden = false;
+  }
+
   function updateRing() {
     if (!state.appOn) { ring.hidden = true; return; }
-    const r = state.ring;
+    const r = state.ring, color = state.color, style = state.cursorStyle || "ring";
+    const dot = ring.querySelector(".cdot");
     ring.hidden = false;
     ring.style.width = r.size + "px"; ring.style.height = r.size + "px";
     ring.style.left = state.mouse.x + "px"; ring.style.top = state.mouse.y + "px";
-    ring.style.borderWidth = r.width + "px"; ring.style.borderColor = state.color; ring.style.opacity = r.opacity;
+    ring.style.opacity = r.opacity;
+    ring.style.borderWidth = "0"; ring.style.background = "transparent"; ring.style.boxShadow = "none";
+    if (dot) dot.style.display = "none";
+    if (style === "ring" || style === "ringdot") { ring.style.borderWidth = r.width + "px"; ring.style.borderColor = color; }
+    if (style === "halo") { ring.style.background = "radial-gradient(circle, " + color + "cc 0%, " + color + "44 38%, transparent 70%)"; }
+    if ((style === "dot" || style === "ringdot") && dot) {
+      const ds = style === "dot" ? Math.max(10, r.size * 0.42) : Math.max(8, r.size * 0.24);
+      dot.style.display = "block"; dot.style.width = ds + "px"; dot.style.height = ds + "px"; dot.style.background = color;
+    }
   }
 
   // ---------- スポットライト ----------
@@ -256,12 +326,22 @@
     if (state.appOn && state.spotlight) {
       sctx.fillStyle = "rgba(8,10,16,0.72)";
       sctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-      const m = state.mouse;
+      const m = state.mouse, W = window.innerWidth, H = window.innerHeight;
       sctx.save();
       sctx.globalCompositeOperation = "destination-out";
-      const g = sctx.createRadialGradient(m.x, m.y, spotRadius * 0.55, m.x, m.y, spotRadius);
-      g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(1, "rgba(0,0,0,0)");
-      sctx.fillStyle = g; sctx.beginPath(); sctx.arc(m.x, m.y, spotRadius, 0, Math.PI * 2); sctx.fill();
+      if (state.spotShape === "band") {
+        const bandH = Math.max(60, H * (state.spotBand || 0.5));
+        const top = Math.min(Math.max(m.y - bandH / 2, 0), H - bandH);
+        const soft = Math.min(0.18, 28 / bandH);
+        const g = sctx.createLinearGradient(0, top, 0, top + bandH);
+        g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(soft, "rgba(0,0,0,1)");
+        g.addColorStop(1 - soft, "rgba(0,0,0,1)"); g.addColorStop(1, "rgba(0,0,0,0)");
+        sctx.fillStyle = g; sctx.fillRect(0, top, W, bandH);
+      } else {
+        const g = sctx.createRadialGradient(m.x, m.y, spotRadius * 0.55, m.x, m.y, spotRadius);
+        g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(1, "rgba(0,0,0,0)");
+        sctx.fillStyle = g; sctx.beginPath(); sctx.arc(m.x, m.y, spotRadius, 0, Math.PI * 2); sctx.fill();
+      }
       sctx.restore();
     }
     requestAnimationFrame(renderSpot);
@@ -324,7 +404,7 @@
   const app = {
     setTool(t) {
       if (!state.appOn) app.toggle(true);
-      state.tool = t; disarmStamp(); syncUI(); setBadge();
+      state.tool = t; disarmStamp(); syncUI(); renderOptions(); setBadge();
     },
     setColor(c) { state.color = c; syncUI(); updateRing(); setBadge(); },
     toggleMode(what) {
@@ -334,7 +414,7 @@
         state.zoom = !state.zoom; applyZoom();
         toast(state.zoom ? "ズーム ON（- =で倍率／表示専用）" : "ズーム OFF");
       }
-      syncUI(); setBadge();
+      syncUI(); renderOptions(); setBadge();
     },
     action(name) {
       if (name === "undo") engine.undo();
@@ -352,7 +432,7 @@
         reserveGutter(true);
         toast("Enmish Focus 起動 — カーソル強調中");
       }
-      updateRing(); syncUI(); setBadge();
+      updateRing(); syncUI(); renderOptions(); setBadge();
     },
     handleEscape() {
       if (state.armedStamp) { disarmStamp(); return true; }
@@ -411,6 +491,14 @@
   });
   reopen.addEventListener("click", () => { sb.classList.remove("collapsed"); reopen.hidden = true; });
 
+  optEl.addEventListener("click", (e) => {
+    const b = e.target.closest(".to-btn"); if (!b) return;
+    let v = b.dataset.val;
+    if (b.dataset.opt === "spotBand") v = parseFloat(v);
+    state[b.dataset.opt] = v;
+    updateRing(); renderOptions(); setBadge();
+  });
+
   // プリセット切替（ツールバー長押しは作らず、ショートカット ⌘⇧0 で循環）
   function cyclePreset() {
     const keys = Object.keys(PRESETS);
@@ -441,7 +529,14 @@
     if (!state.appOn || typing) return;
 
     if ((ev.key === "Backspace" || ev.key === "Delete") && !mod) { ev.preventDefault(); engine.undo(); toast("1つ戻しました"); return; }
-    if (state.spotlight && (ev.key === "[" || ev.key === "]")) { spotRadius = Math.max(60, Math.min(380, spotRadius + (ev.key === "[" ? -25 : 25))); ev.preventDefault(); return; }
+    if (state.spotlight && (ev.key === "[" || ev.key === "]")) {
+      if (state.spotShape === "band") {
+        const opts = [0.25, 0.5, 0.75]; const i = opts.indexOf(state.spotBand);
+        state.spotBand = opts[Math.min(2, Math.max(0, (i < 0 ? 1 : i) + (ev.key === "[" ? -1 : 1)))];
+        renderOptions();
+      } else { spotRadius = Math.max(60, Math.min(380, spotRadius + (ev.key === "[" ? -25 : 25))); }
+      ev.preventDefault(); return;
+    }
     if (state.zoom && (ev.key === "-" || ev.key === "=" || ev.key === "+")) { state.zoomScale = Math.max(1.4, Math.min(4, state.zoomScale + (ev.key === "-" ? -0.2 : 0.2))); applyZoom(); setBadge(); ev.preventDefault(); return; }
   }, true);
 
@@ -451,4 +546,5 @@
   });
 
   syncUI();
+  renderOptions();
 })();

@@ -47,15 +47,32 @@
     update() {
       const on = EF.state.appOn && EF.state.mouse.inStage;
       if (!on) { ring.hidden = true; return; }
-      const r = EF.state.ring;
+      const r = EF.state.ring, color = EF.state.color, style = EF.state.cursorStyle || "ring";
+      const dot = ring.querySelector(".cr-dot");
       ring.hidden = false;
       ring.style.width = r.size + "px";
       ring.style.height = r.size + "px";
       ring.style.left = EF.state.mouse.x + "px";
       ring.style.top = EF.state.mouse.y + "px";
-      ring.style.borderWidth = r.width + "px";
-      ring.style.borderColor = EF.state.color;
       ring.style.opacity = r.opacity;
+      // 一旦リセット
+      ring.style.borderWidth = "0"; ring.style.background = "transparent"; ring.style.boxShadow = "none";
+      if (dot) dot.style.display = "none";
+      if (style === "ring" || style === "ringdot") {
+        ring.style.borderWidth = r.width + "px";
+        ring.style.borderColor = color;
+      }
+      if (style === "halo") {
+        ring.style.background = "radial-gradient(circle, " + color + "cc 0%, " + color + "44 38%, transparent 70%)";
+      }
+      if (style === "dot" || style === "ringdot") {
+        if (dot) {
+          const ds = style === "dot" ? Math.max(10, r.size * 0.42) : Math.max(8, r.size * 0.24);
+          dot.style.display = "block";
+          dot.style.width = ds + "px"; dot.style.height = ds + "px";
+          dot.style.background = color;
+        }
+      }
     },
   };
 })();

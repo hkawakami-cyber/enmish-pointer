@@ -15,7 +15,7 @@
     init() {
       const canvas = document.getElementById("annot-canvas");
       this.engine = new EF.DrawingEngine(canvas, {
-        getStyle: () => ({ tool: EF.state.tool, color: EF.state.color, width: EF.state.strokeWidth }),
+        getStyle: () => ({ tool: EF.state.tool, color: EF.state.color, width: EF.state.strokeWidth, head: EF.state.arrowHead }),
         getAutoErase: () => EF.state.autoErase,
       });
       window.addEventListener("resize", () => this.engine.resize());
@@ -28,6 +28,8 @@
         if (EF.stamps.tryPlace(p)) return;
         // ズーム中は座標がずれるため描画しない（表示専用）
         if (EF.state.zoom) return;
+        // テキストはインライン入力欄で
+        if (EF.state.tool === "text") { ev.preventDefault(); EF.app.showTextInput(p); return; }
         if (DRAW_TOOLS.indexOf(EF.state.tool) === -1) return;
         this.drawing = true;
         this.engine.start(p.x, p.y);
@@ -53,7 +55,39 @@
       stage.classList.toggle("tool-cursor", tool === "cursor");
       stage.classList.toggle("armed", tool !== "cursor");
       EF.toolbar.sync();
+      EF.options.render();
       EF.setStatus();
+    },
+
+    // インラインのテキスト入力欄
+    showTextInput(p) {
+      const stage = document.getElementById("stage");
+      const old = stage.querySelector(".ef-text-input");
+      if (old) old.remove();
+      const inp = document.createElement("input");
+      inp.className = "ef-text-input";
+      inp.type = "text";
+      inp.style.left = p.x + "px";
+      inp.style.top = p.y + "px";
+      inp.style.color = EF.state.color;
+      inp.style.fontSize = Math.max(16, EF.state.strokeWidth * 3) + "px";
+      stage.appendChild(inp);
+      requestAnimationFrame(() => inp.focus());
+      let done = false;
+      const close = (keep) => {
+        if (done) return; done = true;
+        inp.removeEventListener("blur", onBlur);
+        const v = inp.value;
+        if (inp.isConnected) inp.remove();
+        if (keep && v && v.trim()) EF.annot.engine.addText(p.x, p.y, v, EF.state.color, EF.state.strokeWidth);
+      };
+      const onBlur = () => close(true);
+      inp.addEventListener("keydown", (e) => {
+        e.stopPropagation();
+        if (e.key === "Enter") close(true);
+        else if (e.key === "Escape") close(false);
+      });
+      inp.addEventListener("blur", onBlur);
     },
 
     setColor(color) {
@@ -74,6 +108,7 @@
         EF.toast(EF.state.zoom ? "ズーム ON （- = で倍率調整）" : "ズーム OFF");
       }
       EF.toolbar.sync();
+      EF.options.render();
       EF.setStatus();
     },
 
@@ -116,6 +151,7 @@
       }
       EF.cursor.update();
       EF.toolbar.sync();
+      EF.options.render();
       EF.setStatus();
     },
 
@@ -132,6 +168,51 @@
       if (EF.state.spotlight) { EF.state.spotlight = false; EF.toolbar.sync(); EF.setStatus(); return true; }
       if (EF.state.appOn && EF.state.tool !== "cursor") { this.setTool("cursor"); return true; }
       return false;
+    },
+  };
+
+  // ツール別オプション（カーソル形状 / 矢じり向き / 注目の帯）
+  function optGroup(title, opt, cur, items) {
+    const btns = items.map((it) =>
+      `<button class="to-btn${String(it[0]) === String(cur) ? " on" : ""}" data-opt="${opt}" data-val="${it[0]}">` +
+      (it[1] ? `<span class="to-ico">${it[1]}</span>` : "") + `<span>${it[2]}</span></button>`).join("");
+    return `<div class="to-group"><div class="to-title">${title}</div><div class="to-btns">${btns}</div></div>`;
+  }
+  EF.options = {
+    render() {
+      const el = document.getElementById("tool-options");
+      if (!el) return;
+      const groups = [];
+      if (EF.state.appOn && EF.state.tool === "cursor") {
+        groups.push(optGroup("カーソル", "cursorStyle", EF.state.cursorStyle,
+          [["ring", "◎", "リング"], ["dot", "●", "ドット"], ["ringdot", "◉", "両方"], ["halo", "✦", "ハロー"]]));
+      } else if (EF.state.appOn && EF.state.tool === "arrow") {
+        groups.push(optGroup("矢じり", "arrowHead", EF.state.arrowHead,
+          [["end", "→", "終点"], ["start", "←", "始点"], ["both", "↔", "両方"]]));
+      }
+      if (EF.state.appOn && EF.state.spotlight) {
+        groups.push(optGroup("注目の形", "spotShape", EF.state.spotShape,
+          [["band", "▭", "帯"], ["circle", "◯", "丸"]]));
+        if (EF.state.spotShape === "band") {
+          groups.push(optGroup("帯の高さ", "spotBand", EF.state.spotBand,
+            [[0.25, "", "25%"], [0.5, "", "50%"], [0.75, "", "75%"]]));
+        }
+      }
+      if (!groups.length) { el.hidden = true; return; }
+      el.innerHTML = groups.join("");
+      el.hidden = false;
+    },
+    bind() {
+      const el = document.getElementById("tool-options");
+      el.addEventListener("click", (e) => {
+        const b = e.target.closest(".to-btn"); if (!b) return;
+        let v = b.dataset.val;
+        if (b.dataset.opt === "spotBand") v = parseFloat(v);
+        EF.state[b.dataset.opt] = v;
+        EF.cursor.update();
+        this.render();
+        EF.setStatus();
+      });
     },
   };
 
@@ -169,6 +250,8 @@
     EF.presets.init();
     bindPalette();
     bindScenes();
+    EF.options.bind();
+    EF.options.render();
 
     EF.toolbar.sync();
     EF.toast("Enmish Focus プロトタイプ — ⌘⇧E で起動", 2600);

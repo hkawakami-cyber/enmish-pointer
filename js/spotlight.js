@@ -6,7 +6,6 @@
 
   let canvas, ctx, dpr, w, h, raf;
   let radius = 130;
-  let shape = "circle"; // circle | rect
 
   function resize() {
     const r = canvas.getBoundingClientRect();
@@ -28,17 +27,26 @@
     if (m.inStage) {
       ctx.save();
       ctx.globalCompositeOperation = "destination-out";
-      const grad = ctx.createRadialGradient(m.x, m.y, radius * 0.55, m.x, m.y, radius);
-      grad.addColorStop(0, "rgba(0,0,0,1)");
-      grad.addColorStop(1, "rgba(0,0,0,0)");
-      if (shape === "circle") {
+      if (EF.state.spotShape === "band") {
+        // カーソルのY位置を中心にした横帯（高さはビューポート比で選択）
+        const bandH = Math.max(60, h * (EF.state.spotBand || 0.5));
+        const top = Math.min(Math.max(m.y - bandH / 2, 0), h - bandH);
+        const soft = Math.min(0.18, 28 / bandH);
+        const grad = ctx.createLinearGradient(0, top, 0, top + bandH);
+        grad.addColorStop(0, "rgba(0,0,0,0)");
+        grad.addColorStop(soft, "rgba(0,0,0,1)");
+        grad.addColorStop(1 - soft, "rgba(0,0,0,1)");
+        grad.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, top, w, bandH);
+      } else {
+        const grad = ctx.createRadialGradient(m.x, m.y, radius * 0.55, m.x, m.y, radius);
+        grad.addColorStop(0, "rgba(0,0,0,1)");
+        grad.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.arc(m.x, m.y, radius, 0, Math.PI * 2);
         ctx.fill();
-      } else {
-        ctx.fillStyle = "rgba(0,0,0,1)";
-        ctx.fillRect(m.x - radius * 1.4, m.y - radius, radius * 2.8, radius * 2);
       }
       ctx.restore();
     }
@@ -54,7 +62,12 @@
       render();
     },
     setRadius(px) { radius = Math.max(60, Math.min(360, px)); },
-    adjust(delta) { this.setRadius(radius + delta); },
-    toggleShape() { shape = shape === "circle" ? "rect" : "circle"; },
+    adjust(delta) {
+      if (EF.state.spotShape === "band") {
+        const opts = [0.25, 0.5, 0.75];
+        const i = opts.indexOf(EF.state.spotBand);
+        EF.state.spotBand = opts[Math.min(opts.length - 1, Math.max(0, (i < 0 ? 1 : i) + (delta > 0 ? 1 : -1)))];
+      } else { this.setRadius(radius + delta); }
+    },
   };
 })();

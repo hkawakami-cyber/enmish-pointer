@@ -92,8 +92,12 @@
     color: "#6cbba5",
     strokeWidth: 6,
     ring: { width: 6, size: 64, opacity: 0.9, ripple: true },
+    cursorStyle: "ring", // ring | dot | halo | ringdot
+    arrowHead: "end",    // end | start | both
     autoErase: 0,        // 秒（0で残す）
     spotlight: false,
+    spotShape: "band",   // band（横帯） | circle
+    spotBand: 0.5,       // 帯の高さ（ビューポート比）
     zoom: false,
     zoomScale: 2.2,
     preset: "proposal",

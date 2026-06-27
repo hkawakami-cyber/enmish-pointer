@@ -289,11 +289,43 @@ body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ea
 .ss-btn:hover { background: rgba(255,255,255,.16); }
 .ss-btn.active { background: var(--ef-blue); }
 
+/* ============ ツール別オプション・フライアウト ============ */
+.tool-options {
+  position: fixed; right: 100px; top: 50%; transform: translateY(-50%);
+  background: var(--tb-bg); color: var(--tb-fg); border-radius: 14px;
+  padding: 12px; box-shadow: var(--shadow); z-index: 8900; width: 168px;
+  border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(14px);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.to-group { display: flex; flex-direction: column; gap: 6px; }
+.to-title { font-size: 11px; color: var(--tb-muted); letter-spacing: .03em; }
+.to-btns { display: flex; flex-wrap: wrap; gap: 5px; }
+.to-btn {
+  display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.05); color: var(--tb-fg); border-radius: 8px;
+  padding: 5px 9px; font-size: 11.5px; cursor: pointer; line-height: 1;
+}
+.to-btn:hover { background: rgba(255,255,255,.12); }
+.to-btn.on { background: var(--ef-green); border-color: var(--ef-green); color: #06251c; font-weight: 700; }
+.to-btn .to-ico { font-size: 13px; }
+
+/* インラインのテキスト入力欄 */
+.ef-text-input {
+  position: absolute; transform: translateY(-4px); z-index: 8100;
+  border: none; border-bottom: 2px solid currentColor; background: rgba(255,255,255,.9);
+  font-weight: 700; padding: 2px 6px; border-radius: 4px; min-width: 120px; outline: none;
+  font-family: var(--font-en), var(--font-jp);
+}
+
 /* ============ カーソルリング ============ */
 .cursor-ring {
   position: absolute; left: 0; top: 0; pointer-events: none; z-index: 8000;
   border-radius: 50%; transform: translate(-50%, -50%);
-  border-style: solid; border-color: var(--ef-blue);
+  border-style: solid; border-color: var(--ef-green);
+}
+.cursor-ring .cr-dot {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  border-radius: 50%; display: none;
 }
 .ripple {
   position: absolute; pointer-events: none; z-index: 7999;
@@ -456,7 +488,7 @@ kbd {
     <canvas id="spotlight-canvas" class="overlay-canvas"></canvas>
 
     <!-- カーソル強調リング -->
-    <div id="cursor-ring" class="cursor-ring" hidden></div>
+    <div id="cursor-ring" class="cursor-ring" hidden><i class="cr-dot"></i></div>
 
     <!-- ズームレンズ枠の縁取り -->
     <div id="zoom-frame" class="zoom-frame" hidden></div>
@@ -539,6 +571,9 @@ kbd {
       </button>
     </div>
   </div>
+
+  <!-- ============ ツール別オプション（カーソル形状/矢じり向き/注目の帯） ============ -->
+  <div id="tool-options" class="tool-options" hidden></div>
 
   <!-- ============ 営業テンプレ注釈バー ============ -->
   <div id="stamp-bar" class="stamp-bar">
@@ -782,8 +817,12 @@ kbd {
     color: "#6cbba5",
     strokeWidth: 6,
     ring: { width: 6, size: 64, opacity: 0.9, ripple: true },
+    cursorStyle: "ring", // ring | dot | halo | ringdot
+    arrowHead: "end",    // end | start | both
     autoErase: 0,        // 秒（0で残す）
     spotlight: false,
+    spotShape: "band",   // band（横帯） | circle
+    spotBand: 0.5,       // 帯の高さ（ビューポート比）
     zoom: false,
     zoomScale: 2.2,
     preset: "proposal",
@@ -957,9 +996,9 @@ kbd {
   // --- ポインタ操作 ---
   DrawingEngine.prototype.start = function (x, y) {
     const s = this.getStyle();
-    if (s.tool === "text") { return this._placeText(x, y, s); }
+    if (s.tool === "text") { return; } // テキストはインライン入力で別途処理
     this.current = {
-      tool: s.tool, color: s.color, width: s.width,
+      tool: s.tool, color: s.color, width: s.width, head: s.head || "end",
       points: [{ x, y }], a: { x, y }, b: { x, y },
     };
     this.redo.length = 0;
@@ -982,11 +1021,10 @@ kbd {
     this.current = null;
   };
 
-  DrawingEngine.prototype._placeText = function (x, y, s) {
-    const txt = window.prompt("注釈テキストを入力");
-    if (txt && txt.trim()) {
-      this.strokes.push({ tool: "text", text: txt.trim(), a: { x, y }, color: s.color, width: s.width, born: performance.now() });
-    }
+  DrawingEngine.prototype.addText = function (x, y, text, color, width) {
+    if (!text || !text.trim()) return;
+    this.strokes.push({ tool: "text", text: text.trim(), a: { x, y }, color: color, width: width, born: performance.now() });
+    this.redo.length = 0;
   };
 
   DrawingEngine.prototype.addStamp = function (x, y, label, color) {
@@ -1055,7 +1093,7 @@ kbd {
     } else if (s.tool === "line" || s.tool === "hline") {
       ctx.beginPath(); ctx.moveTo(s.a.x, s.a.y); ctx.lineTo(s.b.x, s.b.y); ctx.stroke();
     } else if (s.tool === "arrow") {
-      this._arrow(ctx, s.a, s.b, s.width || 6);
+      this._arrow(ctx, s.a, s.b, s.width || 6, s.head || "end");
     } else if (s.tool === "rect") {
       const x = Math.min(s.a.x, s.b.x), y = Math.min(s.a.y, s.b.y);
       this._roundRect(ctx, x, y, Math.abs(s.b.x - s.a.x), Math.abs(s.b.y - s.a.y), 8);
@@ -1095,15 +1133,19 @@ kbd {
     ctx.stroke();
   };
 
-  DrawingEngine.prototype._arrow = function (ctx, a, b, w) {
-    const ang = Math.atan2(b.y - a.y, b.x - a.x);
-    const head = Math.max(14, w * 3.2);
+  DrawingEngine.prototype._arrow = function (ctx, a, b, w, head) {
+    const size = Math.max(14, w * 3.2);
     ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(b.x, b.y);
-    ctx.lineTo(b.x - head * Math.cos(ang - Math.PI / 7), b.y - head * Math.sin(ang - Math.PI / 7));
-    ctx.lineTo(b.x - head * Math.cos(ang + Math.PI / 7), b.y - head * Math.sin(ang + Math.PI / 7));
-    ctx.closePath(); ctx.fill();
+    const drawHead = (tip, from) => {
+      const ang = Math.atan2(tip.y - from.y, tip.x - from.x);
+      ctx.beginPath();
+      ctx.moveTo(tip.x, tip.y);
+      ctx.lineTo(tip.x - size * Math.cos(ang - Math.PI / 7), tip.y - size * Math.sin(ang - Math.PI / 7));
+      ctx.lineTo(tip.x - size * Math.cos(ang + Math.PI / 7), tip.y - size * Math.sin(ang + Math.PI / 7));
+      ctx.closePath(); ctx.fill();
+    };
+    if (head === "end" || head === "both") drawHead(b, a);
+    if (head === "start" || head === "both") drawHead(a, b);
   };
 
   DrawingEngine.prototype._roundRect = function (ctx, x, y, w, h, r) {
@@ -1194,15 +1236,32 @@ kbd {
     update() {
       const on = EF.state.appOn && EF.state.mouse.inStage;
       if (!on) { ring.hidden = true; return; }
-      const r = EF.state.ring;
+      const r = EF.state.ring, color = EF.state.color, style = EF.state.cursorStyle || "ring";
+      const dot = ring.querySelector(".cr-dot");
       ring.hidden = false;
       ring.style.width = r.size + "px";
       ring.style.height = r.size + "px";
       ring.style.left = EF.state.mouse.x + "px";
       ring.style.top = EF.state.mouse.y + "px";
-      ring.style.borderWidth = r.width + "px";
-      ring.style.borderColor = EF.state.color;
       ring.style.opacity = r.opacity;
+      // 一旦リセット
+      ring.style.borderWidth = "0"; ring.style.background = "transparent"; ring.style.boxShadow = "none";
+      if (dot) dot.style.display = "none";
+      if (style === "ring" || style === "ringdot") {
+        ring.style.borderWidth = r.width + "px";
+        ring.style.borderColor = color;
+      }
+      if (style === "halo") {
+        ring.style.background = "radial-gradient(circle, " + color + "cc 0%, " + color + "44 38%, transparent 70%)";
+      }
+      if (style === "dot" || style === "ringdot") {
+        if (dot) {
+          const ds = style === "dot" ? Math.max(10, r.size * 0.42) : Math.max(8, r.size * 0.24);
+          dot.style.display = "block";
+          dot.style.width = ds + "px"; dot.style.height = ds + "px";
+          dot.style.background = color;
+        }
+      }
     },
   };
 })();
@@ -1217,7 +1276,6 @@ kbd {
 
   let canvas, ctx, dpr, w, h, raf;
   let radius = 130;
-  let shape = "circle"; // circle | rect
 
   function resize() {
     const r = canvas.getBoundingClientRect();
@@ -1239,17 +1297,26 @@ kbd {
     if (m.inStage) {
       ctx.save();
       ctx.globalCompositeOperation = "destination-out";
-      const grad = ctx.createRadialGradient(m.x, m.y, radius * 0.55, m.x, m.y, radius);
-      grad.addColorStop(0, "rgba(0,0,0,1)");
-      grad.addColorStop(1, "rgba(0,0,0,0)");
-      if (shape === "circle") {
+      if (EF.state.spotShape === "band") {
+        // カーソルのY位置を中心にした横帯（高さはビューポート比で選択）
+        const bandH = Math.max(60, h * (EF.state.spotBand || 0.5));
+        const top = Math.min(Math.max(m.y - bandH / 2, 0), h - bandH);
+        const soft = Math.min(0.18, 28 / bandH);
+        const grad = ctx.createLinearGradient(0, top, 0, top + bandH);
+        grad.addColorStop(0, "rgba(0,0,0,0)");
+        grad.addColorStop(soft, "rgba(0,0,0,1)");
+        grad.addColorStop(1 - soft, "rgba(0,0,0,1)");
+        grad.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, top, w, bandH);
+      } else {
+        const grad = ctx.createRadialGradient(m.x, m.y, radius * 0.55, m.x, m.y, radius);
+        grad.addColorStop(0, "rgba(0,0,0,1)");
+        grad.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.arc(m.x, m.y, radius, 0, Math.PI * 2);
         ctx.fill();
-      } else {
-        ctx.fillStyle = "rgba(0,0,0,1)";
-        ctx.fillRect(m.x - radius * 1.4, m.y - radius, radius * 2.8, radius * 2);
       }
       ctx.restore();
     }
@@ -1265,8 +1332,13 @@ kbd {
       render();
     },
     setRadius(px) { radius = Math.max(60, Math.min(360, px)); },
-    adjust(delta) { this.setRadius(radius + delta); },
-    toggleShape() { shape = shape === "circle" ? "rect" : "circle"; },
+    adjust(delta) {
+      if (EF.state.spotShape === "band") {
+        const opts = [0.25, 0.5, 0.75];
+        const i = opts.indexOf(EF.state.spotBand);
+        EF.state.spotBand = opts[Math.min(opts.length - 1, Math.max(0, (i < 0 ? 1 : i) + (delta > 0 ? 1 : -1)))];
+      } else { this.setRadius(radius + delta); }
+    },
   };
 })();
 
@@ -1764,7 +1836,7 @@ kbd {
     init() {
       const canvas = document.getElementById("annot-canvas");
       this.engine = new EF.DrawingEngine(canvas, {
-        getStyle: () => ({ tool: EF.state.tool, color: EF.state.color, width: EF.state.strokeWidth }),
+        getStyle: () => ({ tool: EF.state.tool, color: EF.state.color, width: EF.state.strokeWidth, head: EF.state.arrowHead }),
         getAutoErase: () => EF.state.autoErase,
       });
       window.addEventListener("resize", () => this.engine.resize());
@@ -1777,6 +1849,8 @@ kbd {
         if (EF.stamps.tryPlace(p)) return;
         // ズーム中は座標がずれるため描画しない（表示専用）
         if (EF.state.zoom) return;
+        // テキストはインライン入力欄で
+        if (EF.state.tool === "text") { ev.preventDefault(); EF.app.showTextInput(p); return; }
         if (DRAW_TOOLS.indexOf(EF.state.tool) === -1) return;
         this.drawing = true;
         this.engine.start(p.x, p.y);
@@ -1802,7 +1876,39 @@ kbd {
       stage.classList.toggle("tool-cursor", tool === "cursor");
       stage.classList.toggle("armed", tool !== "cursor");
       EF.toolbar.sync();
+      EF.options.render();
       EF.setStatus();
+    },
+
+    // インラインのテキスト入力欄
+    showTextInput(p) {
+      const stage = document.getElementById("stage");
+      const old = stage.querySelector(".ef-text-input");
+      if (old) old.remove();
+      const inp = document.createElement("input");
+      inp.className = "ef-text-input";
+      inp.type = "text";
+      inp.style.left = p.x + "px";
+      inp.style.top = p.y + "px";
+      inp.style.color = EF.state.color;
+      inp.style.fontSize = Math.max(16, EF.state.strokeWidth * 3) + "px";
+      stage.appendChild(inp);
+      requestAnimationFrame(() => inp.focus());
+      let done = false;
+      const close = (keep) => {
+        if (done) return; done = true;
+        inp.removeEventListener("blur", onBlur);
+        const v = inp.value;
+        if (inp.isConnected) inp.remove();
+        if (keep && v && v.trim()) EF.annot.engine.addText(p.x, p.y, v, EF.state.color, EF.state.strokeWidth);
+      };
+      const onBlur = () => close(true);
+      inp.addEventListener("keydown", (e) => {
+        e.stopPropagation();
+        if (e.key === "Enter") close(true);
+        else if (e.key === "Escape") close(false);
+      });
+      inp.addEventListener("blur", onBlur);
     },
 
     setColor(color) {
@@ -1823,6 +1929,7 @@ kbd {
         EF.toast(EF.state.zoom ? "ズーム ON （- = で倍率調整）" : "ズーム OFF");
       }
       EF.toolbar.sync();
+      EF.options.render();
       EF.setStatus();
     },
 
@@ -1865,6 +1972,7 @@ kbd {
       }
       EF.cursor.update();
       EF.toolbar.sync();
+      EF.options.render();
       EF.setStatus();
     },
 
@@ -1881,6 +1989,51 @@ kbd {
       if (EF.state.spotlight) { EF.state.spotlight = false; EF.toolbar.sync(); EF.setStatus(); return true; }
       if (EF.state.appOn && EF.state.tool !== "cursor") { this.setTool("cursor"); return true; }
       return false;
+    },
+  };
+
+  // ツール別オプション（カーソル形状 / 矢じり向き / 注目の帯）
+  function optGroup(title, opt, cur, items) {
+    const btns = items.map((it) =>
+      `<button class="to-btn${String(it[0]) === String(cur) ? " on" : ""}" data-opt="${opt}" data-val="${it[0]}">` +
+      (it[1] ? `<span class="to-ico">${it[1]}</span>` : "") + `<span>${it[2]}</span></button>`).join("");
+    return `<div class="to-group"><div class="to-title">${title}</div><div class="to-btns">${btns}</div></div>`;
+  }
+  EF.options = {
+    render() {
+      const el = document.getElementById("tool-options");
+      if (!el) return;
+      const groups = [];
+      if (EF.state.appOn && EF.state.tool === "cursor") {
+        groups.push(optGroup("カーソル", "cursorStyle", EF.state.cursorStyle,
+          [["ring", "◎", "リング"], ["dot", "●", "ドット"], ["ringdot", "◉", "両方"], ["halo", "✦", "ハロー"]]));
+      } else if (EF.state.appOn && EF.state.tool === "arrow") {
+        groups.push(optGroup("矢じり", "arrowHead", EF.state.arrowHead,
+          [["end", "→", "終点"], ["start", "←", "始点"], ["both", "↔", "両方"]]));
+      }
+      if (EF.state.appOn && EF.state.spotlight) {
+        groups.push(optGroup("注目の形", "spotShape", EF.state.spotShape,
+          [["band", "▭", "帯"], ["circle", "◯", "丸"]]));
+        if (EF.state.spotShape === "band") {
+          groups.push(optGroup("帯の高さ", "spotBand", EF.state.spotBand,
+            [[0.25, "", "25%"], [0.5, "", "50%"], [0.75, "", "75%"]]));
+        }
+      }
+      if (!groups.length) { el.hidden = true; return; }
+      el.innerHTML = groups.join("");
+      el.hidden = false;
+    },
+    bind() {
+      const el = document.getElementById("tool-options");
+      el.addEventListener("click", (e) => {
+        const b = e.target.closest(".to-btn"); if (!b) return;
+        let v = b.dataset.val;
+        if (b.dataset.opt === "spotBand") v = parseFloat(v);
+        EF.state[b.dataset.opt] = v;
+        EF.cursor.update();
+        this.render();
+        EF.setStatus();
+      });
     },
   };
 
@@ -1918,6 +2071,8 @@ kbd {
     EF.presets.init();
     bindPalette();
     bindScenes();
+    EF.options.bind();
+    EF.options.render();
 
     EF.toolbar.sync();
     EF.toast("Enmish Focus プロトタイプ — ⌘⇧E で起動", 2600);
