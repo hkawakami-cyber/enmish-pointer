@@ -7,16 +7,35 @@
    ============================================================ */
 
 :root {
-  --ef-blue: #2f6bff;
-  --ef-red: #ff3b4e;
-  --ef-green: #18b56a;
-  --ef-amber: #ffb020;
-  --ef-ink: #1c2230;
-  --tb-bg: rgba(24, 28, 38, 0.92);
-  --tb-fg: #e8ecf4;
-  --tb-muted: #97a0b5;
+  /* ===== Enmish ブランドトークン（資料デザインガイドライン v1.0 準拠） ===== */
+  --ef-green: #6cbba5;        /* エンミッシュグリーン（ブランドカラー） */
+  --ef-green-light: #8df1d5;
+  --ef-green-pale: #cffaec;
+  --ef-green-mid: #52907f;
+  --ef-green-dark: #31594e;
+  --ef-ink: #032841;          /* エンミッシュブラック（文字色） */
+  --ef-gold: #917d44;         /* 注記・強調 */
+  --ef-gold-light: #fbfaf7;
+  --ef-rose: #c1677f;         /* 警告・注意 */
+  --ef-rose-light: #f3e1e5;
+  --ef-gray: #f5f7fa;         /* ストライプ／本文エリア */
+  --ef-label-gray: #e8edf2;
+  --ef-muted: #5b6478;
+
+  /* 旧名のエイリアス（既存コードの参照を壊さないため） */
+  --ef-blue: var(--ef-green);
+  --ef-red: var(--ef-rose);
+  --ef-amber: var(--ef-gold);
+
+  --tb-bg: rgba(3, 40, 65, 0.94);   /* エンミッシュブラック基調のツールバー */
+  --tb-fg: #f4f8f7;
+  --tb-muted: #9fc6bb;
+
+  --font-jp: "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  --font-en: "Helvetica Neue", Helvetica, Arial, sans-serif;
+
   --radius: 12px;
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+  --shadow: 0 10px 30px rgba(3, 40, 65, 0.22);
   font-synthesis: none;
 }
 
@@ -31,8 +50,7 @@ html, body {
   overflow: hidden;
   background: #0c0f16;
   color: var(--ef-ink);
-  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI",
-    "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-en), var(--font-jp);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -62,8 +80,8 @@ html, body {
   justify-content: center;
   padding: 48px 64px 96px;
   background:
-    radial-gradient(1200px 700px at 70% -10%, #20304f 0%, transparent 60%),
-    linear-gradient(160deg, #0f1626 0%, #131a2b 100%);
+    radial-gradient(1100px 640px at 72% -12%, rgba(108, 187, 165, 0.22) 0%, transparent 58%),
+    linear-gradient(160deg, #052f49 0%, #032841 100%);
 }
 
 .annot-canvas,
@@ -86,7 +104,7 @@ html, body {
   border-radius: 14px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
   overflow: hidden;
-  color: #1c2230;
+  color: var(--ef-ink);
 }
 .surface-bar {
   height: 38px;
@@ -103,20 +121,27 @@ html, body {
 .dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
 .surface-url { margin-left: 10px; background:#fff; border:1px solid #dce1ea; border-radius:7px; padding:3px 10px; }
 
-/* ---- 提案資料スライド ---- */
-.slide { padding: 44px 54px; }
-.slide .eyebrow { color: var(--ef-blue); font-weight: 700; letter-spacing: .08em; font-size: 13px; }
-.slide h1 { font-size: 34px; margin: 8px 0 22px; line-height: 1.25; }
-.slide ul { font-size: 18px; line-height: 1.9; color: #2c3550; padding-left: 22px; }
-.price-box {
-  margin-top: 26px; display: flex; gap: 18px; flex-wrap: wrap;
+/* ---- 提案資料スライド（Enmishトンマナ） ---- */
+.slide { padding: 40px 54px 46px; }
+.slide-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 26px; }
+.slide-head img { height: 30px; }
+.slide-head .doc-tag { font-size: 12px; color: var(--ef-muted); letter-spacing: .04em; }
+.slide .eyebrow { color: var(--ef-green); font-weight: 700; letter-spacing: .12em; font-size: 13px; }
+.slide h1 {
+  font-size: 32px; margin: 8px 0 10px; line-height: 1.3; color: var(--ef-ink);
+  display: inline-block; padding-bottom: 8px; border-bottom: 4px solid var(--ef-green);
 }
+.slide ul { font-size: 17px; line-height: 1.95; color: var(--ef-ink); padding-left: 22px; margin-top: 16px; }
+.slide ul li::marker { color: var(--ef-green); }
+.price-box { margin-top: 26px; display: flex; gap: 18px; flex-wrap: wrap; }
 .price-card {
-  flex: 1 1 200px; border: 1.5px solid #e3e7f0; border-radius: 12px; padding: 18px 20px;
+  flex: 1 1 200px; border: 1.5px solid var(--ef-label-gray); border-radius: 12px; padding: 18px 20px;
+  background: #fff;
 }
-.price-card .pc-name { font-size: 13px; color: #6b7488; }
-.price-card .pc-amt { font-size: 28px; font-weight: 800; margin-top: 6px; }
-.price-card.feature { border-color: var(--ef-blue); background: #f4f7ff; }
+.price-card .pc-name { font-size: 13px; color: var(--ef-muted); }
+.price-card .pc-amt { font-size: 28px; font-weight: 800; margin-top: 6px; color: var(--ef-ink); }
+.price-card.feature { border-color: var(--ef-green); background: var(--ef-green-pale); }
+.price-card.feature .pc-amt { color: var(--ef-green-dark); }
 
 /* ---- KPI スプレッドシート ---- */
 .sheet { padding: 0; }
@@ -173,8 +198,17 @@ body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ea
 .toolbar[data-collapsed="true"] .tb-handle { display: block; }
 
 .tb-body { display: flex; flex-direction: column; gap: 3px; width: 78px; }
-.tb-brand { font-size: 12px; text-align:center; color: var(--tb-muted); padding: 2px 0 6px; letter-spacing: .02em; }
-.tb-brand b { color: var(--ef-blue); font-weight: 800; }
+.tb-brand { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 2px 0 7px; }
+.tb-brand .ef-mark {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--ef-green);
+  position: relative; flex: none;
+}
+.tb-brand .ef-mark::after {
+  content: ""; position: absolute; right: 4px; top: 4px; width: 6px; height: 6px;
+  border-radius: 50%; background: var(--ef-ink);
+}
+.tb-brand .ef-word { font-family: var(--font-en); font-size: 13px; font-weight: 700; letter-spacing: -.01em; color: var(--tb-fg); line-height: 1; }
+.tb-brand .ef-tag { font-size: 8.5px; letter-spacing: .18em; color: var(--ef-green); font-weight: 600; }
 .tb-sep { height: 1px; background: rgba(255,255,255,.10); margin: 5px 4px; }
 
 .tool {
@@ -230,7 +264,7 @@ body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ea
 .stamp-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }
 .chip {
   font-size: 11.5px; padding: 4px 9px; border-radius: 999px; cursor: pointer;
-  border: 1px solid transparent; color: #fff; font-weight: 600; line-height: 1.3;
+  border: 1px solid rgba(255,255,255,.18); color: #fff; font-weight: 600; line-height: 1.3;
   transition: transform .08s, filter .12s;
 }
 .chip:hover { filter: brightness(1.12); }
@@ -354,7 +388,8 @@ body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ea
 .modal-section { padding: 18px 24px; border-bottom: 1px solid #f3f5f9; }
 .modal-section h3 { margin: 0 0 12px; font-size: 14px; color: #5b6478; }
 .field { display: flex; align-items: center; gap: 12px; font-size: 13.5px; margin-bottom: 12px; color: #2c3550; }
-.field input[type="range"] { flex: 1; }
+.field input[type="range"] { flex: 1; accent-color: var(--ef-green); }
+.checkfield input { accent-color: var(--ef-green); }
 .field output { min-width: 42px; text-align: right; color: #5b6478; font-variant-numeric: tabular-nums; }
 .checkfield { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #2c3550; }
 
@@ -364,7 +399,7 @@ body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ea
   background: #fff; cursor: pointer; transition: border-color .12s, background .12s;
 }
 .preset:hover { border-color: var(--ef-blue); }
-.preset.active { border-color: var(--ef-blue); background: #f4f7ff; }
+.preset.active { border-color: var(--ef-green); background: var(--ef-green-pale); }
 .preset .p-name { font-weight: 700; font-size: 14px; }
 .preset .p-desc { font-size: 11.5px; color: #6b7488; margin-top: 3px; line-height: 1.5; }
 
@@ -434,7 +469,11 @@ kbd {
   <div id="toolbar" class="toolbar" data-collapsed="false">
     <button class="tb-handle" id="tb-handle" title="ツールバーを展開/収納">⋮</button>
     <div class="tb-body">
-      <div class="tb-brand">Enmish<b>Focus</b></div>
+      <div class="tb-brand">
+        <span class="ef-mark"></span>
+        <span class="ef-word">enmish</span>
+        <span class="ef-tag">FOCUS</span>
+      </div>
 
       <button class="tool" data-action="toggle-app" id="btn-app" title="アプリ ON/OFF (⌘⇧E)">
         <span class="ico">⏻</span><span class="lbl">起動</span>
@@ -655,64 +694,64 @@ kbd {
 (function () {
   const EF = (window.EF = window.EF || {});
 
-  // カラーパレット（商談で安っぽく見えない配色）
+  // カラーパレット（Enmishブランド規定色のみ）
   EF.PALETTE = [
-    { name: "blue", value: "#2f6bff" },
-    { name: "red", value: "#ff3b4e" },
-    { name: "green", value: "#18b56a" },
-    { name: "amber", value: "#ffb020" },
-    { name: "purple", value: "#8b5cf6" },
-    { name: "ink", value: "#1c2230" },
+    { name: "green", value: "#6cbba5" },       // エンミッシュグリーン
+    { name: "green-dark", value: "#31594e" },
+    { name: "ink", value: "#032841" },         // エンミッシュブラック
+    { name: "gold", value: "#917d44" },        // 強調
+    { name: "rose", value: "#c1677f" },        // 警告
+    { name: "green-light", value: "#8df1d5" },
     { name: "white", value: "#ffffff" },
-    { name: "pink", value: "#ff5fa2" },
+    { name: "gray", value: "#5b6478" },
   ];
 
-  // 営業テンプレ注釈（ワンクリックでステージに配置）
+  // 営業テンプレ注釈（ブランド色: グリーン/ブラック/Gold/Rose/Gray のみ）
   EF.SALES_TEMPLATES = [
-    { label: "要確認", color: "#ffb020" },
-    { label: "宿題", color: "#ff3b4e" },
-    { label: "次回まで", color: "#2f6bff" },
-    { label: "論点", color: "#8b5cf6" },
-    { label: "懸念", color: "#ff5fa2" },
-    { label: "決裁者", color: "#18b56a" },
-    { label: "金額", color: "#0ea5b7" },
-    { label: "優先度高", color: "#ff3b4e" },
-    { label: "未対応", color: "#6b7488" },
-    { label: "ボトルネック", color: "#e0531f" },
+    { label: "要確認", color: "#917d44" },
+    { label: "宿題", color: "#c1677f" },
+    { label: "次回まで", color: "#6cbba5" },
+    { label: "論点", color: "#032841" },
+    { label: "懸念", color: "#c1677f" },
+    { label: "決裁者", color: "#31594e" },
+    { label: "金額", color: "#6cbba5" },
+    { label: "優先度高", color: "#c1677f" },
+    { label: "未対応", color: "#5b6478" },
+    { label: "ボトルネック", color: "#917d44" },
   ];
 
   EF.KPI_MARKERS = [
-    { label: "目標未達", color: "#ff3b4e" },
-    { label: "改善余地", color: "#ffb020" },
-    { label: "要因確認", color: "#8b5cf6" },
-    { label: "施策候補", color: "#2f6bff" },
-    { label: "勝ち筋", color: "#18b56a" },
-    { label: "歩留低下", color: "#e0531f" },
-    { label: "次アクション", color: "#0ea5b7" },
+    { label: "目標未達", color: "#c1677f" },
+    { label: "改善余地", color: "#917d44" },
+    { label: "要因確認", color: "#032841" },
+    { label: "施策候補", color: "#6cbba5" },
+    { label: "勝ち筋", color: "#31594e" },
+    { label: "歩留低下", color: "#c1677f" },
+    { label: "次アクション", color: "#6cbba5" },
   ];
 
   // プリセット定義
   EF.PRESETS = {
     proposal: {
       name: "商談モード",
-      desc: "顧客向け提案。カーソル大きめ、赤・青中心、自動消去5秒。",
-      color: "#2f6bff",
+      desc: "顧客向け提案。グリーン中心・カーソル大きめ・自動消去5秒。",
+      color: "#6cbba5",
       strokeWidth: 6,
       ring: { width: 6, size: 64, opacity: 0.9, ripple: true },
       autoErase: 5,
     },
     review: {
       name: "社内レビュー",
-      desc: "KPI・資料レビュー。薄め表示で邪魔にならない。残す設定。",
-      color: "#8b5cf6",
+      desc: "KPI・資料レビュー。エンミッシュブラックで薄め・残す設定。",
+      color: "#032841",
       strokeWidth: 4,
       ring: { width: 4, size: 40, opacity: 0.55, ripple: false },
       autoErase: 0,
     },
     record: {
       name: "録画モード",
-      desc: "マニュアル・研修動画。カーソル大きめ、クリック波紋あり。",
-      color: "#ff3b4e",
+      desc: "マニュアル・研修動画。Gold強調・カーソル大きめ・波紋あり。",
+      color: "#917d44",
       strokeWidth: 7,
       ring: { width: 8, size: 78, opacity: 1.0, ripple: true },
       autoErase: 0,
@@ -720,7 +759,7 @@ kbd {
     whiteboard: {
       name: "ホワイトボード",
       desc: "図解・壁打ち。太めペン、ホワイトボードを自動で開く。",
-      color: "#1c2230",
+      color: "#032841",
       strokeWidth: 8,
       ring: { width: 5, size: 48, opacity: 0.7, ripple: false },
       autoErase: 0,
@@ -728,8 +767,8 @@ kbd {
     },
     demo: {
       name: "デモモード",
-      desc: "SaaS画面説明。スポットライト・ズーム優先、青系。",
-      color: "#2f6bff",
+      desc: "SaaS画面説明。スポットライト・ズーム優先・グリーンダーク。",
+      color: "#31594e",
       strokeWidth: 5,
       ring: { width: 6, size: 56, opacity: 0.85, ripple: true },
       autoErase: 3,
@@ -740,7 +779,7 @@ kbd {
   EF.state = {
     appOn: false,        // アプリ起動状態
     tool: "cursor",      // 現在の注釈ツール: cursor|pen|highlighter|arrow|ellipse|rect|text
-    color: "#2f6bff",
+    color: "#6cbba5",
     strokeWidth: 6,
     ring: { width: 6, size: 64, opacity: 0.9, ripple: true },
     autoErase: 0,        // 秒（0で残す）
@@ -810,6 +849,10 @@ kbd {
         <div class="surface-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
           <span class="surface-url">提案資料 ｜ エンミッシュ 営業支援プラン.key</span></div>
         <div class="slide">
+          <div class="slide-head">
+            <img src="assets/enmish-logo.svg" alt="enmish" />
+            <span class="doc-tag">提案書 ｜ 2026.06</span>
+          </div>
           <div class="eyebrow">ENMISH PROPOSAL</div>
           <h1>インサイドセールス立ち上げ支援プラン</h1>
           <ul>

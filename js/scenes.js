@@ -12,6 +12,10 @@
         <div class="surface-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
           <span class="surface-url">提案資料 ｜ エンミッシュ 営業支援プラン.key</span></div>
         <div class="slide">
+          <div class="slide-head">
+            <img src="assets/enmish-logo.svg" alt="enmish" />
+            <span class="doc-tag">提案書 ｜ 2026.06</span>
+          </div>
           <div class="eyebrow">ENMISH PROPOSAL</div>
           <h1>インサイドセールス立ち上げ支援プラン</h1>
           <ul>

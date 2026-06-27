@@ -11,26 +11,27 @@
   const EF = (window.EF = window.EF || {}); // drawing.js が DrawingEngine を載せている
 
   // ---------- 定義 ----------
+  // Enmishブランド規定色のみ
   const PALETTE = [
-    "#2f6bff", "#ff3b4e", "#18b56a", "#ffb020",
-    "#8b5cf6", "#1c2230", "#ffffff", "#ff5fa2",
+    "#6cbba5", "#31594e", "#032841", "#917d44",
+    "#c1677f", "#8df1d5", "#ffffff", "#5b6478",
   ];
   const SALES_TEMPLATES = [
-    ["要確認", "#ffb020"], ["宿題", "#ff3b4e"], ["次回まで", "#2f6bff"],
-    ["論点", "#8b5cf6"], ["懸念", "#ff5fa2"], ["決裁者", "#18b56a"],
-    ["金額", "#0ea5b7"], ["優先度高", "#ff3b4e"], ["未対応", "#6b7488"],
-    ["ボトルネック", "#e0531f"],
+    ["要確認", "#917d44"], ["宿題", "#c1677f"], ["次回まで", "#6cbba5"],
+    ["論点", "#032841"], ["懸念", "#c1677f"], ["決裁者", "#31594e"],
+    ["金額", "#6cbba5"], ["優先度高", "#c1677f"], ["未対応", "#5b6478"],
+    ["ボトルネック", "#917d44"],
   ];
   const KPI_MARKERS = [
-    ["目標未達", "#ff3b4e"], ["改善余地", "#ffb020"], ["要因確認", "#8b5cf6"],
-    ["施策候補", "#2f6bff"], ["勝ち筋", "#18b56a"], ["歩留低下", "#e0531f"],
-    ["次アクション", "#0ea5b7"],
+    ["目標未達", "#c1677f"], ["改善余地", "#917d44"], ["要因確認", "#032841"],
+    ["施策候補", "#6cbba5"], ["勝ち筋", "#31594e"], ["歩留低下", "#c1677f"],
+    ["次アクション", "#6cbba5"],
   ];
   const PRESETS = {
-    proposal: { name: "商談", color: "#2f6bff", strokeWidth: 6, ring: { width: 6, size: 64, opacity: 0.9, ripple: true }, autoErase: 5 },
-    review: { name: "社内", color: "#8b5cf6", strokeWidth: 4, ring: { width: 4, size: 40, opacity: 0.55, ripple: false }, autoErase: 0 },
-    record: { name: "録画", color: "#ff3b4e", strokeWidth: 7, ring: { width: 8, size: 78, opacity: 1, ripple: true }, autoErase: 0 },
-    demo: { name: "デモ", color: "#2f6bff", strokeWidth: 5, ring: { width: 6, size: 56, opacity: 0.85, ripple: true }, autoErase: 3 },
+    proposal: { name: "商談", color: "#6cbba5", strokeWidth: 6, ring: { width: 6, size: 64, opacity: 0.9, ripple: true }, autoErase: 5 },
+    review: { name: "社内", color: "#032841", strokeWidth: 4, ring: { width: 4, size: 40, opacity: 0.55, ripple: false }, autoErase: 0 },
+    record: { name: "録画", color: "#917d44", strokeWidth: 7, ring: { width: 8, size: 78, opacity: 1, ripple: true }, autoErase: 0 },
+    demo: { name: "デモ", color: "#31594e", strokeWidth: 5, ring: { width: 6, size: 56, opacity: 0.85, ripple: true }, autoErase: 3 },
   };
   const DRAW_TOOLS = ["pen", "highlighter", "arrow", "hline", "ellipse", "rect", "text"];
   const TOOL_NAMES = {
@@ -39,7 +40,7 @@
   };
 
   const state = {
-    appOn: false, tool: "cursor", color: "#2f6bff", strokeWidth: 6,
+    appOn: false, tool: "cursor", color: "#6cbba5", strokeWidth: 6,
     ring: { width: 6, size: 64, opacity: 0.9, ripple: true },
     autoErase: 0, spotlight: false, zoom: false, zoomScale: 2.0,
     preset: "proposal", armedStamp: null,
@@ -55,29 +56,32 @@
 
   const CSS = `
     :host { all: initial; }
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Segoe UI", Roboto, sans-serif; }
+    * { box-sizing: border-box; font-family: "Helvetica Neue", Helvetica, Arial, "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif; }
     canvas, .ring, .badge, .toast, .hint { position: fixed; }
     .layer { inset: 0; width: 100vw; height: 100vh; pointer-events: none; }
     #annot { pointer-events: none; }
     #annot.live { pointer-events: auto; cursor: crosshair; }
     #annot.tool-cursor { cursor: none; }
-    .ring { border-radius: 50%; transform: translate(-50%,-50%); border-style: solid; border-color: #2f6bff; pointer-events: none; }
-    .ripple { position: fixed; border-radius: 50%; transform: translate(-50%,-50%); border: 3px solid #2f6bff; pointer-events: none; animation: rip .55s ease-out forwards; }
+    .ring { border-radius: 50%; transform: translate(-50%,-50%); border-style: solid; border-color: #6cbba5; pointer-events: none; }
+    .ripple { position: fixed; border-radius: 50%; transform: translate(-50%,-50%); border: 3px solid #6cbba5; pointer-events: none; animation: rip .55s ease-out forwards; }
     @keyframes rip { from { width: 8px; height: 8px; opacity: .85; } to { width: 90px; height: 90px; opacity: 0; } }
 
-    --tb-bg: rgba(24,28,38,.94);
+    --tb-bg: rgba(3,40,65,.94);
     .toolbar, .stamp-bar, .reopen, .badge, .toast, .hint { pointer-events: auto; }
     .toolbar {
       position: fixed; top: 50%; right: 0; transform: translateY(-50%);
-      background: rgba(24,28,38,.94); color: #e8ecf4; border-radius: 16px 0 0 16px;
+      background: rgba(3,40,65,.94); color: #e8ecf4; border-radius: 16px 0 0 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,.35); backdrop-filter: blur(14px);
       padding: 9px 7px; border: 1px solid rgba(255,255,255,.08); border-right: none; width: 76px;
       display: flex; flex-direction: column; gap: 2px; max-height: 94vh; overflow-y: auto;
     }
     .toolbar.app-off .tool[data-tool], .toolbar.app-off .tool[data-toggle],
     .toolbar.app-off .tool[data-action="whiteboard"], .toolbar.app-off .colors { opacity: .35; pointer-events: none; }
-    .brand { font-size: 11px; text-align: center; color: #97a0b5; padding: 1px 0 5px; }
-    .brand b { color: #2f6bff; }
+    .brand { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 1px 0 6px; }
+    .brand .ef-mark { width: 22px; height: 22px; border-radius: 50%; background: #6cbba5; position: relative; }
+    .brand .ef-mark::after { content: ""; position: absolute; right: 4px; top: 4px; width: 6px; height: 6px; border-radius: 50%; background: #032841; }
+    .brand .ef-word { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 700; color: #f4f8f7; line-height: 1; }
+    .brand .ef-tag { font-size: 8px; letter-spacing: .18em; color: #6cbba5; font-weight: 600; }
     .sep { height: 1px; background: rgba(255,255,255,.10); margin: 4px 4px; }
     .tool {
       display: flex; flex-direction: column; align-items: center; gap: 2px; border: none;
@@ -86,31 +90,31 @@
     }
     .tool:hover { background: rgba(255,255,255,.10); }
     .tool .ico { font-size: 16px; } .tool .lbl { color: #97a0b5; }
-    .tool.active { background: #2f6bff; } .tool.active .lbl { color: #fff; }
-    .tool.toggled { background: rgba(47,107,255,.28); outline: 1.5px solid #2f6bff; }
+    .tool.active { background: #6cbba5; } .tool.active .lbl { color: #fff; }
+    .tool.toggled { background: rgba(108,187,165,.28); outline: 1.5px solid #6cbba5; }
     .colors { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; padding: 2px; }
     .swatch { width: 14px; height: 14px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
     .swatch.active { border-color: #fff; box-shadow: 0 0 0 1.5px rgba(0,0,0,.4); }
 
     .stamp-bar {
       position: fixed; left: 12px; top: 50%; transform: translateY(-50%); width: 148px;
-      background: rgba(24,28,38,.94); color: #e8ecf4; border-radius: 14px; padding: 28px 11px 11px;
+      background: rgba(3,40,65,.94); color: #e8ecf4; border-radius: 14px; padding: 28px 11px 11px;
       box-shadow: 0 10px 30px rgba(0,0,0,.35); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.08);
     }
     .stamp-bar.collapsed { display: none; }
     .sb-title { font-size: 11px; color: #97a0b5; margin: 3px 2px 5px; }
     .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 7px; }
-    .chip { font-size: 11px; padding: 4px 8px; border-radius: 999px; cursor: pointer; border: 1px solid transparent; color: #fff; font-weight: 600; line-height: 1.3; }
+    .chip { font-size: 11px; padding: 4px 8px; border-radius: 999px; cursor: pointer; border: 1px solid rgba(255,255,255,.18); color: #fff; font-weight: 600; line-height: 1.3; }
     .chip:hover { filter: brightness(1.12); } .chip.armed { outline: 2px solid #fff; }
     .sb-hide { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border: none; border-radius: 6px; background: rgba(255,255,255,.10); color: #e8ecf4; cursor: pointer; font-size: 11px; }
     .sb-hide:hover { background: rgba(255,255,255,.22); }
-    .reopen { position: fixed; left: 0; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; background: rgba(24,28,38,.94); color: #e8ecf4; border: 1px solid rgba(255,255,255,.08); border-left: none; border-radius: 0 11px 11px 0; padding: 15px 7px; cursor: pointer; font-size: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+    .reopen { position: fixed; left: 0; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; background: rgba(3,40,65,.94); color: #e8ecf4; border: 1px solid rgba(255,255,255,.08); border-left: none; border-radius: 0 11px 11px 0; padding: 15px 7px; cursor: pointer; font-size: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
 
-    .badge { bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(24,28,38,.94); color: #fff; padding: 7px 15px; border-radius: 999px; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.35); pointer-events: none; }
+    .badge { bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(3,40,65,.94); color: #fff; padding: 7px 15px; border-radius: 999px; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.35); pointer-events: none; }
     .badge .dotc { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
     .toast { bottom: 64px; left: 50%; transform: translateX(-50%) translateY(8px); background: #1b2130; color: #fff; padding: 10px 18px; border-radius: 11px; font-size: 13px; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    .hint { bottom: 20px; left: 50%; transform: translateX(-50%); background: #2f6bff; color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 13px; pointer-events: none; }
+    .hint { bottom: 20px; left: 50%; transform: translateX(-50%); background: #6cbba5; color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 13px; pointer-events: none; }
     [hidden] { display: none !important; }
   `;
 
@@ -136,7 +140,7 @@
   ];
 
   function buildToolbar() {
-    let html = '<div class="brand">Enmish<b>Focus</b></div>';
+    let html = '<div class="brand"><span class="ef-mark"></span><span class="ef-word">enmish</span><span class="ef-tag">FOCUS</span></div>';
     for (const b of TOOL_BTNS) {
       if (b[0] === "sep") { html += '<div class="sep"></div>'; continue; }
       if (b[0] === "colors") { html += '<div class="colors" id="colors"></div>'; continue; }
