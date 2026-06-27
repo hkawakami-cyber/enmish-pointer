@@ -68,10 +68,10 @@
     --tb-bg: rgba(24,28,38,.94);
     .toolbar, .stamp-bar, .reopen, .badge, .toast, .hint { pointer-events: auto; }
     .toolbar {
-      position: fixed; top: 50%; right: 12px; transform: translateY(-50%);
-      background: rgba(24,28,38,.94); color: #e8ecf4; border-radius: 16px;
+      position: fixed; top: 50%; right: 0; transform: translateY(-50%);
+      background: rgba(24,28,38,.94); color: #e8ecf4; border-radius: 16px 0 0 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,.35); backdrop-filter: blur(14px);
-      padding: 9px 7px; border: 1px solid rgba(255,255,255,.08); width: 76px;
+      padding: 9px 7px; border: 1px solid rgba(255,255,255,.08); border-right: none; width: 76px;
       display: flex; flex-direction: column; gap: 2px; max-height: 94vh; overflow-y: auto;
     }
     .toolbar.app-off .tool[data-tool], .toolbar.app-off .tool[data-toggle],
@@ -264,6 +264,14 @@
   }
   sizeSpot(); renderSpot();
 
+  // ---------- 右端レーン（ツールバーがページ本体に被らないよう余白を確保） ----------
+  const GUTTER = 86;
+  function reserveGutter(on) {
+    const el = document.documentElement;
+    if (on) el.style.setProperty("margin-right", GUTTER + "px", "important");
+    else el.style.removeProperty("margin-right");
+  }
+
   // ---------- ズーム（ページ本体を拡大・表示専用） ----------
   function applyZoom() {
     const b = document.body; if (!b) return;
@@ -334,8 +342,10 @@
       state.appOn = next;
       if (!next) {
         state.spotlight = false; state.zoom = false; applyZoom(); disarmStamp();
+        reserveGutter(false);
         toast("Enmish Focus を終了");
       } else {
+        reserveGutter(true);
         toast("Enmish Focus 起動 — カーソル強調中");
       }
       updateRing(); syncUI(); setBadge();

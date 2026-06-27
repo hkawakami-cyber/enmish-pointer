@@ -143,19 +143,22 @@ html, body {
 .toolbar {
   position: fixed;
   top: 50%;
-  right: 14px;
+  right: 0;
   transform: translateY(-50%);
   background: var(--tb-bg);
   color: var(--tb-fg);
-  border-radius: 16px;
+  border-radius: 16px 0 0 16px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   padding: 10px 8px;
   z-index: 9000;
   border: 1px solid rgba(255,255,255,.08);
+  border-right: none;
   transition: transform .25s ease, opacity .25s ease;
 }
+/* アプリON中は共有画面を左に寄せ、右端ツールバーと被らないようにする */
+body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ease; }
 .toolbar[data-collapsed="true"] .tb-body { display: none; }
 .toolbar[data-collapsed="true"] { padding: 6px; }
 .tb-handle {

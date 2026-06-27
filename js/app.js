@@ -99,6 +99,7 @@
       const next = forceOn ? true : !EF.state.appOn;
       // OFF→ONかつ強制でない場合はクイックパレットを一瞬見せる演出
       EF.state.appOn = next;
+      document.body.classList.toggle("ef-on", next);
       if (!next) {
         // 全モードを畳む
         EF.state.spotlight = false;
