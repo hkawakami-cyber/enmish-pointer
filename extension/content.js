@@ -62,17 +62,16 @@
     .ripple { position: fixed; border-radius: 50%; transform: translate(-50%,-50%); border: 3px solid #6cbba5; pointer-events: none; animation: rip .55s ease-out forwards; }
     @keyframes rip { from { width: 8px; height: 8px; opacity: .85; } to { width: 90px; height: 90px; opacity: 0; } }
 
-    --tb-bg: rgba(3,40,65,.94);
     .toolbar, .stamp-bar, .reopen, .badge, .toast, .hint { pointer-events: auto; }
     .toolbar {
       position: fixed; top: 50%; right: 0; transform: translateY(-50%);
       background: rgba(3,40,65,.94); color: #e8ecf4; border-radius: 16px 0 0 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,.35); backdrop-filter: blur(14px);
       padding: 9px 7px; border: 1px solid rgba(255,255,255,.08); border-right: none; width: 76px;
-      display: flex; flex-direction: column; gap: 2px; max-height: 94vh; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 2px; max-height: calc(100vh - 168px); overflow-y: auto;
     }
-    .toolbar.app-off .tool[data-tool], .toolbar.app-off .tool[data-toggle],
-    .toolbar.app-off .tool[data-action="whiteboard"], .toolbar.app-off .colors { opacity: .35; pointer-events: none; }
+    /* 未起動でもツールは押せる（押すと自動的に起動して選択される）。視覚的にだけ少し淡く。 */
+    .toolbar.app-off .tool[data-tool], .toolbar.app-off .tool[data-toggle], .toolbar.app-off .colors { opacity: .7; }
     .toolbar.side-left { right: auto; left: 0; border-radius: 0 16px 16px 0; border-left: none; border-right: 1px solid rgba(255,255,255,.08); }
     .toolbar.compact { width: 46px; gap: 1px; }
     .toolbar.compact .lbl { display: none; }
@@ -206,7 +205,7 @@
   }
 
   function buildToolbar() {
-    let html = '<div class="brand"><span class="ef-mark"></span><span class="ef-word">enmish</span><span class="ef-tag">POINTER</span></div>';
+    let html = '';
     for (const b of TOOL_BTNS) {
       if (b[0] === "sep") { html += '<div class="sep"></div>'; continue; }
       if (b[0] === "colors") { html += '<div class="colors" id="colors"></div>'; continue; }
@@ -336,7 +335,8 @@
   }
   function fitToolbar() {
     tb.classList.remove("compact");
-    if (tb.scrollHeight > window.innerHeight - 16) tb.classList.add("compact");
+    // Meet/Slides 等のボタンと被らないよう、上下に余白を確保して早めにコンパクト化（アイコンのみ）
+    if (tb.scrollHeight > window.innerHeight - 168) tb.classList.add("compact");
   }
 
   // ツール群だけ再生成（順序・表示/非表示の変更を反映）
@@ -790,5 +790,17 @@
   updateDock();
   fitToolbar();
   window.addEventListener("resize", fitToolbar, true);
+
+  // Google スライド等の「全画面プレゼン」では、特定要素だけが全画面表示になり
+  // documentElement 直下のオーバーレイは隠れてしまう。全画面要素の中へ host を移動して追従させる。
+  function followFullscreen() {
+    const fs = document.fullscreenElement || document.webkitFullscreenElement;
+    const parent = fs || document.documentElement || document.body;
+    if (host.parentNode !== parent) parent.appendChild(host); // 末尾へ移動＝最前面を維持
+    fitToolbar();
+  }
+  document.addEventListener("fullscreenchange", followFullscreen, true);
+  document.addEventListener("webkitfullscreenchange", followFullscreen, true);
+
   loadSettings(() => { updateRing(); rebuildTools(); renderOptions(); applyLayout(); }); // 保存済み設定を反映（ツール群も再生成・配置も）
 })();

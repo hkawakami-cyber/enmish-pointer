@@ -181,7 +181,7 @@ html, body {
   z-index: 9000;
   border: 1px solid rgba(255,255,255,.08);
   border-right: none;
-  max-height: calc(100vh - 16px);
+  max-height: calc(100vh - 168px);
   overflow-y: auto;
   overflow-x: hidden;
   transition: transform .25s ease, opacity .25s ease;
@@ -248,10 +248,10 @@ body.ef-on.bar-left .scene-root { padding-right: 0; padding-left: 116px; }
 .swatch.active { border-color: #fff; box-shadow: 0 0 0 1.5px rgba(0,0,0,.4); }
 
 /* アプリOFF時はツール群を無効化 */
+/* 未起動でもツールは押せる（押すと自動的に起動して選択される）。視覚的にだけ少し淡く。 */
 .toolbar.app-off .tool[data-tool],
 .toolbar.app-off .tool[data-toggle],
-.toolbar.app-off .tool[data-action="whiteboard"],
-.toolbar.app-off .tb-colors { opacity: .35; pointer-events: none; }
+.toolbar.app-off .tb-colors { opacity: .7; }
 
 /* ツール群コンテナ（ツールバー内） */
 .tb-tools { display: flex; flex-direction: column; gap: 3px; }

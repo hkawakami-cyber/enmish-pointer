@@ -182,7 +182,7 @@ html, body {
   z-index: 9000;
   border: 1px solid rgba(255,255,255,.08);
   border-right: none;
-  max-height: calc(100vh - 16px);
+  max-height: calc(100vh - 168px);
   overflow-y: auto;
   overflow-x: hidden;
   transition: transform .25s ease, opacity .25s ease;
@@ -249,10 +249,10 @@ body.ef-on.bar-left .scene-root { padding-right: 0; padding-left: 116px; }
 .swatch.active { border-color: #fff; box-shadow: 0 0 0 1.5px rgba(0,0,0,.4); }
 
 /* アプリOFF時はツール群を無効化 */
+/* 未起動でもツールは押せる（押すと自動的に起動して選択される）。視覚的にだけ少し淡く。 */
 .toolbar.app-off .tool[data-tool],
 .toolbar.app-off .tool[data-toggle],
-.toolbar.app-off .tool[data-action="whiteboard"],
-.toolbar.app-off .tb-colors { opacity: .35; pointer-events: none; }
+.toolbar.app-off .tb-colors { opacity: .7; }
 
 /* ツール群コンテナ（ツールバー内） */
 .tb-tools { display: flex; flex-direction: column; gap: 3px; }
@@ -609,12 +609,6 @@ kbd {
   <div id="toolbar" class="toolbar" data-collapsed="false">
     <button class="tb-handle" id="tb-handle" title="ツールバーを展開/収納">⋮</button>
     <div class="tb-body">
-      <div class="tb-brand">
-        <span class="ef-mark"></span>
-        <span class="ef-word">enmish</span>
-        <span class="ef-tag">POINTER</span>
-      </div>
-
       <button class="tool" data-action="toggle-app" id="btn-app" title="アプリ ON/OFF (⌘⇧E)">
         <span class="ico" data-ic="power"></span><span class="lbl">起動</span>
       </button>
@@ -1701,7 +1695,7 @@ kbd {
     fit() {
       const tb = document.getElementById("toolbar");
       tb.classList.remove("compact");
-      if (tb.scrollHeight > window.innerHeight - 16) tb.classList.add("compact");
+      if (tb.scrollHeight > window.innerHeight - 168) tb.classList.add("compact");
     },
 
     // 状態をUIへ反映
