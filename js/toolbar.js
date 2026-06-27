@@ -7,6 +7,7 @@
   EF.toolbar = {
     init() {
       const tb = document.getElementById("toolbar");
+      if (EF.fillIcons) EF.fillIcons(document); // 絵文字→SVGアイコン
 
       // カラースウォッチ生成
       const colors = document.getElementById("tb-colors");

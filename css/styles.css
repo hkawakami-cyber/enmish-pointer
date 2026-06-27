@@ -217,7 +217,9 @@ body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ea
 }
 .tool:hover { background: rgba(255,255,255,.10); }
 .tool:active { transform: scale(.94); }
-.tool .ico { font-size: 17px; }
+.tool .ico { font-size: 17px; display: inline-flex; align-items: center; justify-content: center; height: 20px; }
+.ico svg { display: block; }
+.dock-btn .ico svg { display: block; }
 .tool .lbl { color: var(--tb-muted); }
 .tool.active { background: var(--ef-blue); }
 .tool.active .lbl { color: #fff; }

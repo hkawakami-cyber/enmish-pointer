@@ -64,6 +64,17 @@
           $("set-spot-band").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
           if (EF.options) EF.options.render();
         }));
+      $("set-spot-dim").querySelectorAll("button").forEach((b) =>
+        b.addEventListener("click", () => {
+          EF.state.spotDim = parseFloat(b.dataset.dim);
+          $("set-spot-dim").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+        }));
+      $("set-zoom-scale").querySelectorAll("button").forEach((b) =>
+        b.addEventListener("click", () => {
+          EF.state.zoomScale = parseFloat(b.dataset.zoom);
+          $("set-zoom-scale").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+          EF.zoom.refresh(); EF.setStatus();
+        }));
 
       // 閉じる
       document.querySelectorAll('[data-action="close-settings"]').forEach((b) =>
@@ -118,6 +129,8 @@
       setActive("set-arrow-head", "head", EF.state.arrowHead);
       setActive("set-spot-shape", "shape", EF.state.spotShape);
       setActive("set-spot-band", "band", EF.state.spotBand);
+      setActive("set-spot-dim", "dim", EF.state.spotDim);
+      setActive("set-zoom-scale", "zoom", EF.state.zoomScale);
       $("settings").hidden = false;
     },
     closeModal() { $("settings").hidden = true; },

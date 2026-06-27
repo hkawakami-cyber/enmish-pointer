@@ -32,7 +32,7 @@
     appOn: false, tool: "cursor", color: "#6cbba5", strokeWidth: 6,
     ring: { width: 6, size: 64, opacity: 0.9, ripple: true },
     cursorStyle: "ring", arrowHead: "end", uiHidden: false, optionsOpen: false,
-    autoErase: 0, spotlight: false, spotShape: "band", spotBand: 0.5,
+    autoErase: 0, spotlight: false, spotShape: "band", spotBand: 0.5, spotDim: 0.72,
     zoom: false, zoomScale: 2.0,
     preset: "proposal",
     mouse: { x: -999, y: -999 },
@@ -83,7 +83,8 @@
       cursor: pointer; font-size: 10px; line-height: 1;
     }
     .tool:hover { background: rgba(255,255,255,.10); }
-    .tool .ico { font-size: 16px; } .tool .lbl { color: #97a0b5; }
+    .tool .ico { font-size: 16px; display: inline-flex; align-items: center; justify-content: center; height: 18px; } .tool .lbl { color: #97a0b5; }
+    .ico svg { display: block; }
     .tool.active { background: #6cbba5; } .tool.active .lbl { color: #fff; }
     .tool.toggled { background: rgba(108,187,165,.28); outline: 1.5px solid #6cbba5; }
     .colors { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; padding: 2px; }
@@ -115,7 +116,7 @@
     #dock-power.on { background: #6cbba5; color: #06251c; font-weight: 700; }
     #dock-bars.on { background: #917d44; color: #fff; font-weight: 700; }
     .ef-text { position: fixed; transform: translateY(-4px); z-index: 10; pointer-events: auto; border: none; border-bottom: 2px solid currentColor; background: rgba(255,255,255,.92); font-weight: 700; padding: 2px 6px; border-radius: 4px; min-width: 120px; outline: none; }
-    .tool-options { position: fixed; right: 92px; top: 50%; transform: translateY(-50%); background: rgba(3,40,65,.94); color: #e8ecf4; border-radius: 14px; padding: 11px; width: 158px; box-shadow: 0 10px 30px rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(14px); display: flex; flex-direction: column; gap: 11px; pointer-events: auto; }
+    .tool-options { position: fixed; right: 92px; top: 50%; transform: translateY(-50%); background: rgba(3,40,65,.94); color: #e8ecf4; border-radius: 14px; padding: 13px; width: 168px; max-height: 88vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(14px); display: flex; flex-direction: column; gap: 11px; pointer-events: auto; }
     .to-group { display: flex; flex-direction: column; gap: 5px; }
     .to-title { font-size: 10.5px; color: #9fc6bb; }
     .to-btns { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -138,7 +139,7 @@
     ["sep"],
     ["toggle", "spotlight", "☀", "注目"],
     ["toggle", "zoom", "🔍", "ズーム"],
-    ["action", "options", "⚙", "詳細"],
+    ["action", "options", "⚙", "設定"],
     ["sep"],
     ["colors"],
     ["sep"],
@@ -154,7 +155,9 @@
       if (b[0] === "colors") { html += '<div class="colors" id="colors"></div>'; continue; }
       const attr = b[0] === "tool" ? `data-tool="${b[1]}"` : b[0] === "toggle" ? `data-toggle="${b[1]}"` : `data-action="${b[1]}"`;
       const id = b[1] === "spotlight" ? 'id="btn-spot"' : b[1] === "zoom" ? 'id="btn-zoom"' : b[1] === "options" ? 'id="btn-options"' : "";
-      html += `<button class="tool" ${attr} ${id}><span class="ico">${b[2]}</span><span class="lbl">${b[3]}</span></button>`;
+      const icoName = b[1] === "screenshot" ? "save" : b[1];
+      const ico = (EF.iconSvg && EF.iconSvg(icoName)) || b[2];
+      html += `<button class="tool" ${attr} ${id}><span class="ico">${ico}</span><span class="lbl">${b[3]}</span></button>`;
     }
     return html;
   }
@@ -169,8 +172,8 @@
     <div id="badge" class="badge" hidden></div>
     <div id="toast" class="toast" hidden></div>
     <div id="ef-dock" class="ef-dock" hidden>
-      <button class="dock-btn on" id="dock-power" title="ポインターモード ON/OFF (⌘⇧E)"><span>⏻</span><span class="lbl">ポインターON</span></button>
-      <button class="dock-btn" id="dock-bars" title="バーの表示/非表示 (⌘⇧H)"><span>▤</span><span class="lbl">バー隠す</span></button>
+      <button class="dock-btn on" id="dock-power" title="ポインターモード ON/OFF (⌘⇧E)"><span class="ico">${(EF.iconSvg && EF.iconSvg("power", 16)) || "⏻"}</span><span class="lbl">ポインターON</span></button>
+      <button class="dock-btn" id="dock-bars" title="バーの表示/非表示 (⌘⇧H)"><span class="ico">${(EF.iconSvg && EF.iconSvg("bars", 16)) || "▤"}</span><span class="lbl">バー隠す</span></button>
     </div>
   `;
 
@@ -285,6 +288,11 @@
   function renderOptions() {
     if (!state.optionsOpen) { optEl.hidden = true; return; }
     const groups = [];
+    // 共通設定（常に表示）
+    groups.push(optGroup("線の太さ", "strokeWidth", state.strokeWidth, [[4, "", "細"], [6, "", "中"], [10, "", "太"]]));
+    groups.push(optGroup("ズーム倍率", "zoomScale", state.zoomScale, [[1.5, "", "×1.5"], [2, "", "×2"], [3, "", "×3"]]));
+    groups.push(optGroup("クリック波紋", "ripple", state.ring.ripple ? "on" : "off", [["on", "", "ON"], ["off", "", "OFF"]]));
+    groups.push(optGroup("注目の濃さ", "spotDim", state.spotDim, [[0.55, "", "薄"], [0.72, "", "標準"], [0.88, "", "濃"]]));
     if (state.appOn && state.tool === "cursor") {
       groups.push(optGroup("カーソル", "cursorStyle", state.cursorStyle, [["ring", "◎", "リング"], ["arrow", "➤", "矢印"], ["dot", "●", "ドット"], ["ringdot", "◉", "両方"], ["halo", "✦", "ハロー"]]));
       groups.push(optGroup("大きさ", "ringSize", state.ring.size, [[28, "", "極小"], [44, "", "小"], [60, "", "中"]]));
@@ -339,7 +347,7 @@
   function renderSpot() {
     sctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     if (state.appOn && state.spotlight) {
-      sctx.fillStyle = "rgba(8,10,16,0.72)";
+      sctx.fillStyle = "rgba(8,10,16," + (state.spotDim || 0.72) + ")";
       sctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
       const m = state.mouse, W = window.innerWidth, H = window.innerHeight;
       sctx.save();
@@ -510,6 +518,10 @@
     const opt = b.dataset.opt; let v = b.dataset.val;
     if (opt === "ringSize") state.ring.size = parseFloat(v);
     else if (opt === "spotBand") state.spotBand = parseFloat(v);
+    else if (opt === "spotDim") state.spotDim = parseFloat(v);
+    else if (opt === "strokeWidth") state.strokeWidth = parseFloat(v);
+    else if (opt === "zoomScale") { state.zoomScale = parseFloat(v); applyZoom(); }
+    else if (opt === "ripple") state.ring.ripple = (v === "on");
     else state[opt] = v;
     updateRing(); renderOptions(); setBadge();
   });

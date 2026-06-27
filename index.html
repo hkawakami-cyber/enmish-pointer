@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Enmish Focus — 画面共有支援プロトタイプ</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='30' fill='none' stroke='%232f6bff' stroke-width='10'/%3E%3Ccircle cx='50' cy='50' r='6' fill='%23ff3b4e'/%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='42' fill='%236cbba5'/%3E%3Ccircle cx='62' cy='38' r='12' fill='%23032841'/%3E%3C/svg%3E" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -41,43 +41,43 @@
       </div>
 
       <button class="tool" data-action="toggle-app" id="btn-app" title="アプリ ON/OFF (⌘⇧E)">
-        <span class="ico">⏻</span><span class="lbl">起動</span>
+        <span class="ico" data-ic="power"></span><span class="lbl">起動</span>
       </button>
 
       <div class="tb-sep"></div>
 
       <button class="tool" data-tool="cursor" id="btn-cursor" title="カーソル強調">
-        <span class="ico">◎</span><span class="lbl">カーソル</span>
+        <span class="ico" data-ic="cursor"></span><span class="lbl">カーソル</span>
       </button>
       <button class="tool" data-tool="pen" title="ペン (⌘⇧1)">
-        <span class="ico">✎</span><span class="lbl">ペン</span>
+        <span class="ico" data-ic="pen"></span><span class="lbl">ペン</span>
       </button>
       <button class="tool" data-tool="highlighter" title="蛍光ペン">
-        <span class="ico">▰</span><span class="lbl">蛍光</span>
+        <span class="ico" data-ic="highlighter"></span><span class="lbl">蛍光</span>
       </button>
       <button class="tool" data-tool="arrow" title="矢印 (⌘⇧2)">
-        <span class="ico">↗</span><span class="lbl">矢印</span>
+        <span class="ico" data-ic="arrow"></span><span class="lbl">矢印</span>
       </button>
       <button class="tool" data-tool="hline" title="横線（高さ固定・アンダーライン）">
-        <span class="ico">—</span><span class="lbl">横線</span>
+        <span class="ico" data-ic="hline"></span><span class="lbl">横線</span>
       </button>
       <button class="tool" data-tool="ellipse" title="丸囲み (⌘⇧3)">
-        <span class="ico">◯</span><span class="lbl">丸</span>
+        <span class="ico" data-ic="ellipse"></span><span class="lbl">丸</span>
       </button>
       <button class="tool" data-tool="rect" title="四角囲み (⌘⇧4)">
-        <span class="ico">▢</span><span class="lbl">四角</span>
+        <span class="ico" data-ic="rect"></span><span class="lbl">四角</span>
       </button>
       <button class="tool" data-tool="text" title="テキスト注釈">
-        <span class="ico">T</span><span class="lbl">文字</span>
+        <span class="ico" data-ic="text"></span><span class="lbl">文字</span>
       </button>
 
       <div class="tb-sep"></div>
 
       <button class="tool" data-toggle="spotlight" id="btn-spotlight" title="スポットライト (⌘⇧5)">
-        <span class="ico">☀</span><span class="lbl">注目</span>
+        <span class="ico" data-ic="spotlight"></span><span class="lbl">注目</span>
       </button>
       <button class="tool" data-toggle="zoom" id="btn-zoom" title="ズーム (⌘⇧6)">
-        <span class="ico">🔍</span><span class="lbl">ズーム</span>
+        <span class="ico" data-ic="zoom"></span><span class="lbl">ズーム</span>
       </button>
 
       <div class="tb-sep"></div>
@@ -88,16 +88,16 @@
       <div class="tb-sep"></div>
 
       <button class="tool" data-action="undo" title="元に戻す (⌘Z)">
-        <span class="ico">↶</span><span class="lbl">戻す</span>
+        <span class="ico" data-ic="undo"></span><span class="lbl">戻す</span>
       </button>
       <button class="tool" data-action="clear" title="全消去 (⌘⇧⌫)">
-        <span class="ico">🗑</span><span class="lbl">全消去</span>
+        <span class="ico" data-ic="clear"></span><span class="lbl">全消去</span>
       </button>
       <button class="tool" data-action="screenshot" title="注釈付きスクショ保存">
-        <span class="ico">📷</span><span class="lbl">保存</span>
+        <span class="ico" data-ic="save"></span><span class="lbl">保存</span>
       </button>
       <button class="tool" data-action="settings" title="設定 / プリセット">
-        <span class="ico">⚙</span><span class="lbl">設定</span>
+        <span class="ico" data-ic="options"></span><span class="lbl">設定</span>
       </button>
     </div>
   </div>
@@ -193,8 +193,8 @@
         <h3>注目（スポットライト）</h3>
         <label class="field" style="display:block">形
           <div class="seg seg-wrap" id="set-spot-shape" style="margin-top:8px">
-            <button data-shape="band">▭ 帯</button>
-            <button data-shape="circle">◯ 丸</button>
+            <button data-shape="band">帯</button>
+            <button data-shape="circle">丸</button>
           </div>
         </label>
         <label class="field" style="display:block">帯の高さ
@@ -204,6 +204,22 @@
             <button data-band="0.75">75%</button>
           </div>
         </label>
+        <label class="field" style="display:block">暗さ
+          <div class="seg seg-wrap" id="set-spot-dim" style="margin-top:8px">
+            <button data-dim="0.55">薄い</button>
+            <button data-dim="0.72">標準</button>
+            <button data-dim="0.88">濃い</button>
+          </div>
+        </label>
+      </section>
+
+      <section class="modal-section">
+        <h3>ズーム倍率</h3>
+        <div class="seg seg-wrap" id="set-zoom-scale">
+          <button data-zoom="1.5">×1.5</button>
+          <button data-zoom="2">×2</button>
+          <button data-zoom="3">×3</button>
+        </div>
       </section>
 
       <section class="modal-section">
@@ -232,10 +248,10 @@
   <!-- 常駐ドック：ポインターON/OFF・バー表示/非表示（バーを隠しても残る） -->
   <div id="ef-dock" class="ef-dock">
     <button class="dock-btn" id="dock-power" title="ポインターモード ON/OFF (⌘⇧E)">
-      <span class="ico">⏻</span><span class="lbl">ポインター</span>
+      <span class="ico" data-ic="power"></span><span class="lbl">ポインター</span>
     </button>
     <button class="dock-btn" id="dock-bars" title="バーの表示/非表示 (⌘⇧H)">
-      <span class="ico">▤</span><span class="lbl">バー隠す</span>
+      <span class="ico" data-ic="bars"></span><span class="lbl">バー隠す</span>
     </button>
   </div>
 
@@ -246,6 +262,7 @@
   <div id="toast" class="toast" hidden></div>
 
   <script src="js/vendor/html2canvas.min.js"></script>
+  <script src="js/icons.js"></script>
   <script src="js/state.js"></script>
   <script src="js/scenes.js"></script>
   <script src="js/drawing.js"></script>

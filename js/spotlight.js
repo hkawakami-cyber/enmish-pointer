@@ -20,7 +20,7 @@
     ctx.clearRect(0, 0, w, h);
     if (!EF.state.spotlight) { raf = requestAnimationFrame(render); return; }
 
-    ctx.fillStyle = "rgba(8,10,16,0.74)";
+    ctx.fillStyle = "rgba(8,10,16," + (EF.state.spotDim || 0.72) + ")";
     ctx.fillRect(0, 0, w, h);
 
     const m = EF.state.mouse;

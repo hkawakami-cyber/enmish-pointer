@@ -68,8 +68,9 @@
     spotlight: false,
     spotShape: "band",   // band（横帯） | circle
     spotBand: 0.5,       // 帯の高さ（ビューポート比）
+    spotDim: 0.72,       // スポットライトの暗さ（0〜1）
     zoom: false,
-    zoomScale: 2.2,
+    zoomScale: 2.0,
     preset: "proposal",
     mouse: { x: -999, y: -999, inStage: false },
   };
