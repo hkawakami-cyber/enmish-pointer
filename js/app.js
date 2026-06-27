@@ -325,7 +325,7 @@
     },
     updateReveal(x, y) {
       if (!(EF.state.appOn && EF.state.autoHide && !EF.state.uiHidden)) return;
-      const HOT = 32, left = EF.state.barSide === "left";
+      const HOT = 56, left = EF.state.barSide === "left";
       const nearEdge = left ? x <= HOT : x >= window.innerWidth - HOT;
       let overBar = false;
       if (this._revealed) { const tb = document.getElementById("toolbar"); if (tb) { const r = tb.getBoundingClientRect(); overBar = x >= r.left - 10 && x <= r.right + 10 && y >= r.top - 10 && y <= r.bottom + 10; } }

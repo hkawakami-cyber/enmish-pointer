@@ -65,9 +65,9 @@
     .toolbar, .stamp-bar, .reopen, .badge, .toast, .hint { pointer-events: auto; }
     .toolbar {
       position: fixed; top: 50%; right: 0; transform: translateY(-50%);
-      background: transparent; color: #fff; border-radius: 14px 0 0 14px;
-      box-shadow: none; backdrop-filter: blur(2px);
-      padding: 7px 6px; border: 1px solid rgba(176,184,196,.45); border-right: none; width: 76px;
+      background: rgba(6,32,52,.92); color: #fff; border-radius: 14px 0 0 14px;
+      box-shadow: 0 8px 26px rgba(0,0,0,.32); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      padding: 7px 6px; border: 1px solid rgba(255,255,255,.16); border-right: none; width: 76px;
       display: flex; flex-direction: column; gap: 2px; max-height: calc(100vh - 168px); overflow-y: auto;
       transition: transform .22s ease, opacity .22s ease;
     }
@@ -81,7 +81,7 @@
     .toolbar.auto-hide.side-left.revealed { transform: translate(0, -50%); }
     .toolbar.auto-hide .tool[data-action="collapse"] { display: none; } /* 自動表示中は最小化ボタン不要 */
     /* 自動表示モードのヒント（右端の細い帯） */
-    .edge-hint { position: fixed; right: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 116px; border-radius: 4px 0 0 4px; background: rgba(108,187,165,.6); box-shadow: 0 0 10px rgba(0,0,0,.25); pointer-events: none; transition: opacity .2s ease; }
+    .edge-hint { position: fixed; right: 0; top: 50%; transform: translateY(-50%); width: 6px; height: 130px; border-radius: 5px 0 0 5px; background: rgba(108,187,165,.85); box-shadow: 0 0 12px rgba(0,0,0,.3); pointer-events: none; transition: opacity .2s ease; }
     .edge-hint.side-left { right: auto; left: 0; border-radius: 0 4px 4px 0; }
     .toolbar.compact { width: 46px; gap: 1px; }
     .toolbar.compact .lbl { display: none; }
@@ -301,7 +301,7 @@
   }, true);
 
   // ---- 右端ホバーで自動表示（Macのドック風）----
-  const HOT = 32; // 端から何pxで反応するか
+  const HOT = 56; // 端から何pxで反応するか（広めにして出しやすく）
   let revealTimer = null, revealed = false;
   function autoHideActive() { return state.appOn && state.autoHide && !state.uiHidden; }
   function setReveal(on) {
@@ -490,7 +490,7 @@
     }
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.2.0</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.2.1</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }

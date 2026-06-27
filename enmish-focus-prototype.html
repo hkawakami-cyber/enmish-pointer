@@ -172,15 +172,15 @@ html, body {
   top: 50%;
   right: 0;
   transform: translateY(-50%);
-  background: transparent;
+  background: rgba(6,32,52,.92);
   color: #fff;
   border-radius: 14px 0 0 14px;
-  box-shadow: none;
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  box-shadow: 0 8px 26px rgba(0,0,0,.32);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   padding: 8px 6px;
   z-index: 9000;
-  border: 1px solid rgba(176,184,196,.45);
+  border: 1px solid rgba(255,255,255,.16);
   border-right: none;
   max-height: calc(100vh - 168px);
   overflow-y: auto;
@@ -196,7 +196,7 @@ html, body {
 .toolbar.auto-hide.side-left { transform: translate(calc(-100% - 6px), -50%); }
 .toolbar.auto-hide.side-left.revealed { transform: translate(0, -50%); }
 .toolbar.auto-hide .tool[data-action="hide-ui"] { display: none; }
-.edge-hint { position: fixed; right: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 116px; border-radius: 4px 0 0 4px; background: rgba(108,187,165,.6); box-shadow: 0 0 10px rgba(0,0,0,.25); pointer-events: none; z-index: 9000; transition: opacity .2s ease; }
+.edge-hint { position: fixed; right: 0; top: 50%; transform: translateY(-50%); width: 6px; height: 130px; border-radius: 5px 0 0 5px; background: rgba(108,187,165,.85); box-shadow: 0 0 12px rgba(0,0,0,.3); pointer-events: none; z-index: 9000; transition: opacity .2s ease; }
 .edge-hint.side-left { right: auto; left: 0; border-radius: 0 4px 4px 0; }
 /* アプリON中は共有画面を寄せ、端のツールバーと被らないようにする（自動表示モードは寄せない） */
 body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ease, padding-left .25s ease; }
@@ -2432,7 +2432,7 @@ kbd {
     },
     updateReveal(x, y) {
       if (!(EF.state.appOn && EF.state.autoHide && !EF.state.uiHidden)) return;
-      const HOT = 32, left = EF.state.barSide === "left";
+      const HOT = 56, left = EF.state.barSide === "left";
       const nearEdge = left ? x <= HOT : x >= window.innerWidth - HOT;
       let overBar = false;
       if (this._revealed) { const tb = document.getElementById("toolbar"); if (tb) { const r = tb.getBoundingClientRect(); overBar = x >= r.left - 10 && x <= r.right + 10 && y >= r.top - 10 && y <= r.bottom + 10; } }
