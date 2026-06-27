@@ -118,16 +118,20 @@
         case "undo": if (EF.state.appOn) EF.annot.engine.undo(); break;
         case "clear":
           EF.annot.engine.clear();
-          if (EF.whiteboard.isOpen()) { /* WBは独立。誤消去を避ける */ }
           EF.toast("注釈を全消去しました");
           break;
         case "screenshot": EF.screenshot.capture(); break;
         case "settings": EF.presets.openModal(); break;
-        case "whiteboard":
-          if (!EF.state.appOn) this.toggleApp(true);
-          EF.whiteboard.toggle();
-          break;
+        case "hide-ui": this.toggleUI(); break;
       }
+    },
+
+    // UI（ツールバー・サイドバー等）の表示/非表示
+    toggleUI() {
+      if (!EF.state.appOn) return;
+      EF.state.uiHidden = !EF.state.uiHidden;
+      document.body.classList.toggle("ef-ui-hidden", EF.state.uiHidden);
+      EF.toast(EF.state.uiHidden ? "UIを非表示にしました（⌘⇧Hで再表示）" : "UIを表示しました");
     },
 
     toggleApp(forceOn) {
@@ -141,6 +145,8 @@
         EF.state.zoom = false;
         EF.zoom.refresh();
         EF.stamps.disarm();
+        EF.state.uiHidden = false;
+        document.body.classList.remove("ef-ui-hidden");
         document.getElementById("stage").classList.remove("armed", "tool-cursor");
         EF.toast("Enmish Focus を終了");
       } else {
@@ -162,7 +168,7 @@
     handleEscape() {
       if (!document.getElementById("settings").hidden) { EF.presets.closeModal(); return true; }
       if (!document.getElementById("quick-palette").hidden) { this.closePalette(); return true; }
-      if (EF.whiteboard.isOpen()) { EF.whiteboard.close(); return true; }
+      if (EF.state.uiHidden) { this.toggleUI(); return true; }
       if (EF.state.armedStamp) { EF.stamps.disarm(); return true; }
       if (EF.state.zoom) { EF.state.zoom = false; EF.zoom.refresh(); EF.toolbar.sync(); EF.setStatus(); return true; }
       if (EF.state.spotlight) { EF.state.spotlight = false; EF.toolbar.sync(); EF.setStatus(); return true; }
@@ -185,7 +191,9 @@
       const groups = [];
       if (EF.state.appOn && EF.state.tool === "cursor") {
         groups.push(optGroup("カーソル", "cursorStyle", EF.state.cursorStyle,
-          [["ring", "◎", "リング"], ["dot", "●", "ドット"], ["ringdot", "◉", "両方"], ["halo", "✦", "ハロー"]]));
+          [["ring", "◎", "リング"], ["arrow", "➤", "矢印"], ["dot", "●", "ドット"], ["ringdot", "◉", "両方"], ["halo", "✦", "ハロー"]]));
+        groups.push(optGroup("大きさ", "ringSize", EF.state.ring.size,
+          [[40, "", "小"], [64, "", "中"], [90, "", "大"]]));
       } else if (EF.state.appOn && EF.state.tool === "arrow") {
         groups.push(optGroup("矢じり", "arrowHead", EF.state.arrowHead,
           [["end", "→", "終点"], ["start", "←", "始点"], ["both", "↔", "両方"]]));
@@ -206,9 +214,10 @@
       const el = document.getElementById("tool-options");
       el.addEventListener("click", (e) => {
         const b = e.target.closest(".to-btn"); if (!b) return;
-        let v = b.dataset.val;
-        if (b.dataset.opt === "spotBand") v = parseFloat(v);
-        EF.state[b.dataset.opt] = v;
+        const opt = b.dataset.opt; let v = b.dataset.val;
+        if (opt === "ringSize") EF.state.ring.size = parseFloat(v);
+        else if (opt === "spotBand") EF.state.spotBand = parseFloat(v);
+        else EF.state[opt] = v;
         EF.cursor.update();
         this.render();
         EF.setStatus();
@@ -243,7 +252,6 @@
     EF.annot.init();
     EF.spotlight.init();
     EF.zoom.init();
-    EF.whiteboard.init();
     EF.stamps.init();
     EF.toolbar.init();
     EF.shortcuts.init();

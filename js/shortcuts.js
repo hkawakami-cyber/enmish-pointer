@@ -51,7 +51,7 @@
           if (code === "Digit4") { ev.preventDefault(); EF.app.setTool("rect"); return; }
           if (code === "Digit5") { ev.preventDefault(); EF.app.toggle("spotlight"); return; }
           if (code === "Digit6") { ev.preventDefault(); EF.app.toggle("zoom"); return; }
-          if (code === "KeyW") { ev.preventDefault(); EF.app.action("whiteboard"); return; }
+          if (code === "KeyH") { ev.preventDefault(); EF.app.toggleUI(); return; }
           if (ev.key === "Backspace" || ev.key === "Delete") { ev.preventDefault(); EF.app.action("clear"); return; }
         }
 

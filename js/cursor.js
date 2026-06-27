@@ -49,6 +49,7 @@
       if (!on) { ring.hidden = true; return; }
       const r = EF.state.ring, color = EF.state.color, style = EF.state.cursorStyle || "ring";
       const dot = ring.querySelector(".cr-dot");
+      const arrow = ring.querySelector(".cr-arrow");
       ring.hidden = false;
       ring.style.width = r.size + "px";
       ring.style.height = r.size + "px";
@@ -58,6 +59,19 @@
       // 一旦リセット
       ring.style.borderWidth = "0"; ring.style.background = "transparent"; ring.style.boxShadow = "none";
       if (dot) dot.style.display = "none";
+      if (arrow) arrow.style.display = "none";
+      ring.style.transform = "translate(-50%, -50%)";
+      if (style === "arrow") {
+        // 矢印カーソル：先端をマウス位置に合わせる
+        ring.style.transform = "translate(" + (-(3 / 24) * r.size) + "px, " + (-(2 / 24) * r.size) + "px)";
+        if (arrow) {
+          arrow.style.display = "block";
+          arrow.style.width = r.size + "px"; arrow.style.height = r.size + "px";
+          const path = arrow.querySelector("path");
+          if (path) path.setAttribute("fill", color);
+        }
+        return;
+      }
       if (style === "ring" || style === "ringdot") {
         ring.style.borderWidth = r.width + "px";
         ring.style.borderColor = color;

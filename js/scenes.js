@@ -13,7 +13,14 @@
           <span class="surface-url">提案資料 ｜ エンミッシュ 営業支援プラン.key</span></div>
         <div class="slide">
           <div class="slide-head">
-            <img src="assets/enmish-logo.svg" alt="enmish" />
+            <span class="ef-logo">
+              <svg viewBox="0 0 96 96" width="30" height="30" aria-hidden="true">
+                <circle cx="48" cy="48" r="40" fill="#6cbba5"></circle>
+                <path d="M 32 54 C 32 34 48 26 64 32 C 54 30 42 38 40 52 C 39 62 46 70 60 68 C 50 74 32 70 32 54 Z" fill="#ffffff"></path>
+                <circle cx="62" cy="36" r="7" fill="#032841"></circle>
+              </svg>
+              <b>enmish</b>
+            </span>
             <span class="doc-tag">提案書 ｜ 2026.06</span>
           </div>
           <div class="eyebrow">ENMISH PROPOSAL</div>

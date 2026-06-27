@@ -28,6 +28,15 @@
 
       $("set-click-ripple").addEventListener("change", (e) => { EF.state.ring.ripple = e.target.checked; });
 
+      // カーソルの形
+      $("set-cursor-style").querySelectorAll("button").forEach((b) =>
+        b.addEventListener("click", () => {
+          EF.state.cursorStyle = b.dataset.cursor;
+          $("set-cursor-style").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+          EF.cursor.update();
+          if (EF.options) EF.options.render();
+        }));
+
       // 自動消去セグメント
       $("autoerase-seg").querySelectorAll("button").forEach((b) =>
         b.addEventListener("click", () => this.setAutoErase(+b.dataset.autoerase)));
@@ -58,6 +67,7 @@
       EF.state.color = p.color;
       EF.state.strokeWidth = p.strokeWidth;
       EF.state.ring = Object.assign({}, p.ring);
+      EF.state.cursorStyle = p.cursorStyle || "ring";
       EF.state.autoErase = p.autoErase;
 
       // UI同期
@@ -71,10 +81,14 @@
       document.querySelectorAll(".preset").forEach((b) =>
         b.classList.toggle("active", b.dataset.preset === key));
 
-      if (p.openWhiteboard && EF.state.appOn) EF.whiteboard.open();
+      // カーソル形状セレクタの同期
+      const cs = document.getElementById("set-cursor-style");
+      if (cs) cs.querySelectorAll("button").forEach((b) =>
+        b.classList.toggle("active", b.dataset.cursor === EF.state.cursorStyle));
 
       EF.cursor.update();
       EF.toolbar.sync();
+      if (EF.options) EF.options.render();
       EF.setStatus();
       if (!silent) EF.toast(`プリセット: ${p.name}`);
     },

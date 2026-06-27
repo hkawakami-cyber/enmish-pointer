@@ -47,7 +47,8 @@
   DrawingEngine.prototype.move = function (x, y) {
     if (!this.current) return;
     const c = this.current;
-    if (c.tool === "hline") y = c.a.y; // 高さ固定（水平に引く）
+    // 横線・蛍光ペンはY固定（高さが変わらない＝水平に引く）
+    if (c.tool === "hline" || c.tool === "highlighter") y = c.a.y;
     c.b = { x, y };
     if (c.tool === "pen" || c.tool === "highlighter") c.points.push({ x, y });
   };
@@ -174,14 +175,21 @@
   };
 
   DrawingEngine.prototype._arrow = function (ctx, a, b, w, head) {
-    const size = Math.max(14, w * 3.2);
-    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    const size = Math.max(16, w * 3.4);     // 矢じりの長さ
+    const spread = Math.PI / 5.5;            // 矢じりの開き（広めで自然に）
+    // 矢じりの根元までで線を止める（線が矢じりを突き抜けないように）
+    const ang = Math.atan2(b.y - a.y, b.x - a.x);
+    const back = size * 0.72;
+    const ea = { x: a.x, y: a.y }, eb = { x: b.x, y: b.y };
+    if (head === "end" || head === "both") { eb.x = b.x - back * Math.cos(ang); eb.y = b.y - back * Math.sin(ang); }
+    if (head === "start" || head === "both") { ea.x = a.x + back * Math.cos(ang); ea.y = a.y + back * Math.sin(ang); }
+    ctx.beginPath(); ctx.moveTo(ea.x, ea.y); ctx.lineTo(eb.x, eb.y); ctx.stroke();
     const drawHead = (tip, from) => {
-      const ang = Math.atan2(tip.y - from.y, tip.x - from.x);
+      const an = Math.atan2(tip.y - from.y, tip.x - from.x);
       ctx.beginPath();
       ctx.moveTo(tip.x, tip.y);
-      ctx.lineTo(tip.x - size * Math.cos(ang - Math.PI / 7), tip.y - size * Math.sin(ang - Math.PI / 7));
-      ctx.lineTo(tip.x - size * Math.cos(ang + Math.PI / 7), tip.y - size * Math.sin(ang + Math.PI / 7));
+      ctx.lineTo(tip.x - size * Math.cos(an - spread), tip.y - size * Math.sin(an - spread));
+      ctx.lineTo(tip.x - size * Math.cos(an + spread), tip.y - size * Math.sin(an + spread));
       ctx.closePath(); ctx.fill();
     };
     if (head === "end" || head === "both") drawHead(b, a);

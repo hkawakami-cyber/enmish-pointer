@@ -121,7 +121,8 @@ html, body {
 /* ---- 提案資料スライド（Enmishトンマナ） ---- */
 .slide { padding: 40px 54px 46px; }
 .slide-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 26px; }
-.slide-head img { height: 30px; }
+.slide-head .ef-logo { display: inline-flex; align-items: center; gap: 9px; }
+.slide-head .ef-logo b { font-family: var(--font-en); font-size: 24px; font-weight: 700; letter-spacing: -.01em; color: var(--ef-ink); }
 .slide-head .doc-tag { font-size: 12px; color: var(--ef-muted); letter-spacing: .04em; }
 .slide .eyebrow { color: var(--ef-green); font-weight: 700; letter-spacing: .12em; font-size: 13px; }
 .slide h1 {
@@ -314,6 +315,16 @@ body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ea
   font-family: var(--font-en), var(--font-jp);
 }
 
+/* UI（ツールバー・サイドバー）の一時非表示。注釈・カーソルは残す */
+body.ef-ui-hidden .toolbar,
+body.ef-ui-hidden .stamp-bar,
+body.ef-ui-hidden .sb-reopen,
+body.ef-ui-hidden #tool-options,
+body.ef-ui-hidden .scene-switch { display: none !important; }
+body.ef-ui-hidden .scene-root { padding-right: 64px; }
+
+.seg-wrap { display: flex; flex-wrap: wrap; margin-top: 8px; }
+
 /* ============ カーソルリング ============ */
 .cursor-ring {
   position: absolute; left: 0; top: 0; pointer-events: none; z-index: 8000;
@@ -323,6 +334,10 @@ body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ea
 .cursor-ring .cr-dot {
   position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   border-radius: 50%; display: none;
+}
+.cursor-ring .cr-arrow {
+  position: absolute; left: 0; top: 0; display: none; overflow: visible;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,.35));
 }
 .ripple {
   position: absolute; pointer-events: none; z-index: 7999;

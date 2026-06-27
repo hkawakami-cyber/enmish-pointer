@@ -28,10 +28,10 @@
     ["次アクション", "#6cbba5"],
   ];
   const PRESETS = {
-    proposal: { name: "商談", color: "#6cbba5", strokeWidth: 6, ring: { width: 6, size: 64, opacity: 0.9, ripple: true }, autoErase: 5 },
-    review: { name: "社内", color: "#032841", strokeWidth: 4, ring: { width: 4, size: 40, opacity: 0.55, ripple: false }, autoErase: 0 },
-    record: { name: "録画", color: "#917d44", strokeWidth: 7, ring: { width: 8, size: 78, opacity: 1, ripple: true }, autoErase: 0 },
-    demo: { name: "デモ", color: "#31594e", strokeWidth: 5, ring: { width: 6, size: 56, opacity: 0.85, ripple: true }, autoErase: 3 },
+    proposal: { name: "商談", color: "#6cbba5", strokeWidth: 6, ring: { width: 6, size: 64, opacity: 0.9, ripple: true }, cursorStyle: "ring", autoErase: 5 },
+    review: { name: "社内", color: "#032841", strokeWidth: 4, ring: { width: 4, size: 40, opacity: 0.55, ripple: false }, cursorStyle: "dot", autoErase: 0 },
+    record: { name: "録画", color: "#917d44", strokeWidth: 7, ring: { width: 8, size: 90, opacity: 1, ripple: true }, cursorStyle: "arrow", autoErase: 0 },
+    demo: { name: "デモ", color: "#31594e", strokeWidth: 5, ring: { width: 6, size: 56, opacity: 0.85, ripple: true }, cursorStyle: "halo", autoErase: 3 },
   };
   const DRAW_TOOLS = ["pen", "highlighter", "arrow", "hline", "ellipse", "rect", "text"];
   const TOOL_NAMES = {
@@ -42,7 +42,7 @@
   const state = {
     appOn: false, tool: "cursor", color: "#6cbba5", strokeWidth: 6,
     ring: { width: 6, size: 64, opacity: 0.9, ripple: true },
-    cursorStyle: "ring", arrowHead: "end",
+    cursorStyle: "ring", arrowHead: "end", uiHidden: false,
     autoErase: 0, spotlight: false, spotShape: "band", spotBand: 0.5,
     zoom: false, zoomScale: 2.0,
     preset: "proposal", armedStamp: null,
@@ -66,6 +66,8 @@
     #annot.tool-cursor { cursor: none; }
     .ring { border-radius: 50%; transform: translate(-50%,-50%); border-style: solid; border-color: #6cbba5; pointer-events: none; }
     .ring .cdot { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); border-radius: 50%; display: none; }
+    .ring .carrow { position: absolute; left: 0; top: 0; display: none; overflow: visible; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
+    :host(.ui-hidden) .toolbar, :host(.ui-hidden) .stamp-bar, :host(.ui-hidden) .reopen, :host(.ui-hidden) .tool-options { display: none !important; }
     .ripple { position: fixed; border-radius: 50%; transform: translate(-50%,-50%); border: 3px solid #6cbba5; pointer-events: none; animation: rip .55s ease-out forwards; }
     @keyframes rip { from { width: 8px; height: 8px; opacity: .85; } to { width: 90px; height: 90px; opacity: 0; } }
 
@@ -170,7 +172,7 @@
     <style>${CSS}</style>
     <canvas id="annot" class="layer"></canvas>
     <canvas id="spot" class="layer"></canvas>
-    <div id="ring" class="ring" hidden><i class="cdot"></i></div>
+    <div id="ring" class="ring" hidden><i class="cdot"></i><svg class="carrow" viewBox="0 0 24 24"><path d="M3 2 L3 21 L8 16 L11.5 23.5 L14.5 22 L11 15 L18 15 Z" stroke="#fff" stroke-width="1.1" stroke-linejoin="round"></path></svg></div>
     <div id="tb" class="toolbar app-off">${buildToolbar()}</div>
     <div id="sb" class="stamp-bar">
       <button class="sb-hide" id="sb-hide" title="このバーを隠す">✕</button>
@@ -281,9 +283,10 @@
   }
   function renderOptions() {
     const groups = [];
-    if (state.appOn && state.tool === "cursor")
-      groups.push(optGroup("カーソル", "cursorStyle", state.cursorStyle, [["ring", "◎", "リング"], ["dot", "●", "ドット"], ["ringdot", "◉", "両方"], ["halo", "✦", "ハロー"]]));
-    else if (state.appOn && state.tool === "arrow")
+    if (state.appOn && state.tool === "cursor") {
+      groups.push(optGroup("カーソル", "cursorStyle", state.cursorStyle, [["ring", "◎", "リング"], ["arrow", "➤", "矢印"], ["dot", "●", "ドット"], ["ringdot", "◉", "両方"], ["halo", "✦", "ハロー"]]));
+      groups.push(optGroup("大きさ", "ringSize", state.ring.size, [[40, "", "小"], [64, "", "中"], [90, "", "大"]]));
+    } else if (state.appOn && state.tool === "arrow")
       groups.push(optGroup("矢じり", "arrowHead", state.arrowHead, [["end", "→", "終点"], ["start", "←", "始点"], ["both", "↔", "両方"]]));
     if (state.appOn && state.spotlight) {
       groups.push(optGroup("注目の形", "spotShape", state.spotShape, [["band", "▭", "帯"], ["circle", "◯", "丸"]]));
@@ -297,13 +300,23 @@
   function updateRing() {
     if (!state.appOn) { ring.hidden = true; return; }
     const r = state.ring, color = state.color, style = state.cursorStyle || "ring";
-    const dot = ring.querySelector(".cdot");
+    const dot = ring.querySelector(".cdot"), arrow = ring.querySelector(".carrow");
     ring.hidden = false;
     ring.style.width = r.size + "px"; ring.style.height = r.size + "px";
     ring.style.left = state.mouse.x + "px"; ring.style.top = state.mouse.y + "px";
     ring.style.opacity = r.opacity;
     ring.style.borderWidth = "0"; ring.style.background = "transparent"; ring.style.boxShadow = "none";
     if (dot) dot.style.display = "none";
+    if (arrow) arrow.style.display = "none";
+    ring.style.transform = "translate(-50%, -50%)";
+    if (style === "arrow") {
+      ring.style.transform = "translate(" + (-(3 / 24) * r.size) + "px, " + (-(2 / 24) * r.size) + "px)";
+      if (arrow) {
+        arrow.style.display = "block"; arrow.style.width = r.size + "px"; arrow.style.height = r.size + "px";
+        const path = arrow.querySelector("path"); if (path) path.setAttribute("fill", color);
+      }
+      return;
+    }
     if (style === "ring" || style === "ringdot") { ring.style.borderWidth = r.width + "px"; ring.style.borderColor = color; }
     if (style === "halo") { ring.style.background = "radial-gradient(circle, " + color + "cc 0%, " + color + "44 38%, transparent 70%)"; }
     if ((style === "dot" || style === "ringdot") && dot) {
@@ -384,8 +397,8 @@
   function applyPreset(key) {
     const p = PRESETS[key]; if (!p) return;
     state.preset = key; state.color = p.color; state.strokeWidth = p.strokeWidth;
-    state.ring = Object.assign({}, p.ring); state.autoErase = p.autoErase;
-    syncUI(); updateRing(); setBadge();
+    state.ring = Object.assign({}, p.ring); state.cursorStyle = p.cursorStyle || "ring"; state.autoErase = p.autoErase;
+    syncUI(); updateRing(); renderOptions(); setBadge();
     toast("プリセット: " + p.name);
   }
 
@@ -421,11 +434,19 @@
       else if (name === "clear") { engine.clear(); toast("注釈を全消去しました"); }
       else if (name === "screenshot") app.screenshot();
     },
+    toggleUI() {
+      if (!state.appOn) return;
+      state.uiHidden = !state.uiHidden;
+      host.classList.toggle("ui-hidden", state.uiHidden);
+      reserveGutter(!state.uiHidden);
+      toast(state.uiHidden ? "UIを非表示（⌘⇧Hで再表示）" : "UIを表示");
+    },
     toggle(forceOn) {
       const next = forceOn === true ? true : !state.appOn;
       state.appOn = next;
       if (!next) {
         state.spotlight = false; state.zoom = false; applyZoom(); disarmStamp();
+        state.uiHidden = false; host.classList.remove("ui-hidden");
         reserveGutter(false);
         toast("Enmish Focus を終了");
       } else {
@@ -435,6 +456,7 @@
       updateRing(); syncUI(); renderOptions(); setBadge();
     },
     handleEscape() {
+      if (state.uiHidden) { app.toggleUI(); return true; }
       if (state.armedStamp) { disarmStamp(); return true; }
       if (state.zoom) { state.zoom = false; applyZoom(); syncUI(); setBadge(); return true; }
       if (state.spotlight) { state.spotlight = false; syncUI(); setBadge(); return true; }
@@ -493,9 +515,10 @@
 
   optEl.addEventListener("click", (e) => {
     const b = e.target.closest(".to-btn"); if (!b) return;
-    let v = b.dataset.val;
-    if (b.dataset.opt === "spotBand") v = parseFloat(v);
-    state[b.dataset.opt] = v;
+    const opt = b.dataset.opt; let v = b.dataset.val;
+    if (opt === "ringSize") state.ring.size = parseFloat(v);
+    else if (opt === "spotBand") state.spotBand = parseFloat(v);
+    else state[opt] = v;
     updateRing(); renderOptions(); setBadge();
   });
 
@@ -522,6 +545,7 @@
       if (code === "Digit5") { ev.preventDefault(); app.toggleMode("spotlight"); return; }
       if (code === "Digit6") { ev.preventDefault(); app.toggleMode("zoom"); return; }
       if (code === "Digit0") { ev.preventDefault(); cyclePreset(); return; }
+      if (code === "KeyH") { ev.preventDefault(); app.toggleUI(); return; }
       if (ev.key === "Backspace" || ev.key === "Delete") { ev.preventDefault(); app.action("clear"); return; }
       return;
     }
