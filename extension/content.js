@@ -26,7 +26,7 @@
     cursorStyle: "ring", arrowHead: "end", uiHidden: false, optionsOpen: false,
     autoErase: 0, spotlight: false, spotShape: "band", spotBand: 0.5, spotDim: 0.72,
     zoom: false, zoomScale: 2.0,
-    textSize: 28, textBold: true, textColor: "#032841",
+    textSize: 20, textBold: false, textColor: "#032841",
     // ツールバーのカスタム（並べ替え・表示/非表示）
     toolOrder: ["rect", "highlighter", "arrow", "hline", "text", "pen", "cursor", "ellipse", "spotlight", "zoom"],
     toolHidden: {},
@@ -492,7 +492,7 @@
     }
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.2.2</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.2.3</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
