@@ -246,7 +246,8 @@
     toastT = setTimeout(() => { toastEl.classList.remove("show"); setTimeout(() => (toastEl.hidden = true), 220); }, ms || 1600);
   }
   function setBadge() {
-    if (!state.appOn) { badgeEl.hidden = true; return; }
+    // 現在のツールを示す中央下のバッジは非表示（ツールバーの緑ハイライトで判別できるため）
+    badgeEl.hidden = true; return;
     const extras = [];
     if (state.spotlight) extras.push("スポットライト");
     if (state.zoom) extras.push("ズーム×" + state.zoomScale.toFixed(1));

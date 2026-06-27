@@ -64,6 +64,10 @@
 
   EF.setStatus = function () {
     const el = document.getElementById("status-badge");
+    // 現在のツールを示す中央下のバッジは非表示（ツールバーの緑ハイライトで判別できるため）
+    if (el) el.hidden = true;
+    return;
+    /* eslint-disable no-unreachable */
     if (!EF.state.appOn) { el.hidden = true; return; }
     const names = {
       cursor: "カーソル強調", pen: "ペン", highlighter: "蛍光ペン",
