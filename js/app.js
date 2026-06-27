@@ -254,7 +254,7 @@
         EF.state.uiHidden = false;
         document.body.classList.remove("ef-ui-hidden");
         document.getElementById("stage").classList.remove("armed", "tool-cursor");
-        EF.toast("Enmish Focus を終了");
+        EF.toast("Enmish Pointer を終了");
       } else {
         document.getElementById("stage").classList.add(
           EF.state.tool === "cursor" ? "tool-cursor" : "armed");
@@ -262,7 +262,7 @@
           EF._onboarded = true;
           EF.toast("ツールを選んでドラッグで注釈 ／ 右下ドックでON/OFF・バー表示 ／ ⚙設定で配置や詳細を変更", 4600);
         } else {
-          EF.toast("Enmish Focus 起動 — カーソル強調中");
+          EF.toast("Enmish Pointer 起動 — カーソル強調中");
         }
       }
       document.body.classList.toggle("bar-left", EF.state.barSide === "left");
@@ -388,6 +388,6 @@
     EF.app.applyLayout();
 
     EF.toolbar.sync();
-    EF.toast("Enmish Focus プロトタイプ — ⌘⇧E で起動", 2600);
+    EF.toast("Enmish Pointer プロトタイプ — ⌘⇧E で起動", 2600);
   });
 })();

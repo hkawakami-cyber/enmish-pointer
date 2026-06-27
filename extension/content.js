@@ -1,5 +1,5 @@
 /* ============================================================
-   Enmish Focus — content script
+   Enmish Pointer — content script
    実ページ上に Shadow DOM のオーバーレイを重ね、注釈・カーソル強調・
    スポットライト・ズーム・スタンプを描く。ブラウザのタブ共有時に、
    そのまま視線誘導ツールとして使える。
@@ -206,7 +206,7 @@
   }
 
   function buildToolbar() {
-    let html = '<div class="brand"><span class="ef-mark"></span><span class="ef-word">enmish</span><span class="ef-tag">FOCUS</span></div>';
+    let html = '<div class="brand"><span class="ef-mark"></span><span class="ef-word">enmish</span><span class="ef-tag">POINTER</span></div>';
     for (const b of TOOL_BTNS) {
       if (b[0] === "sep") { html += '<div class="sep"></div>'; continue; }
       if (b[0] === "colors") { html += '<div class="colors" id="colors"></div>'; continue; }
@@ -575,14 +575,14 @@
         state.optionsOpen = false;
         const ob = root.getElementById("btn-options"); if (ob) ob.classList.remove("toggled");
         reserveGutter(false);
-        toast("Enmish Focus を終了");
+        toast("Enmish Pointer を終了");
       } else {
         reserveGutter(true);
         if (!onboarded) {
           onboarded = true;
           toast("ツールを選んでドラッグで注釈 ／ 左下ドックでON/OFF・バー表示 ／ ⚙設定で詳細", 4600);
         } else {
-          toast("Enmish Focus 起動 — カーソル強調中");
+          toast("Enmish Pointer 起動 — カーソル強調中");
         }
       }
       updateRing(); syncUI(); renderOptions(); updateDock(); setBadge();

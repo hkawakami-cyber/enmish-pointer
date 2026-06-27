@@ -1,4 +1,4 @@
-# Enmish Focus — Chrome 拡張
+# Enmish Pointer — Chrome 拡張
 
 ブラウザのタブ上に注釈・カーソル強調・スポットライト・ズームを重ねる、画面共有支援の Chrome 拡張（Manifest V3）です。
 **Google Meet / Zoom で「このタブ」を共有する**ときに、Salesforce・Google スプレッドシート・スライド・PDF など
@@ -17,7 +17,7 @@
 3. **「パッケージ化されていない拡張機能を読み込む」** をクリック
 4. このリポジトリの `extension/` フォルダを選択
 
-読み込むと、ツールバーに Enmish Focus が追加されます。
+読み込むと、ツールバーに Enmish Pointer が追加されます。
 
 > 社内配布する場合は `extension/` を zip 化して共有し、各自が同じ手順で読み込めばOKです。
 > （Chrome Web ストアに公開する場合は別途審査が必要です）

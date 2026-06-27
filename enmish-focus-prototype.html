@@ -1,6 +1,6 @@
 <style>
 /* ============================================================
-   Enmish Focus — プロトタイプ スタイル
+   Enmish Pointer — プロトタイプ スタイル
    画面共有支援アプリ（カーソル強調・注釈・スポットライト・ズーム）
    ============================================================ */
 
@@ -612,7 +612,7 @@ kbd {
       <div class="tb-brand">
         <span class="ef-mark"></span>
         <span class="ef-word">enmish</span>
-        <span class="ef-tag">FOCUS</span>
+        <span class="ef-tag">POINTER</span>
       </div>
 
       <button class="tool" data-action="toggle-app" id="btn-app" title="アプリ ON/OFF (⌘⇧E)">
@@ -2329,7 +2329,7 @@ kbd {
         EF.state.uiHidden = false;
         document.body.classList.remove("ef-ui-hidden");
         document.getElementById("stage").classList.remove("armed", "tool-cursor");
-        EF.toast("Enmish Focus を終了");
+        EF.toast("Enmish Pointer を終了");
       } else {
         document.getElementById("stage").classList.add(
           EF.state.tool === "cursor" ? "tool-cursor" : "armed");
@@ -2337,7 +2337,7 @@ kbd {
           EF._onboarded = true;
           EF.toast("ツールを選んでドラッグで注釈 ／ 右下ドックでON/OFF・バー表示 ／ ⚙設定で配置や詳細を変更", 4600);
         } else {
-          EF.toast("Enmish Focus 起動 — カーソル強調中");
+          EF.toast("Enmish Pointer 起動 — カーソル強調中");
         }
       }
       document.body.classList.toggle("bar-left", EF.state.barSide === "left");
@@ -2463,7 +2463,7 @@ kbd {
     EF.app.applyLayout();
 
     EF.toolbar.sync();
-    EF.toast("Enmish Focus プロトタイプ — ⌘⇧E で起動", 2600);
+    EF.toast("Enmish Pointer プロトタイプ — ⌘⇧E で起動", 2600);
   });
 })();
 
