@@ -62,9 +62,16 @@
     this.current = null;
   };
 
-  DrawingEngine.prototype.addText = function (x, y, text, color, width) {
+  DrawingEngine.prototype.addText = function (x, y, text, opts) {
     if (!text || !text.trim()) return;
-    const s = { tool: "text", text: text.trim(), a: { x, y }, color: color, width: width, born: performance.now() };
+    opts = opts || {};
+    const s = {
+      tool: "text", text: text.trim(), a: { x, y },
+      color: opts.color || "#032841",
+      size: opts.size || 28,
+      weight: opts.weight || 700,
+      born: performance.now(),
+    };
     this.strokes.push(s);
     this.redo.length = 0;
     return s;
@@ -76,8 +83,8 @@
     for (let i = this.strokes.length - 1; i >= 0; i--) {
       const s = this.strokes[i];
       if (s.tool !== "text") continue;
-      const fs = Math.max(16, (s.width || 6) * 3);
-      ctx.font = `700 ${fs}px -apple-system, "Hiragino Sans", sans-serif`;
+      const fs = s.size || 28;
+      ctx.font = `${s.weight || 700} ${fs}px -apple-system, "Hiragino Sans", sans-serif`;
       const tw = ctx.measureText(s.text).width, pad = 8;
       if (x >= s.a.x - pad && x <= s.a.x + tw + pad && y >= s.a.y - pad && y <= s.a.y + fs + pad) return s;
     }
@@ -167,8 +174,8 @@
       ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
     } else if (s.tool === "text") {
       ctx.globalAlpha = alpha;
-      const fs = Math.max(16, (s.width || 6) * 3);
-      ctx.font = `700 ${fs}px -apple-system, "Hiragino Sans", sans-serif`;
+      const fs = s.size || 28;
+      ctx.font = `${s.weight || 700} ${fs}px -apple-system, "Hiragino Sans", sans-serif`;
       ctx.textBaseline = "top";
       // 視認性のため白縁取り
       ctx.lineWidth = 4; ctx.strokeStyle = "rgba(255,255,255,.9)";

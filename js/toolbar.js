@@ -10,17 +10,7 @@
       if (EF.fillIcons) EF.fillIcons(document); // 絵文字→SVGアイコン
 
       // カラースウォッチ生成
-      const colors = document.getElementById("tb-colors");
-      colors.innerHTML = "";
-      EF.PALETTE.forEach((c) => {
-        const sw = document.createElement("div");
-        sw.className = "swatch";
-        sw.style.background = c.value;
-        sw.dataset.color = c.value;
-        sw.title = c.name;
-        sw.addEventListener("click", () => EF.app.setColor(c.value));
-        colors.appendChild(sw);
-      });
+      this.buildColors();
 
       // ツール選択
       tb.querySelectorAll("[data-tool]").forEach((b) =>
@@ -41,6 +31,22 @@
 
       this.fit();
       window.addEventListener("resize", () => this.fit());
+      this.sync();
+    },
+
+    // カラースウォッチ（パレット編集後の再生成にも使う）
+    buildColors() {
+      const colors = document.getElementById("tb-colors");
+      colors.innerHTML = "";
+      EF.PALETTE.forEach((c) => {
+        const sw = document.createElement("div");
+        sw.className = "swatch";
+        sw.style.background = c.value;
+        sw.dataset.color = c.value;
+        sw.title = c.name;
+        sw.addEventListener("click", () => EF.app.setColor(c.value));
+        colors.appendChild(sw);
+      });
       this.sync();
     },
 

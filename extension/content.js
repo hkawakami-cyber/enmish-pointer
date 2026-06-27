@@ -16,12 +16,6 @@
     "#6cbba5", "#31594e", "#032841", "#917d44",
     "#c1677f", "#8df1d5", "#ffffff", "#5b6478",
   ];
-  const PRESETS = {
-    proposal: { name: "商談", color: "#6cbba5", strokeWidth: 6, ring: { width: 6, size: 60, opacity: 0.9, ripple: true }, cursorStyle: "ring", autoErase: 5 },
-    review: { name: "社内", color: "#032841", strokeWidth: 4, ring: { width: 4, size: 44, opacity: 0.55, ripple: false }, cursorStyle: "dot", autoErase: 0 },
-    record: { name: "録画", color: "#917d44", strokeWidth: 7, ring: { width: 8, size: 60, opacity: 1, ripple: true }, cursorStyle: "arrow", autoErase: 0 },
-    demo: { name: "デモ", color: "#31594e", strokeWidth: 5, ring: { width: 6, size: 44, opacity: 0.85, ripple: true }, cursorStyle: "halo", autoErase: 3 },
-  };
   const DRAW_TOOLS = ["pen", "highlighter", "arrow", "hline", "ellipse", "rect", "text"];
   const TOOL_NAMES = {
     cursor: "カーソル強調", pen: "ペン", highlighter: "蛍光ペン", arrow: "矢印",
@@ -34,7 +28,7 @@
     cursorStyle: "ring", arrowHead: "end", uiHidden: false, optionsOpen: false,
     autoErase: 0, spotlight: false, spotShape: "band", spotBand: 0.5, spotDim: 0.72,
     zoom: false, zoomScale: 2.0,
-    preset: "proposal",
+    textSize: 28, textBold: true, textColor: "#032841",
     mouse: { x: -999, y: -999 },
   };
 
@@ -249,12 +243,14 @@
   function showTextInput(x, y, hit) {
     const old = root.querySelector(".ef-text"); if (old) old.remove();
     const px = hit ? hit.a.x : x, py = hit ? hit.a.y : y;
-    const color = hit ? hit.color : state.color, width = hit ? hit.width : state.strokeWidth;
+    const color = hit ? hit.color : state.textColor;
+    const size = hit ? hit.size : state.textSize;
+    const weight = hit ? hit.weight : (state.textBold ? 800 : 500);
     if (hit) hit._editing = true;
     const inp = document.createElement("input");
     inp.className = "ef-text"; inp.type = "text"; inp.value = hit ? hit.text : "";
     inp.style.left = px + "px"; inp.style.top = py + "px";
-    inp.style.color = color; inp.style.fontSize = Math.max(16, width * 3) + "px";
+    inp.style.color = color; inp.style.fontSize = size + "px"; inp.style.fontWeight = weight;
     root.appendChild(inp); requestAnimationFrame(() => { inp.focus(); inp.select(); });
     let done = false;
     const close = (keep) => {
@@ -267,7 +263,7 @@
         if (!keep) return;
         if (v) hit.text = v; else engine.removeStroke(hit);
       } else if (keep && v) {
-        engine.addText(px, py, v, color, width);
+        engine.addText(px, py, v, { color: color, size: size, weight: weight });
       }
     };
     const onBlur = () => close(true);
@@ -289,6 +285,29 @@
   function fitToolbar() {
     tb.classList.remove("compact");
     if (tb.scrollHeight > window.innerHeight - 16) tb.classList.add("compact");
+  }
+
+  // 設定の永続化（chrome.storage.local）
+  const PERSIST = ["color", "strokeWidth", "ring", "cursorStyle", "arrowHead",
+    "spotShape", "spotBand", "spotDim", "zoomScale", "textSize", "textBold", "textColor"];
+  function saveSettings() {
+    try {
+      const o = {}; PERSIST.forEach((k) => { o[k] = state[k]; });
+      chrome.storage && chrome.storage.local.set({ efSettings: o });
+    } catch (e) { /* noop */ }
+  }
+  function loadSettings(done) {
+    try {
+      chrome.storage.local.get("efSettings", (r) => {
+        const o = r && r.efSettings;
+        if (o) PERSIST.forEach((k) => {
+          if (o[k] === undefined) return;
+          if (k === "ring") state.ring = Object.assign({}, state.ring, o.ring);
+          else state[k] = o[k];
+        });
+        done && done();
+      });
+    } catch (e) { done && done(); }
   }
 
   function updateDock() {
@@ -401,16 +420,6 @@
     b.style.transform = "scale(" + state.zoomScale + ")";
   }
 
-  // ---------- スタンプ ----------
-  // ---------- プリセット ----------
-  function applyPreset(key) {
-    const p = PRESETS[key]; if (!p) return;
-    state.preset = key; state.color = p.color; state.strokeWidth = p.strokeWidth;
-    state.ring = Object.assign({}, p.ring); state.cursorStyle = p.cursorStyle || "ring"; state.autoErase = p.autoErase;
-    syncUI(); updateRing(); renderOptions(); setBadge();
-    toast("プリセット: " + p.name);
-  }
-
   // ---------- UI 同期 ----------
   function syncUI() {
     tb.classList.toggle("app-off", !state.appOn);
@@ -427,7 +436,7 @@
       if (!state.appOn) app.toggle(true);
       state.tool = t; syncUI(); renderOptions(); setBadge();
     },
-    setColor(c) { state.color = c; syncUI(); updateRing(); setBadge(); },
+    setColor(c) { state.color = c; syncUI(); updateRing(); setBadge(); saveSettings(); },
     toggleMode(what) {
       if (!state.appOn) app.toggle(true);
       if (what === "spotlight") { state.spotlight = !state.spotlight; toast(state.spotlight ? "スポットライト ON（[ ]で広さ）" : "スポットライト OFF"); }
@@ -541,15 +550,8 @@
     else if (opt === "zoomScale") { state.zoomScale = parseFloat(v); applyZoom(); }
     else if (opt === "ripple") state.ring.ripple = (v === "on");
     else state[opt] = v;
-    updateRing(); renderOptions(); setBadge();
+    updateRing(); renderOptions(); setBadge(); saveSettings();
   });
-
-  // プリセット切替（ツールバー長押しは作らず、ショートカット ⌘⇧0 で循環）
-  function cyclePreset() {
-    const keys = Object.keys(PRESETS);
-    const i = (keys.indexOf(state.preset) + 1) % keys.length;
-    applyPreset(keys[i]);
-  }
 
   // ---------- ショートカット ----------
   window.addEventListener("keydown", (ev) => {
@@ -566,7 +568,6 @@
       if (map[code]) { ev.preventDefault(); app.setTool(map[code]); return; }
       if (code === "Digit5") { ev.preventDefault(); app.toggleMode("spotlight"); return; }
       if (code === "Digit6") { ev.preventDefault(); app.toggleMode("zoom"); return; }
-      if (code === "Digit0") { ev.preventDefault(); cyclePreset(); return; }
       if (code === "KeyH") { ev.preventDefault(); app.toggleUI(); return; }
       if (ev.key === "Backspace" || ev.key === "Delete") { ev.preventDefault(); app.action("clear"); return; }
       return;
@@ -596,4 +597,5 @@
   updateDock();
   fitToolbar();
   window.addEventListener("resize", fitToolbar, true);
+  loadSettings(() => { updateRing(); syncUI(); renderOptions(); fitToolbar(); }); // 保存済み設定を反映
 })();

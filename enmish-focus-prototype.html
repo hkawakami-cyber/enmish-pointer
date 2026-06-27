@@ -454,6 +454,19 @@ body.ef-ui-hidden .scene-root { padding-right: 64px; }
 .field output { min-width: 42px; text-align: right; color: #5b6478; font-variant-numeric: tabular-nums; }
 .checkfield { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #2c3550; }
 
+/* カラーパレット編集 */
+.palette-edit { display: flex; flex-wrap: wrap; gap: 8px; }
+.pal-color {
+  width: 34px; height: 34px; padding: 0; border: 1px solid #dfe3ec; border-radius: 9px;
+  background: none; cursor: pointer;
+}
+.pal-color::-webkit-color-swatch-wrapper { padding: 2px; }
+.pal-color::-webkit-color-swatch { border: none; border-radius: 6px; }
+/* 設定モーダル内のカラー行（テキスト色） */
+.palette-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.palette-row .swatch { width: 20px; height: 20px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+.palette-row .swatch.active { border-color: var(--ef-ink); box-shadow: 0 0 0 1.5px #fff inset; }
+
 .preset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .preset {
   text-align: left; border: 1.5px solid #e3e7f0; border-radius: 12px; padding: 12px 14px;
@@ -643,17 +656,18 @@ kbd {
     </div>
   </div>
 
-  <!-- ============ 設定 / プリセット ============ -->
+  <!-- ============ 設定 ============ -->
   <div id="settings" class="modal" hidden>
     <div class="modal-card">
       <div class="modal-head">
-        <h2>設定 / プリセット</h2>
+        <h2>設定</h2>
         <button class="modal-close" data-action="close-settings">✕</button>
       </div>
 
       <section class="modal-section">
-        <h3>プリセット</h3>
-        <div class="preset-grid" id="preset-grid"></div>
+        <h3>カラーパレット</h3>
+        <div class="palette-edit" id="palette-edit"></div>
+        <p class="note">クリックして色を変更できます。変更内容は自動で保存されます。</p>
       </section>
 
       <section class="modal-section">
@@ -739,6 +753,26 @@ kbd {
           <button data-zoom="2">×2</button>
           <button data-zoom="3">×3</button>
         </div>
+      </section>
+
+      <section class="modal-section">
+        <h3>テキスト</h3>
+        <label class="field" style="display:block">大きさ
+          <div class="seg seg-wrap" id="set-text-size" style="margin-top:8px">
+            <button data-size="20">小</button>
+            <button data-size="28">中</button>
+            <button data-size="44">大</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">太さ
+          <div class="seg seg-wrap" id="set-text-weight" style="margin-top:8px">
+            <button data-weight="normal">標準</button>
+            <button data-weight="bold">太字</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">色
+          <div class="tb-colors palette-row" id="set-text-color" style="margin-top:8px"></div>
+        </label>
       </section>
 
       <section class="modal-section">
@@ -867,48 +901,15 @@ kbd {
 
 
 
-  // プリセット定義
-  EF.PRESETS = {
-    proposal: {
-      name: "商談モード",
-      desc: "顧客向け提案。グリーン中心・リングカーソル中。",
-      color: "#6cbba5",
-      strokeWidth: 6,
-      ring: { width: 6, size: 60, opacity: 0.9, ripple: true },
-      cursorStyle: "ring",
-    },
-    review: {
-      name: "社内レビュー",
-      desc: "KPI・資料レビュー。ブラックで薄め・ドット小。",
-      color: "#032841",
-      strokeWidth: 4,
-      ring: { width: 4, size: 44, opacity: 0.55, ripple: false },
-      cursorStyle: "dot",
-    },
-    record: {
-      name: "録画モード",
-      desc: "マニュアル・研修動画。Gold強調・矢印カーソル大・波紋あり。",
-      color: "#917d44",
-      strokeWidth: 7,
-      ring: { width: 8, size: 60, opacity: 1.0, ripple: true },
-      cursorStyle: "arrow",
-    },
-    demo: {
-      name: "デモモード",
-      desc: "SaaS画面説明。スポットライト・ズーム優先・ハローカーソル。",
-      color: "#31594e",
-      strokeWidth: 5,
-      ring: { width: 6, size: 44, opacity: 0.85, ripple: true },
-      cursorStyle: "halo",
-    },
-  };
-
   // 実行時状態
   EF.state = {
     appOn: false,        // アプリ起動状態
     tool: "cursor",      // 現在の注釈ツール: cursor|pen|highlighter|arrow|ellipse|rect|text
     color: "#6cbba5",
     strokeWidth: 6,
+    textSize: 28,        // テキスト注釈の大きさ(px)
+    textBold: true,      // テキスト注釈の太さ
+    textColor: "#032841",// テキスト注釈の色
     ring: { width: 6, size: 64, opacity: 0.9, ripple: true },
     cursorStyle: "ring", // ring | dot | halo | ringdot | arrow
     arrowHead: "end",    // end | start | both
@@ -920,7 +921,10 @@ kbd {
     spotDim: 0.72,       // スポットライトの暗さ（0〜1）
     zoom: false,
     zoomScale: 2.0,
-    preset: "proposal",
+    // ツールバーのカスタム（並べ替え・表示/非表示）
+    toolOrder: ["cursor", "pen", "highlighter", "arrow", "hline", "ellipse", "rect", "text", "spotlight", "zoom"],
+    toolHidden: {},
+    recording: false,
     mouse: { x: -999, y: -999, inStage: false },
   };
 
@@ -952,6 +956,37 @@ kbd {
       label + (extras.length ? " ・ " + extras.join(" ・ ") : "");
     el.hidden = false;
   };
+
+  // --- 設定の永続化（localStorage） ---
+  const STORE_KEY = "enmishFocus.settings.v1";
+  const PERSIST = ["color", "strokeWidth", "textSize", "textBold", "textColor", "ring", "cursorStyle", "arrowHead",
+    "spotShape", "spotBand", "spotDim", "zoomScale", "showOptions", "toolOrder", "toolHidden"];
+
+  EF.saveSettings = function () {
+    try {
+      const obj = { palette: EF.PALETTE.map((c) => c.value) };
+      PERSIST.forEach((k) => { obj[k] = EF.state[k]; });
+      localStorage.setItem(STORE_KEY, JSON.stringify(obj));
+    } catch (e) { /* sandbox等で不可なら黙ってスキップ */ }
+  };
+
+  EF.loadSettings = function () {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return;
+      const obj = JSON.parse(raw);
+      if (Array.isArray(obj.palette)) {
+        obj.palette.forEach((v, i) => { if (EF.PALETTE[i]) EF.PALETTE[i].value = v; });
+      }
+      PERSIST.forEach((k) => {
+        if (obj[k] === undefined) return;
+        if (k === "ring") EF.state.ring = Object.assign({}, EF.state.ring, obj.ring);
+        else EF.state[k] = obj[k];
+      });
+    } catch (e) { /* noop */ }
+  };
+
+  EF.loadSettings(); // 起動時に保存済み設定を反映
 
   // ステージ座標へ正規化（mouseEvent → ステージ相対 px）
   EF.stagePoint = function (ev) {
@@ -1123,9 +1158,16 @@ kbd {
     this.current = null;
   };
 
-  DrawingEngine.prototype.addText = function (x, y, text, color, width) {
+  DrawingEngine.prototype.addText = function (x, y, text, opts) {
     if (!text || !text.trim()) return;
-    const s = { tool: "text", text: text.trim(), a: { x, y }, color: color, width: width, born: performance.now() };
+    opts = opts || {};
+    const s = {
+      tool: "text", text: text.trim(), a: { x, y },
+      color: opts.color || "#032841",
+      size: opts.size || 28,
+      weight: opts.weight || 700,
+      born: performance.now(),
+    };
     this.strokes.push(s);
     this.redo.length = 0;
     return s;
@@ -1137,8 +1179,8 @@ kbd {
     for (let i = this.strokes.length - 1; i >= 0; i--) {
       const s = this.strokes[i];
       if (s.tool !== "text") continue;
-      const fs = Math.max(16, (s.width || 6) * 3);
-      ctx.font = `700 ${fs}px -apple-system, "Hiragino Sans", sans-serif`;
+      const fs = s.size || 28;
+      ctx.font = `${s.weight || 700} ${fs}px -apple-system, "Hiragino Sans", sans-serif`;
       const tw = ctx.measureText(s.text).width, pad = 8;
       if (x >= s.a.x - pad && x <= s.a.x + tw + pad && y >= s.a.y - pad && y <= s.a.y + fs + pad) return s;
     }
@@ -1228,8 +1270,8 @@ kbd {
       ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
     } else if (s.tool === "text") {
       ctx.globalAlpha = alpha;
-      const fs = Math.max(16, (s.width || 6) * 3);
-      ctx.font = `700 ${fs}px -apple-system, "Hiragino Sans", sans-serif`;
+      const fs = s.size || 28;
+      ctx.font = `${s.weight || 700} ${fs}px -apple-system, "Hiragino Sans", sans-serif`;
       ctx.textBaseline = "top";
       // 視認性のため白縁取り
       ctx.lineWidth = 4; ctx.strokeStyle = "rgba(255,255,255,.9)";
@@ -1543,17 +1585,7 @@ kbd {
       if (EF.fillIcons) EF.fillIcons(document); // 絵文字→SVGアイコン
 
       // カラースウォッチ生成
-      const colors = document.getElementById("tb-colors");
-      colors.innerHTML = "";
-      EF.PALETTE.forEach((c) => {
-        const sw = document.createElement("div");
-        sw.className = "swatch";
-        sw.style.background = c.value;
-        sw.dataset.color = c.value;
-        sw.title = c.name;
-        sw.addEventListener("click", () => EF.app.setColor(c.value));
-        colors.appendChild(sw);
-      });
+      this.buildColors();
 
       // ツール選択
       tb.querySelectorAll("[data-tool]").forEach((b) =>
@@ -1574,6 +1606,22 @@ kbd {
 
       this.fit();
       window.addEventListener("resize", () => this.fit());
+      this.sync();
+    },
+
+    // カラースウォッチ（パレット編集後の再生成にも使う）
+    buildColors() {
+      const colors = document.getElementById("tb-colors");
+      colors.innerHTML = "";
+      EF.PALETTE.forEach((c) => {
+        const sw = document.createElement("div");
+        sw.className = "swatch";
+        sw.style.background = c.value;
+        sw.dataset.color = c.value;
+        sw.title = c.name;
+        sw.addEventListener("click", () => EF.app.setColor(c.value));
+        colors.appendChild(sw);
+      });
       this.sync();
     },
 
@@ -1748,140 +1796,123 @@ kbd {
 </script>
 <script>
 /* ============================================================
-   presets.js — プリセット適用と設定モーダル
+   presets.js — 設定モーダル（プリセットは廃止／設定は自動保存）
    ============================================================ */
 (function () {
   const EF = (window.EF = window.EF || {});
 
   function $(id) { return document.getElementById(id); }
+  const save = () => EF.saveSettings && EF.saveSettings();
 
   EF.presets = {
     init() {
-      // プリセットカード生成
-      const grid = $("preset-grid");
-      grid.innerHTML = "";
-      Object.entries(EF.PRESETS).forEach(([key, p]) => {
-        const b = document.createElement("button");
-        b.className = "preset";
-        b.dataset.preset = key;
-        b.innerHTML = `<div class="p-name">${p.name}</div><div class="p-desc">${p.desc}</div>`;
-        b.addEventListener("click", () => this.apply(key));
-        grid.appendChild(b);
-      });
+      // カラーパレット編集
+      this.buildPalette();
 
-      // スライダー類
+      // スライダー類（変更時に保存）
       this.bindRange("set-ring-width", "out-ring-width", (v) => { EF.state.ring.width = +v; EF.cursor.update(); }, (v) => v + "px");
       this.bindRange("set-ring-size", "out-ring-size", (v) => { EF.state.ring.size = +v; EF.cursor.update(); }, (v) => v + "px");
       this.bindRange("set-ring-opacity", "out-ring-opacity", (v) => { EF.state.ring.opacity = v / 100; EF.cursor.update(); }, (v) => v + "%");
       this.bindRange("set-stroke-width", "out-stroke-width", (v) => { EF.state.strokeWidth = +v; }, (v) => v + "px");
 
-      $("set-click-ripple").addEventListener("change", (e) => { EF.state.ring.ripple = e.target.checked; });
+      $("set-click-ripple").addEventListener("change", (e) => { EF.state.ring.ripple = e.target.checked; save(); });
 
-      // カーソルの形
-      $("set-cursor-style").querySelectorAll("button").forEach((b) =>
-        b.addEventListener("click", () => {
-          EF.state.cursorStyle = b.dataset.cursor;
-          $("set-cursor-style").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
-          EF.cursor.update();
-          if (EF.options) EF.options.render();
-        }));
+      // セグメント共通ヘルパー
+      const seg = (id, attr, apply) =>
+        $(id).querySelectorAll("button").forEach((b) =>
+          b.addEventListener("click", () => {
+            apply(b.dataset[attr], b);
+            $(id).querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+            if (EF.options) EF.options.render();
+            EF.cursor.update();
+            save();
+          }));
 
-      // カーソルの大きさ
-      $("set-cursor-size").querySelectorAll("button").forEach((b) =>
-        b.addEventListener("click", () => {
-          EF.state.ring.size = +b.dataset.size;
-          $("set-cursor-size").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
-          $("set-ring-size").value = EF.state.ring.size; $("out-ring-size").textContent = EF.state.ring.size + "px";
-          EF.cursor.update();
-          if (EF.options) EF.options.render();
-        }));
+      seg("set-cursor-style", "cursor", (v) => { EF.state.cursorStyle = v; });
+      seg("set-cursor-size", "size", (v) => {
+        EF.state.ring.size = +v;
+        $("set-ring-size").value = EF.state.ring.size; $("out-ring-size").textContent = EF.state.ring.size + "px";
+      });
+      seg("set-arrow-head", "head", (v) => { EF.state.arrowHead = v; });
+      seg("set-spot-shape", "shape", (v) => { EF.state.spotShape = v; });
+      seg("set-spot-band", "band", (v) => { EF.state.spotBand = parseFloat(v); });
+      seg("set-spot-dim", "dim", (v) => { EF.state.spotDim = parseFloat(v); });
+      seg("set-zoom-scale", "zoom", (v) => { EF.state.zoomScale = parseFloat(v); EF.zoom.refresh(); EF.setStatus(); });
+
+      // テキスト設定
+      seg("set-text-size", "size", (v) => { EF.state.textSize = +v; });
+      seg("set-text-weight", "weight", (v) => { EF.state.textBold = (v === "bold"); });
+      this.buildTextColors();
 
       // オプションパネルの表示/非表示
       $("set-show-options").addEventListener("change", (e) => {
         EF.state.showOptions = e.target.checked;
         if (EF.options) EF.options.render();
+        save();
       });
-
-      // 矢印の向き
-      $("set-arrow-head").querySelectorAll("button").forEach((b) =>
-        b.addEventListener("click", () => {
-          EF.state.arrowHead = b.dataset.head;
-          $("set-arrow-head").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
-          if (EF.options) EF.options.render();
-        }));
-
-      // 注目：形と帯の高さ
-      $("set-spot-shape").querySelectorAll("button").forEach((b) =>
-        b.addEventListener("click", () => {
-          EF.state.spotShape = b.dataset.shape;
-          $("set-spot-shape").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
-          if (EF.options) EF.options.render();
-        }));
-      $("set-spot-band").querySelectorAll("button").forEach((b) =>
-        b.addEventListener("click", () => {
-          EF.state.spotBand = parseFloat(b.dataset.band);
-          $("set-spot-band").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
-          if (EF.options) EF.options.render();
-        }));
-      $("set-spot-dim").querySelectorAll("button").forEach((b) =>
-        b.addEventListener("click", () => {
-          EF.state.spotDim = parseFloat(b.dataset.dim);
-          $("set-spot-dim").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
-        }));
-      $("set-zoom-scale").querySelectorAll("button").forEach((b) =>
-        b.addEventListener("click", () => {
-          EF.state.zoomScale = parseFloat(b.dataset.zoom);
-          $("set-zoom-scale").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
-          EF.zoom.refresh(); EF.setStatus();
-        }));
 
       // 閉じる
       document.querySelectorAll('[data-action="close-settings"]').forEach((b) =>
         b.addEventListener("click", () => this.closeModal()));
       $("settings").addEventListener("click", (e) => { if (e.target.id === "settings") this.closeModal(); });
 
-      this.apply(EF.state.preset, true);
+      // 起動時に現在の状態をUIへ反映
+      this.syncUI();
     },
 
     bindRange(inId, outId, onInput, fmt) {
       const inp = $(inId), out = $(outId);
       inp.addEventListener("input", () => { onInput(inp.value); out.textContent = fmt(inp.value); });
+      inp.addEventListener("change", save);
     },
 
-    apply(key, silent) {
-      const p = EF.PRESETS[key];
-      if (!p) return;
-      EF.state.preset = key;
-      EF.state.color = p.color;
-      EF.state.strokeWidth = p.strokeWidth;
-      EF.state.ring = Object.assign({}, p.ring);
-      EF.state.cursorStyle = p.cursorStyle || "ring";
-
-      // UI同期
-      $("set-ring-width").value = p.ring.width; $("out-ring-width").textContent = p.ring.width + "px";
-      $("set-ring-size").value = p.ring.size; $("out-ring-size").textContent = p.ring.size + "px";
-      $("set-ring-opacity").value = Math.round(p.ring.opacity * 100); $("out-ring-opacity").textContent = Math.round(p.ring.opacity * 100) + "%";
-      $("set-stroke-width").value = p.strokeWidth; $("out-stroke-width").textContent = p.strokeWidth + "px";
-      $("set-click-ripple").checked = p.ring.ripple;
-
-      document.querySelectorAll(".preset").forEach((b) =>
-        b.classList.toggle("active", b.dataset.preset === key));
-
-      // カーソル形状セレクタの同期
-      const cs = document.getElementById("set-cursor-style");
-      if (cs) cs.querySelectorAll("button").forEach((b) =>
-        b.classList.toggle("active", b.dataset.cursor === EF.state.cursorStyle));
-
-      EF.cursor.update();
-      EF.toolbar.sync();
-      if (EF.options) EF.options.render();
-      EF.setStatus();
-      if (!silent) EF.toast(`プリセット: ${p.name}`);
+    // カラーパレット編集（クリックで色変更・自動保存）
+    buildPalette() {
+      const box = $("palette-edit");
+      box.innerHTML = "";
+      EF.PALETTE.forEach((c, i) => {
+        const inp = document.createElement("input");
+        inp.type = "color";
+        inp.className = "pal-color";
+        inp.value = c.value;
+        inp.title = c.name;
+        inp.addEventListener("input", () => {
+          const old = EF.PALETTE[i].value;
+          EF.PALETTE[i].value = inp.value;
+          if (EF.state.color === old) EF.state.color = inp.value; // 選択中の色も追従
+          EF.toolbar.buildColors();
+          EF.cursor.update();
+          save();
+        });
+        box.appendChild(inp);
+      });
     },
 
-    openModal() {
-      // 現在の状態をUIへ反映
+    // テキスト色（パレットから選択）
+    buildTextColors() {
+      const box = $("set-text-color");
+      box.innerHTML = "";
+      EF.PALETTE.forEach((c) => {
+        const sw = document.createElement("div");
+        sw.className = "swatch";
+        sw.style.background = c.value;
+        sw.dataset.color = c.value;
+        sw.addEventListener("click", () => {
+          EF.state.textColor = c.value;
+          box.querySelectorAll(".swatch").forEach((s) => s.classList.toggle("active", s === sw));
+          save();
+        });
+        box.appendChild(sw);
+      });
+    },
+
+    syncUI() {
       $("set-show-options").checked = EF.state.showOptions;
+      $("set-ring-width").value = EF.state.ring.width; $("out-ring-width").textContent = EF.state.ring.width + "px";
+      $("set-ring-size").value = EF.state.ring.size; $("out-ring-size").textContent = EF.state.ring.size + "px";
+      $("set-ring-opacity").value = Math.round(EF.state.ring.opacity * 100); $("out-ring-opacity").textContent = Math.round(EF.state.ring.opacity * 100) + "%";
+      $("set-stroke-width").value = EF.state.strokeWidth; $("out-stroke-width").textContent = EF.state.strokeWidth + "px";
+      $("set-click-ripple").checked = EF.state.ring.ripple;
       const setActive = (id, attr, val) =>
         $(id).querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset[attr] === String(val)));
       setActive("set-cursor-style", "cursor", EF.state.cursorStyle);
@@ -1891,8 +1922,13 @@ kbd {
       setActive("set-spot-band", "band", EF.state.spotBand);
       setActive("set-spot-dim", "dim", EF.state.spotDim);
       setActive("set-zoom-scale", "zoom", EF.state.zoomScale);
-      $("settings").hidden = false;
+      setActive("set-text-size", "size", EF.state.textSize);
+      setActive("set-text-weight", "weight", EF.state.textBold ? "bold" : "normal");
+      $("set-text-color").querySelectorAll(".swatch").forEach((s) =>
+        s.classList.toggle("active", s.dataset.color === EF.state.textColor));
     },
+
+    openModal() { this.syncUI(); $("settings").hidden = false; },
     closeModal() { $("settings").hidden = true; },
   };
 })();
@@ -1968,8 +2004,9 @@ kbd {
       const old = stage.querySelector(".ef-text-input");
       if (old) old.remove();
       const x = hit ? hit.a.x : p.x, y = hit ? hit.a.y : p.y;
-      const color = hit ? hit.color : EF.state.color;
-      const width = hit ? hit.width : EF.state.strokeWidth;
+      const color = hit ? hit.color : EF.state.textColor;
+      const size = hit ? hit.size : EF.state.textSize;
+      const weight = hit ? hit.weight : (EF.state.textBold ? 800 : 500);
       if (hit) hit._editing = true; // 編集中は元の描画を隠す
       const inp = document.createElement("input");
       inp.className = "ef-text-input";
@@ -1978,7 +2015,8 @@ kbd {
       inp.style.left = x + "px";
       inp.style.top = y + "px";
       inp.style.color = color;
-      inp.style.fontSize = Math.max(16, width * 3) + "px";
+      inp.style.fontSize = size + "px";
+      inp.style.fontWeight = weight;
       stage.appendChild(inp);
       requestAnimationFrame(() => { inp.focus(); inp.select(); });
       let done = false;
@@ -1993,7 +2031,7 @@ kbd {
           if (v) hit.text = v;                      // 更新
           else EF.annot.engine.removeStroke(hit);   // 空なら削除
         } else if (keep && v) {
-          EF.annot.engine.addText(x, y, v, color, width);
+          EF.annot.engine.addText(x, y, v, { color: color, size: size, weight: weight });
         }
       };
       const onBlur = () => close(true);
@@ -2010,6 +2048,7 @@ kbd {
       EF.cursor.update();
       EF.toolbar.sync();
       EF.setStatus();
+      if (EF.saveSettings) EF.saveSettings();
     },
 
     toggle(what) {
@@ -2148,6 +2187,7 @@ kbd {
         EF.cursor.update();
         this.render();
         EF.setStatus();
+        if (EF.saveSettings) EF.saveSettings();
       });
     },
   };

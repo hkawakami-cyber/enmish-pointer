@@ -451,6 +451,19 @@ body.ef-ui-hidden .scene-root { padding-right: 64px; }
 .field output { min-width: 42px; text-align: right; color: #5b6478; font-variant-numeric: tabular-nums; }
 .checkfield { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #2c3550; }
 
+/* カラーパレット編集 */
+.palette-edit { display: flex; flex-wrap: wrap; gap: 8px; }
+.pal-color {
+  width: 34px; height: 34px; padding: 0; border: 1px solid #dfe3ec; border-radius: 9px;
+  background: none; cursor: pointer;
+}
+.pal-color::-webkit-color-swatch-wrapper { padding: 2px; }
+.pal-color::-webkit-color-swatch { border: none; border-radius: 6px; }
+/* 設定モーダル内のカラー行（テキスト色） */
+.palette-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.palette-row .swatch { width: 20px; height: 20px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+.palette-row .swatch.active { border-color: var(--ef-ink); box-shadow: 0 0 0 1.5px #fff inset; }
+
 .preset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .preset {
   text-align: left; border: 1.5px solid #e3e7f0; border-radius: 12px; padding: 12px 14px;

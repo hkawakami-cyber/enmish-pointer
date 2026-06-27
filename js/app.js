@@ -67,8 +67,9 @@
       const old = stage.querySelector(".ef-text-input");
       if (old) old.remove();
       const x = hit ? hit.a.x : p.x, y = hit ? hit.a.y : p.y;
-      const color = hit ? hit.color : EF.state.color;
-      const width = hit ? hit.width : EF.state.strokeWidth;
+      const color = hit ? hit.color : EF.state.textColor;
+      const size = hit ? hit.size : EF.state.textSize;
+      const weight = hit ? hit.weight : (EF.state.textBold ? 800 : 500);
       if (hit) hit._editing = true; // 編集中は元の描画を隠す
       const inp = document.createElement("input");
       inp.className = "ef-text-input";
@@ -77,7 +78,8 @@
       inp.style.left = x + "px";
       inp.style.top = y + "px";
       inp.style.color = color;
-      inp.style.fontSize = Math.max(16, width * 3) + "px";
+      inp.style.fontSize = size + "px";
+      inp.style.fontWeight = weight;
       stage.appendChild(inp);
       requestAnimationFrame(() => { inp.focus(); inp.select(); });
       let done = false;
@@ -92,7 +94,7 @@
           if (v) hit.text = v;                      // 更新
           else EF.annot.engine.removeStroke(hit);   // 空なら削除
         } else if (keep && v) {
-          EF.annot.engine.addText(x, y, v, color, width);
+          EF.annot.engine.addText(x, y, v, { color: color, size: size, weight: weight });
         }
       };
       const onBlur = () => close(true);
@@ -109,6 +111,7 @@
       EF.cursor.update();
       EF.toolbar.sync();
       EF.setStatus();
+      if (EF.saveSettings) EF.saveSettings();
     },
 
     toggle(what) {
@@ -247,6 +250,7 @@
         EF.cursor.update();
         this.render();
         EF.setStatus();
+        if (EF.saveSettings) EF.saveSettings();
       });
     },
   };

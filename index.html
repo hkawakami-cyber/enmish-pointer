@@ -131,17 +131,18 @@
     </div>
   </div>
 
-  <!-- ============ 設定 / プリセット ============ -->
+  <!-- ============ 設定 ============ -->
   <div id="settings" class="modal" hidden>
     <div class="modal-card">
       <div class="modal-head">
-        <h2>設定 / プリセット</h2>
+        <h2>設定</h2>
         <button class="modal-close" data-action="close-settings">✕</button>
       </div>
 
       <section class="modal-section">
-        <h3>プリセット</h3>
-        <div class="preset-grid" id="preset-grid"></div>
+        <h3>カラーパレット</h3>
+        <div class="palette-edit" id="palette-edit"></div>
+        <p class="note">クリックして色を変更できます。変更内容は自動で保存されます。</p>
       </section>
 
       <section class="modal-section">
@@ -227,6 +228,26 @@
           <button data-zoom="2">×2</button>
           <button data-zoom="3">×3</button>
         </div>
+      </section>
+
+      <section class="modal-section">
+        <h3>テキスト</h3>
+        <label class="field" style="display:block">大きさ
+          <div class="seg seg-wrap" id="set-text-size" style="margin-top:8px">
+            <button data-size="20">小</button>
+            <button data-size="28">中</button>
+            <button data-size="44">大</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">太さ
+          <div class="seg seg-wrap" id="set-text-weight" style="margin-top:8px">
+            <button data-weight="normal">標準</button>
+            <button data-weight="bold">太字</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">色
+          <div class="tb-colors palette-row" id="set-text-color" style="margin-top:8px"></div>
+        </label>
       </section>
 
       <section class="modal-section">

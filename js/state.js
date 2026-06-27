@@ -18,48 +18,15 @@
 
 
 
-  // プリセット定義
-  EF.PRESETS = {
-    proposal: {
-      name: "商談モード",
-      desc: "顧客向け提案。グリーン中心・リングカーソル中。",
-      color: "#6cbba5",
-      strokeWidth: 6,
-      ring: { width: 6, size: 60, opacity: 0.9, ripple: true },
-      cursorStyle: "ring",
-    },
-    review: {
-      name: "社内レビュー",
-      desc: "KPI・資料レビュー。ブラックで薄め・ドット小。",
-      color: "#032841",
-      strokeWidth: 4,
-      ring: { width: 4, size: 44, opacity: 0.55, ripple: false },
-      cursorStyle: "dot",
-    },
-    record: {
-      name: "録画モード",
-      desc: "マニュアル・研修動画。Gold強調・矢印カーソル大・波紋あり。",
-      color: "#917d44",
-      strokeWidth: 7,
-      ring: { width: 8, size: 60, opacity: 1.0, ripple: true },
-      cursorStyle: "arrow",
-    },
-    demo: {
-      name: "デモモード",
-      desc: "SaaS画面説明。スポットライト・ズーム優先・ハローカーソル。",
-      color: "#31594e",
-      strokeWidth: 5,
-      ring: { width: 6, size: 44, opacity: 0.85, ripple: true },
-      cursorStyle: "halo",
-    },
-  };
-
   // 実行時状態
   EF.state = {
     appOn: false,        // アプリ起動状態
     tool: "cursor",      // 現在の注釈ツール: cursor|pen|highlighter|arrow|ellipse|rect|text
     color: "#6cbba5",
     strokeWidth: 6,
+    textSize: 28,        // テキスト注釈の大きさ(px)
+    textBold: true,      // テキスト注釈の太さ
+    textColor: "#032841",// テキスト注釈の色
     ring: { width: 6, size: 64, opacity: 0.9, ripple: true },
     cursorStyle: "ring", // ring | dot | halo | ringdot | arrow
     arrowHead: "end",    // end | start | both
@@ -71,7 +38,10 @@
     spotDim: 0.72,       // スポットライトの暗さ（0〜1）
     zoom: false,
     zoomScale: 2.0,
-    preset: "proposal",
+    // ツールバーのカスタム（並べ替え・表示/非表示）
+    toolOrder: ["cursor", "pen", "highlighter", "arrow", "hline", "ellipse", "rect", "text", "spotlight", "zoom"],
+    toolHidden: {},
+    recording: false,
     mouse: { x: -999, y: -999, inStage: false },
   };
 
@@ -103,6 +73,37 @@
       label + (extras.length ? " ・ " + extras.join(" ・ ") : "");
     el.hidden = false;
   };
+
+  // --- 設定の永続化（localStorage） ---
+  const STORE_KEY = "enmishFocus.settings.v1";
+  const PERSIST = ["color", "strokeWidth", "textSize", "textBold", "textColor", "ring", "cursorStyle", "arrowHead",
+    "spotShape", "spotBand", "spotDim", "zoomScale", "showOptions", "toolOrder", "toolHidden"];
+
+  EF.saveSettings = function () {
+    try {
+      const obj = { palette: EF.PALETTE.map((c) => c.value) };
+      PERSIST.forEach((k) => { obj[k] = EF.state[k]; });
+      localStorage.setItem(STORE_KEY, JSON.stringify(obj));
+    } catch (e) { /* sandbox等で不可なら黙ってスキップ */ }
+  };
+
+  EF.loadSettings = function () {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return;
+      const obj = JSON.parse(raw);
+      if (Array.isArray(obj.palette)) {
+        obj.palette.forEach((v, i) => { if (EF.PALETTE[i]) EF.PALETTE[i].value = v; });
+      }
+      PERSIST.forEach((k) => {
+        if (obj[k] === undefined) return;
+        if (k === "ring") EF.state.ring = Object.assign({}, EF.state.ring, obj.ring);
+        else EF.state[k] = obj[k];
+      });
+    } catch (e) { /* noop */ }
+  };
+
+  EF.loadSettings(); // 起動時に保存済み設定を反映
 
   // ステージ座標へ正規化（mouseEvent → ステージ相対 px）
   EF.stagePoint = function (ev) {
