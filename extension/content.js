@@ -30,7 +30,7 @@
     zoom: false, zoomScale: 2.0,
     textSize: 28, textBold: true, textColor: "#032841",
     // ツールバーのカスタム（並べ替え・表示/非表示）
-    toolOrder: ["cursor", "pen", "highlighter", "arrow", "hline", "ellipse", "rect", "text", "spotlight", "zoom"],
+    toolOrder: ["rect", "highlighter", "arrow", "hline", "text", "pen", "cursor", "ellipse", "spotlight", "zoom"],
     toolHidden: {},
     barSide: "right", dockPos: "bottom-left",
     recording: false,
@@ -149,6 +149,9 @@
     .to-mv:disabled { opacity: .3; cursor: default; }
     .to-mv svg { display: block; }
     .to-mv.dn svg { transform: rotate(180deg); }
+    .tool-options input[type="checkbox"] { appearance: none; -webkit-appearance: none; margin: 0; width: 16px; height: 16px; flex: none; border: 1.5px solid #6cbba5; border-radius: 4px; background: rgba(255,255,255,.06); cursor: pointer; position: relative; vertical-align: middle; }
+    .tool-options input[type="checkbox"]:checked { background: #6cbba5; border-color: #6cbba5; }
+    .tool-options input[type="checkbox"]:checked::after { content: ""; position: absolute; left: 4.5px; top: 1px; width: 4px; height: 8px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
     [hidden] { display: none !important; }
   `;
 

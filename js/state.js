@@ -39,7 +39,7 @@
     zoom: false,
     zoomScale: 2.0,
     // ツールバーのカスタム（並べ替え・表示/非表示）
-    toolOrder: ["cursor", "pen", "highlighter", "arrow", "hline", "ellipse", "rect", "text", "spotlight", "zoom"],
+    toolOrder: ["rect", "highlighter", "arrow", "hline", "text", "pen", "cursor", "ellipse", "spotlight", "zoom"],
     toolHidden: {},
     // バーの配置
     barSide: "right",    // ツールバーの左右: right | left
