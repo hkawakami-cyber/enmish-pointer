@@ -42,6 +42,8 @@
     barSide: "right",    // ツールバーの左右: right | left
     dockPos: "bottom-left", // ドック位置: bottom-left | bottom-right | top-left | top-right
     autoHide: true,      // 右端ホバーで自動表示（Mac のドック風）
+    showLabels: true,    // ツールの文字ラベル表示（OFFで記号だけ）
+    autoErase: 0,        // 自動で消える（レーザー）秒数。0でOFF
     recording: false,
     mouse: { x: -999, y: -999, inStage: false },
   };
@@ -82,7 +84,7 @@
   // --- 設定の永続化（localStorage） ---
   const STORE_KEY = "enmishFocus.settings.v1";
   const PERSIST = ["color", "strokeWidth", "textSize", "textBold", "textColor", "ring", "cursorStyle", "arrowHead",
-    "spotShape", "spotBand", "spotDim", "zoomScale", "showOptions", "toolOrder", "toolHidden", "barSide", "dockPos", "autoHide"];
+    "spotShape", "spotBand", "spotDim", "zoomScale", "showOptions", "toolOrder", "toolHidden", "barSide", "dockPos", "autoHide", "showLabels", "autoErase", "tool"];
 
   EF.saveSettings = function () {
     try {

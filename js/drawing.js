@@ -9,6 +9,17 @@
 
   const FADE_MS = 600; // 自動消去時のフェード時間
 
+  // 文字色が明るいか（下地チップの明暗を反転させる用）
+  function isLight(hex) {
+    if (typeof hex !== "string") return false;
+    let h = hex.replace("#", "");
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+    if ([r, g, b].some(Number.isNaN)) return false;
+    // 相対輝度
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) > 150;
+  }
+
   function DrawingEngine(canvas, opts) {
     opts = opts || {};
     this.canvas = canvas;
@@ -41,7 +52,7 @@
       tool: s.tool, color: s.color, width: s.width, head: s.head || "end",
       points: [{ x, y }], a: { x, y }, b: { x, y },
     };
-    this.redo.length = 0;
+    this.redo.length = 0; this._cleared = null;
   };
 
   DrawingEngine.prototype.move = function (x, y) {
@@ -73,7 +84,7 @@
       born: performance.now(),
     };
     this.strokes.push(s);
-    this.redo.length = 0;
+    this.redo.length = 0; this._cleared = null;
     return s;
   };
 
@@ -98,11 +109,15 @@
 
   DrawingEngine.prototype.addStamp = function (x, y, label, color) {
     this.strokes.push({ tool: "stamp", label, color, a: { x, y }, born: performance.now() });
-    this.redo.length = 0;
+    this.redo.length = 0; this._cleared = null;
   };
 
   DrawingEngine.prototype.undo = function () {
     if (this.current) { this.current = null; return; }
+    // 全消去の直後なら、まず消去をなかったことに（誤操作対策）
+    if (!this.strokes.length && this._cleared && this._cleared.length) {
+      this.strokes = this._cleared.slice(); this._cleared = null; return;
+    }
     const s = this.strokes.pop();
     if (s) this.redo.push(s);
   };
@@ -111,6 +126,8 @@
     if (s) this.strokes.push(s);
   };
   DrawingEngine.prototype.clear = function () {
+    // 直前の状態を1段だけ保持し、undo で復元できるようにする
+    if (this.strokes.length) this._cleared = this.strokes.slice();
     this.strokes.length = 0; this.current = null; this.redo.length = 0;
   };
   DrawingEngine.prototype.isEmpty = function () {
@@ -173,13 +190,17 @@
       const rx = Math.abs(s.b.x - s.a.x) / 2, ry = Math.abs(s.b.y - s.a.y) / 2;
       ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
     } else if (s.tool === "text") {
-      ctx.globalAlpha = alpha;
       const fs = s.size || 28;
       ctx.font = `${s.weight || 700} ${fs}px -apple-system, "Hiragino Sans", sans-serif`;
       ctx.textBaseline = "top";
-      // 視認性のため白縁取り
-      ctx.lineWidth = 4; ctx.strokeStyle = "rgba(255,255,255,.9)";
-      ctx.strokeText(s.text, s.a.x, s.a.y);
+      const tw = ctx.measureText(s.text).width, padX = 6, padY = 4;
+      // どんな背景でも読めるよう、文字色の明暗に応じた下地チップを敷く
+      ctx.globalAlpha = alpha * 0.85;
+      ctx.fillStyle = isLight(s.color) ? "rgba(16,24,36,0.74)" : "rgba(255,255,255,0.88)";
+      this._roundRect(ctx, s.a.x - padX, s.a.y - padY, tw + padX * 2, fs + padY * 2, 6);
+      ctx.fill();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = s.color;
       ctx.fillText(s.text, s.a.x, s.a.y);
     } else if (s.tool === "stamp") {
       this._stamp(ctx, s, alpha);

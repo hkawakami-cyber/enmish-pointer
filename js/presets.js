@@ -46,6 +46,8 @@
       seg("set-zoom-scale", "zoom", (v) => { EF.state.zoomScale = parseFloat(v); EF.zoom.refresh(); EF.setStatus(); });
 
       // バーの配置
+      seg("set-show-labels", "labels", (v) => { EF.state.showLabels = (v === "on"); EF.app.applyLayout(); });
+      seg("set-laser", "laser", (v) => { EF.state.autoErase = (v === "on") ? 2 : 0; });
       seg("set-auto-hide", "auto", (v) => { EF.state.autoHide = (v === "on"); EF.app.applyLayout(); });
       seg("set-bar-side", "side", (v) => { EF.state.barSide = v; EF.app.applyLayout(); });
       seg("set-dock-pos", "pos", (v) => { EF.state.dockPos = v; EF.app.applyLayout(); });
@@ -203,6 +205,8 @@
       setActive("set-spot-band", "band", EF.state.spotBand);
       setActive("set-spot-dim", "dim", EF.state.spotDim);
       setActive("set-zoom-scale", "zoom", EF.state.zoomScale);
+      setActive("set-show-labels", "labels", EF.state.showLabels ? "on" : "off");
+      setActive("set-laser", "laser", EF.state.autoErase > 0 ? "on" : "off");
       setActive("set-auto-hide", "auto", EF.state.autoHide ? "on" : "off");
       setActive("set-bar-side", "side", EF.state.barSide);
       setActive("set-dock-pos", "pos", EF.state.dockPos);

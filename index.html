@@ -219,6 +219,18 @@
 
       <section class="modal-section">
         <h3>バーの配置</h3>
+        <label class="field" style="display:block">ラベル表示（OFFで記号だけ）
+          <div class="seg seg-wrap" id="set-show-labels" style="margin-top:8px">
+            <button data-labels="on">ON</button>
+            <button data-labels="off">OFF</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">自動で消える（レーザー）
+          <div class="seg seg-wrap" id="set-laser" style="margin-top:8px">
+            <button data-laser="on">ON</button>
+            <button data-laser="off">OFF</button>
+          </div>
+        </label>
         <label class="field" style="display:block">自動表示（マウスを端に近づけると出る）
           <div class="seg seg-wrap" id="set-auto-hide" style="margin-top:8px">
             <button data-auto="on">ON</button>
@@ -245,8 +257,8 @@
 
   <!-- 常駐ドック：ポインター機能のON/OFF（色で状態が分かる・常に表示） -->
   <div id="ef-dock" class="ef-dock">
-    <button class="dock-btn" id="dock-power" title="ポインター ON/OFF (⌘⇧E)">
-      <span class="ico" data-ic="power"></span><span class="lbl">ポインター OFF</span>
+    <button class="dock-btn dock-power-mark" id="dock-power" title="ポインター ON/OFF (⌘⇧E)">
+      <span class="ico" data-ic="power" data-ic-size="18"></span>
     </button>
   </div>
 

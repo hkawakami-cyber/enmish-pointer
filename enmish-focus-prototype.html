@@ -560,16 +560,19 @@ kbd {
   background: var(--tb-bg); border: 1px solid rgba(255,255,255,.08);
   border-radius: 14px; box-shadow: var(--shadow); backdrop-filter: blur(14px);
 }
-/* OFF＝グレー、ON＝緑。マークの色で機能の状態が一目で分かる。 */
+/* 左下は丸い記号だけ。色でON(緑)/OFF(グレー)を表す */
 .dock-btn {
-  display: flex; align-items: center; gap: 7px; border: none; cursor: pointer;
-  background: rgba(255,255,255,.10); color: #c4ccda; font-weight: 600;
-  padding: 8px 13px; border-radius: 10px; font-size: 12px; line-height: 1;
+  display: flex; align-items: center; justify-content: center; border: none; cursor: pointer;
+  background: rgba(255,255,255,.10); color: #c4ccda; line-height: 1;
   transition: background .12s, color .12s;
 }
-.dock-btn:hover { background: rgba(255,255,255,.18); }
-.dock-btn .ico { font-size: 15px; }
-.dock-btn#dock-power.on { background: var(--ef-green); color: #06251c; font-weight: 700; }
+.dock-btn:hover { background: rgba(255,255,255,.2); }
+.dock-btn .ico { font-size: 15px; display: inline-flex; }
+.dock-power-mark { width: 40px; height: 40px; border-radius: 50%; padding: 0; }
+.dock-btn#dock-power.on { background: var(--ef-green); color: #06251c; }
+/* ラベル非表示（記号だけ）＝幅を詰める */
+.toolbar.labels-off .tb-body { width: 86px; }
+.toolbar.labels-off .tool .lbl { display: none; }
 
 /* 最小化中の再表示タブ（バーと同じ端に小さく出す） */
 .reopen {
@@ -818,6 +821,18 @@ kbd {
 
       <section class="modal-section">
         <h3>バーの配置</h3>
+        <label class="field" style="display:block">ラベル表示（OFFで記号だけ）
+          <div class="seg seg-wrap" id="set-show-labels" style="margin-top:8px">
+            <button data-labels="on">ON</button>
+            <button data-labels="off">OFF</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">自動で消える（レーザー）
+          <div class="seg seg-wrap" id="set-laser" style="margin-top:8px">
+            <button data-laser="on">ON</button>
+            <button data-laser="off">OFF</button>
+          </div>
+        </label>
         <label class="field" style="display:block">自動表示（マウスを端に近づけると出る）
           <div class="seg seg-wrap" id="set-auto-hide" style="margin-top:8px">
             <button data-auto="on">ON</button>
@@ -844,8 +859,8 @@ kbd {
 
   <!-- 常駐ドック：ポインター機能のON/OFF（色で状態が分かる・常に表示） -->
   <div id="ef-dock" class="ef-dock">
-    <button class="dock-btn" id="dock-power" title="ポインター ON/OFF (⌘⇧E)">
-      <span class="ico" data-ic="power"></span><span class="lbl">ポインター OFF</span>
+    <button class="dock-btn dock-power-mark" id="dock-power" title="ポインター ON/OFF (⌘⇧E)">
+      <span class="ico" data-ic="power" data-ic-size="18"></span>
     </button>
   </div>
 
@@ -970,6 +985,8 @@ kbd {
     barSide: "right",    // ツールバーの左右: right | left
     dockPos: "bottom-left", // ドック位置: bottom-left | bottom-right | top-left | top-right
     autoHide: true,      // 右端ホバーで自動表示（Mac のドック風）
+    showLabels: true,    // ツールの文字ラベル表示（OFFで記号だけ）
+    autoErase: 0,        // 自動で消える（レーザー）秒数。0でOFF
     recording: false,
     mouse: { x: -999, y: -999, inStage: false },
   };
@@ -1010,7 +1027,7 @@ kbd {
   // --- 設定の永続化（localStorage） ---
   const STORE_KEY = "enmishFocus.settings.v1";
   const PERSIST = ["color", "strokeWidth", "textSize", "textBold", "textColor", "ring", "cursorStyle", "arrowHead",
-    "spotShape", "spotBand", "spotDim", "zoomScale", "showOptions", "toolOrder", "toolHidden", "barSide", "dockPos", "autoHide"];
+    "spotShape", "spotBand", "spotDim", "zoomScale", "showOptions", "toolOrder", "toolHidden", "barSide", "dockPos", "autoHide", "showLabels", "autoErase", "tool"];
 
   EF.saveSettings = function () {
     try {
@@ -1155,6 +1172,17 @@ kbd {
 
   const FADE_MS = 600; // 自動消去時のフェード時間
 
+  // 文字色が明るいか（下地チップの明暗を反転させる用）
+  function isLight(hex) {
+    if (typeof hex !== "string") return false;
+    let h = hex.replace("#", "");
+    if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+    const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+    if ([r, g, b].some(Number.isNaN)) return false;
+    // 相対輝度
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) > 150;
+  }
+
   function DrawingEngine(canvas, opts) {
     opts = opts || {};
     this.canvas = canvas;
@@ -1187,7 +1215,7 @@ kbd {
       tool: s.tool, color: s.color, width: s.width, head: s.head || "end",
       points: [{ x, y }], a: { x, y }, b: { x, y },
     };
-    this.redo.length = 0;
+    this.redo.length = 0; this._cleared = null;
   };
 
   DrawingEngine.prototype.move = function (x, y) {
@@ -1219,7 +1247,7 @@ kbd {
       born: performance.now(),
     };
     this.strokes.push(s);
-    this.redo.length = 0;
+    this.redo.length = 0; this._cleared = null;
     return s;
   };
 
@@ -1244,11 +1272,15 @@ kbd {
 
   DrawingEngine.prototype.addStamp = function (x, y, label, color) {
     this.strokes.push({ tool: "stamp", label, color, a: { x, y }, born: performance.now() });
-    this.redo.length = 0;
+    this.redo.length = 0; this._cleared = null;
   };
 
   DrawingEngine.prototype.undo = function () {
     if (this.current) { this.current = null; return; }
+    // 全消去の直後なら、まず消去をなかったことに（誤操作対策）
+    if (!this.strokes.length && this._cleared && this._cleared.length) {
+      this.strokes = this._cleared.slice(); this._cleared = null; return;
+    }
     const s = this.strokes.pop();
     if (s) this.redo.push(s);
   };
@@ -1257,6 +1289,8 @@ kbd {
     if (s) this.strokes.push(s);
   };
   DrawingEngine.prototype.clear = function () {
+    // 直前の状態を1段だけ保持し、undo で復元できるようにする
+    if (this.strokes.length) this._cleared = this.strokes.slice();
     this.strokes.length = 0; this.current = null; this.redo.length = 0;
   };
   DrawingEngine.prototype.isEmpty = function () {
@@ -1319,13 +1353,17 @@ kbd {
       const rx = Math.abs(s.b.x - s.a.x) / 2, ry = Math.abs(s.b.y - s.a.y) / 2;
       ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2); ctx.stroke();
     } else if (s.tool === "text") {
-      ctx.globalAlpha = alpha;
       const fs = s.size || 28;
       ctx.font = `${s.weight || 700} ${fs}px -apple-system, "Hiragino Sans", sans-serif`;
       ctx.textBaseline = "top";
-      // 視認性のため白縁取り
-      ctx.lineWidth = 4; ctx.strokeStyle = "rgba(255,255,255,.9)";
-      ctx.strokeText(s.text, s.a.x, s.a.y);
+      const tw = ctx.measureText(s.text).width, padX = 6, padY = 4;
+      // どんな背景でも読めるよう、文字色の明暗に応じた下地チップを敷く
+      ctx.globalAlpha = alpha * 0.85;
+      ctx.fillStyle = isLight(s.color) ? "rgba(16,24,36,0.74)" : "rgba(255,255,255,0.88)";
+      this._roundRect(ctx, s.a.x - padX, s.a.y - padY, tw + padX * 2, fs + padY * 2, 6);
+      ctx.fill();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = s.color;
       ctx.fillText(s.text, s.a.x, s.a.y);
     } else if (s.tool === "stamp") {
       this._stamp(ctx, s, alpha);
@@ -1933,6 +1971,8 @@ kbd {
       seg("set-zoom-scale", "zoom", (v) => { EF.state.zoomScale = parseFloat(v); EF.zoom.refresh(); EF.setStatus(); });
 
       // バーの配置
+      seg("set-show-labels", "labels", (v) => { EF.state.showLabels = (v === "on"); EF.app.applyLayout(); });
+      seg("set-laser", "laser", (v) => { EF.state.autoErase = (v === "on") ? 2 : 0; });
       seg("set-auto-hide", "auto", (v) => { EF.state.autoHide = (v === "on"); EF.app.applyLayout(); });
       seg("set-bar-side", "side", (v) => { EF.state.barSide = v; EF.app.applyLayout(); });
       seg("set-dock-pos", "pos", (v) => { EF.state.dockPos = v; EF.app.applyLayout(); });
@@ -2090,6 +2130,8 @@ kbd {
       setActive("set-spot-band", "band", EF.state.spotBand);
       setActive("set-spot-dim", "dim", EF.state.spotDim);
       setActive("set-zoom-scale", "zoom", EF.state.zoomScale);
+      setActive("set-show-labels", "labels", EF.state.showLabels ? "on" : "off");
+      setActive("set-laser", "laser", EF.state.autoErase > 0 ? "on" : "off");
       setActive("set-auto-hide", "auto", EF.state.autoHide ? "on" : "off");
       setActive("set-bar-side", "side", EF.state.barSide);
       setActive("set-dock-pos", "pos", EF.state.dockPos);
@@ -2124,7 +2166,7 @@ kbd {
       const canvas = document.getElementById("annot-canvas");
       this.engine = new EF.DrawingEngine(canvas, {
         getStyle: () => ({ tool: EF.state.tool, color: EF.state.color, width: EF.state.strokeWidth, head: EF.state.arrowHead }),
-        getAutoErase: () => 0,
+        getAutoErase: () => EF.state.autoErase || 0,
       });
       window.addEventListener("resize", () => this.engine.resize());
 
@@ -2394,6 +2436,7 @@ kbd {
     applyLayout() {
       const tb = document.getElementById("toolbar");
       if (tb) tb.classList.toggle("side-left", EF.state.barSide === "left");
+      if (tb) tb.classList.toggle("labels-off", !EF.state.showLabels);
       document.body.classList.toggle("bar-left", EF.state.barSide === "left");
       const dock = document.getElementById("ef-dock");
       if (dock) {
@@ -2513,7 +2556,7 @@ kbd {
       // 左下マークは常に表示。色（緑＝ON／グレー＝OFF）で機能の状態を示す。
       const power = document.getElementById("dock-power");
       power.classList.toggle("on", EF.state.appOn);
-      power.querySelector(".lbl").textContent = EF.state.appOn ? "ポインター ON" : "ポインター OFF";
+      power.title = EF.state.appOn ? "ポインター ON（クリックでOFF）" : "ポインター OFF（クリックでON）";
       // 最小化中だけ、端の再表示タブを出す
       const reopen = document.getElementById("reopen");
       if (reopen) {

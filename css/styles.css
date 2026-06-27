@@ -559,16 +559,19 @@ kbd {
   background: var(--tb-bg); border: 1px solid rgba(255,255,255,.08);
   border-radius: 14px; box-shadow: var(--shadow); backdrop-filter: blur(14px);
 }
-/* OFF＝グレー、ON＝緑。マークの色で機能の状態が一目で分かる。 */
+/* 左下は丸い記号だけ。色でON(緑)/OFF(グレー)を表す */
 .dock-btn {
-  display: flex; align-items: center; gap: 7px; border: none; cursor: pointer;
-  background: rgba(255,255,255,.10); color: #c4ccda; font-weight: 600;
-  padding: 8px 13px; border-radius: 10px; font-size: 12px; line-height: 1;
+  display: flex; align-items: center; justify-content: center; border: none; cursor: pointer;
+  background: rgba(255,255,255,.10); color: #c4ccda; line-height: 1;
   transition: background .12s, color .12s;
 }
-.dock-btn:hover { background: rgba(255,255,255,.18); }
-.dock-btn .ico { font-size: 15px; }
-.dock-btn#dock-power.on { background: var(--ef-green); color: #06251c; font-weight: 700; }
+.dock-btn:hover { background: rgba(255,255,255,.2); }
+.dock-btn .ico { font-size: 15px; display: inline-flex; }
+.dock-power-mark { width: 40px; height: 40px; border-radius: 50%; padding: 0; }
+.dock-btn#dock-power.on { background: var(--ef-green); color: #06251c; }
+/* ラベル非表示（記号だけ）＝幅を詰める */
+.toolbar.labels-off .tb-body { width: 86px; }
+.toolbar.labels-off .tool .lbl { display: none; }
 
 /* 最小化中の再表示タブ（バーと同じ端に小さく出す） */
 .reopen {

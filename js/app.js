@@ -16,7 +16,7 @@
       const canvas = document.getElementById("annot-canvas");
       this.engine = new EF.DrawingEngine(canvas, {
         getStyle: () => ({ tool: EF.state.tool, color: EF.state.color, width: EF.state.strokeWidth, head: EF.state.arrowHead }),
-        getAutoErase: () => 0,
+        getAutoErase: () => EF.state.autoErase || 0,
       });
       window.addEventListener("resize", () => this.engine.resize());
 
@@ -286,6 +286,7 @@
     applyLayout() {
       const tb = document.getElementById("toolbar");
       if (tb) tb.classList.toggle("side-left", EF.state.barSide === "left");
+      if (tb) tb.classList.toggle("labels-off", !EF.state.showLabels);
       document.body.classList.toggle("bar-left", EF.state.barSide === "left");
       const dock = document.getElementById("ef-dock");
       if (dock) {
@@ -405,7 +406,7 @@
       // 左下マークは常に表示。色（緑＝ON／グレー＝OFF）で機能の状態を示す。
       const power = document.getElementById("dock-power");
       power.classList.toggle("on", EF.state.appOn);
-      power.querySelector(".lbl").textContent = EF.state.appOn ? "ポインター ON" : "ポインター OFF";
+      power.title = EF.state.appOn ? "ポインター ON（クリックでOFF）" : "ポインター OFF（クリックでON）";
       // 最小化中だけ、端の再表示タブを出す
       const reopen = document.getElementById("reopen");
       if (reopen) {

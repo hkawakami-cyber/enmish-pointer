@@ -33,6 +33,7 @@
     toolHidden: {},
     barSide: "right", dockPos: "bottom-left",
     autoHide: true, // 右端ホバーで自動表示（Mac のドック風）
+    showLabels: true, // ツールの文字ラベル表示（OFFで記号だけ）
     recording: false,
     mouse: { x: -999, y: -999 },
   };
@@ -146,10 +147,15 @@
     .ef-dock.dock-top-right { top: 16px; right: 16px; bottom: auto; left: auto; }
     .ef-dock { position: fixed; left: 16px; bottom: 16px; display: flex; gap: 6px; padding: 6px; background: rgba(3,40,65,.94); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.35); backdrop-filter: blur(14px); pointer-events: auto; }
     /* OFF＝グレー、ON＝緑。マークの色で機能の状態が一目で分かる。 */
-    .dock-btn { display: flex; align-items: center; gap: 7px; border: none; cursor: pointer; background: rgba(255,255,255,.10); color: #c4ccda; padding: 8px 13px; border-radius: 10px; font-size: 12px; line-height: 1; font-weight: 600; transition: background .12s, color .12s; }
+    .dock-btn { display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; background: rgba(255,255,255,.10); color: #c4ccda; line-height: 1; transition: background .12s, color .12s; }
     .dock-btn .ico { display: inline-flex; }
-    .dock-btn:hover { background: rgba(255,255,255,.18); }
-    #dock-power.on { background: #6cbba5; color: #06251c; font-weight: 700; }
+    .dock-btn:hover { background: rgba(255,255,255,.2); }
+    /* 左下は丸い記号だけ。色でON(緑)/OFF(グレー)を表す */
+    .dock-power-mark { width: 40px; height: 40px; border-radius: 50%; padding: 0; }
+    #dock-power.on { background: #6cbba5; color: #06251c; }
+    /* ラベル非表示（記号だけ）＝幅を詰める */
+    .toolbar.labels-off { width: 86px; }
+    .toolbar.labels-off .lbl { display: none; }
     .ef-text { position: fixed; transform: translateY(-4px); z-index: 10; pointer-events: auto; border: none; border-bottom: 2px solid currentColor; background: rgba(255,255,255,.92); font-weight: 700; padding: 2px 6px; border-radius: 4px; min-width: 120px; outline: none; }
     .tool-options { position: fixed; right: 92px; top: 50%; transform: translateY(-50%); background: rgba(3,40,65,.94); color: #e8ecf4; border-radius: 14px; padding: 13px; width: 168px; max-height: 88vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(14px); display: flex; flex-direction: column; gap: 11px; pointer-events: auto; }
     .to-group { display: flex; flex-direction: column; gap: 5px; }
@@ -253,7 +259,7 @@
     <div id="badge" class="badge" hidden></div>
     <div id="toast" class="toast" hidden></div>
     <div id="ef-dock" class="ef-dock">
-      <button class="dock-btn" id="dock-power" title="ポインター ON/OFF (⌘⇧E)"><span class="ico">${(EF.iconSvg && EF.iconSvg("power", 16)) || "⏻"}</span><span class="lbl">ポインター OFF</span></button>
+      <button class="dock-btn dock-power-mark" id="dock-power" title="ポインター ON/OFF (⌘⇧E)"><span class="ico">${(EF.iconSvg && EF.iconSvg("power", 18)) || "⏻"}</span></button>
     </div>
   `;
 
@@ -427,7 +433,7 @@
   // 設定の永続化（chrome.storage.local）
   const PERSIST = ["color", "strokeWidth", "ring", "cursorStyle", "arrowHead",
     "spotShape", "spotBand", "spotDim", "zoomScale", "textSize", "textBold", "textColor",
-    "toolOrder", "toolHidden", "barSide", "dockPos", "autoHide"];
+    "toolOrder", "toolHidden", "barSide", "dockPos", "autoHide", "showLabels", "autoErase", "tool"];
   // 保存済み順序に新規ツールが欠けていたら補完、未知のキーは除去
   function normalizeToolOrder() {
     if (!Array.isArray(state.toolOrder)) state.toolOrder = TOOL_DEFS.map((d) => d[1]);
@@ -463,7 +469,7 @@
     dockEl.hidden = false;
     const power = root.getElementById("dock-power");
     power.classList.toggle("on", state.appOn);
-    power.querySelector(".lbl").textContent = state.appOn ? "ポインター ON" : "ポインター OFF";
+    power.title = state.appOn ? "ポインター ON（クリックでOFF）" : "ポインター OFF（クリックでON）";
     // 最小化中だけ、右端の再表示タブを出す
     reopenEl.hidden = !(state.appOn && state.uiHidden);
     reopenEl.classList.toggle("side-left", state.barSide === "left");
@@ -478,6 +484,8 @@
     groups.push(optGroup("ズーム倍率", "zoomScale", state.zoomScale, [[1.5, "", "×1.5"], [2, "", "×2"], [3, "", "×3"]]));
     groups.push(optGroup("クリック波紋", "ripple", state.ring.ripple ? "on" : "off", [["on", "", "ON"], ["off", "", "OFF"]]));
     groups.push(optGroup("注目の濃さ", "spotDim", state.spotDim, [[0.55, "", "薄"], [0.72, "", "標準"], [0.88, "", "濃"]]));
+    groups.push(optGroup("ラベル表示（記号だけ＝OFF）", "showLabels", state.showLabels ? "on" : "off", [["on", "", "ON"], ["off", "", "OFF"]]));
+    groups.push(optGroup("自動で消える（レーザー）", "laser", state.autoErase > 0 ? "on" : "off", [["on", "", "ON"], ["off", "", "OFF"]]));
     groups.push(optGroup("自動表示（右端ホバー）", "autoHide", state.autoHide ? "on" : "off", [["on", "", "ON"], ["off", "", "OFF"]]));
     groups.push(optGroup("ツールバー位置", "barSide", state.barSide, [["left", "", "左"], ["right", "", "右"]]));
     groups.push(optGroup("ドック位置", "dockPos", state.dockPos, [["bottom-left", "", "左下"], ["bottom-right", "", "右下"], ["top-left", "", "左上"], ["top-right", "", "右上"]]));
@@ -493,7 +501,7 @@
     }
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.2.4</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.2.5</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -573,6 +581,7 @@
   }
   function applyLayout() {
     tb.classList.toggle("side-left", state.barSide === "left");
+    tb.classList.toggle("labels-off", !state.showLabels);
     dockEl.classList.remove("dock-bottom-right", "dock-top-left", "dock-top-right");
     if (state.dockPos && state.dockPos !== "bottom-left") dockEl.classList.add("dock-" + state.dockPos);
     // 自動表示モードはバーが浮いて出るのでガターは取らない
@@ -810,6 +819,8 @@
     else if (opt === "strokeWidth") state.strokeWidth = parseFloat(v);
     else if (opt === "zoomScale") { state.zoomScale = parseFloat(v); applyZoom(); }
     else if (opt === "ripple") state.ring.ripple = (v === "on");
+    else if (opt === "showLabels") { state.showLabels = (v === "on"); applyLayout(); }
+    else if (opt === "laser") { state.autoErase = (v === "on") ? 2 : 0; }
     else if (opt === "autoHide") { state.autoHide = (v === "on"); applyLayout(); }
     else if (opt === "barSide" || opt === "dockPos") { state[opt] = v; applyLayout(); }
     else state[opt] = v;
