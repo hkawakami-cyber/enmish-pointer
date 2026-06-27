@@ -145,14 +145,15 @@
     .ef-dock.dock-bottom-right { left: auto; right: 16px; bottom: 16px; top: auto; }
     .ef-dock.dock-top-left { top: 16px; left: 16px; bottom: auto; right: auto; }
     .ef-dock.dock-top-right { top: 16px; right: 16px; bottom: auto; left: auto; }
-    .ef-dock { position: fixed; left: 16px; bottom: 16px; display: flex; gap: 6px; padding: 6px; background: rgba(3,40,65,.94); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.35); backdrop-filter: blur(14px); pointer-events: auto; }
-    /* OFF＝グレー、ON＝緑。マークの色で機能の状態が一目で分かる。 */
-    .dock-btn { display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; background: rgba(255,255,255,.10); color: #c4ccda; line-height: 1; transition: background .12s, color .12s; }
+    /* ドックは枠なし（位置だけ）。マーク1枚で見せる。 */
+    .ef-dock { position: fixed; left: 16px; bottom: 16px; display: flex; gap: 6px; padding: 0; background: none; border: none; box-shadow: none; pointer-events: auto; }
+    .dock-btn { display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; background: rgba(255,255,255,.10); color: #c4ccda; line-height: 1; transition: background .15s, color .15s, box-shadow .2s; }
     .dock-btn .ico { display: inline-flex; }
-    .dock-btn:hover { background: rgba(255,255,255,.2); }
-    /* 左下は丸い記号だけ。色でON(緑)/OFF(グレー)を表す */
-    .dock-power-mark { width: 40px; height: 40px; border-radius: 50%; padding: 0; }
-    #dock-power.on { background: #6cbba5; color: #06251c; }
+    /* 左下マーク：OFF=紺の丸 / ON=緑＋緑グロー（色で状態が一目で分かる） */
+    .dock-power-mark { width: 46px; height: 46px; border-radius: 50%; padding: 0; background: #0c2c46; color: #e8ecf4; box-shadow: 0 6px 16px rgba(0,0,0,.25); }
+    .dock-power-mark:hover { background: #123a59; }
+    #dock-power.on { background: #6cbba5; color: #06251c; box-shadow: 0 0 0 4px rgba(108,187,165,.30), 0 6px 18px rgba(108,187,165,.45); }
+    #dock-power.on:hover { background: #7cc7b1; }
     /* ラベル非表示（記号だけ）＝幅を詰める */
     .toolbar.labels-off { width: 86px; }
     .toolbar.labels-off .lbl { display: none; }
@@ -501,7 +502,7 @@
     }
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.2.5</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.2.6</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
