@@ -10,8 +10,9 @@
   <!-- アイコンタイル -->
   <g transform="translate(8,10)">
     <rect x="0" y="0" width="64" height="64" rx="15" fill="url(#lp-bg)"/>
-    <circle cx="26" cy="25" r="12.5" fill="none" stroke="#6cbba5" stroke-width="3.6"/>
-    <path d="M26 22 L26 49 L33 42 L38.2 53 L42.8 50.8 L37.6 40 L47 39 Z"
+    <path d="M40 19 A11 11 0 0 1 45 28" fill="none" stroke="#6cbba5" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+    <path d="M44 15 A16 16 0 0 1 50 27" fill="none" stroke="#6cbba5" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
+    <path d="M22 17 L22 50 L30.5 41.6 L36.8 55 L42.2 52.4 L36 39 L47.5 39 Z"
           fill="#ffffff" stroke="#032841" stroke-width="1.6" stroke-linejoin="round"/>
   </g>
   <!-- ワードマーク -->
