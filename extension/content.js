@@ -22,11 +22,12 @@
 
   const state = {
     appOn: false, tool: "cursor", color: "#6cbba5", strokeWidth: 6,
-    ring: { width: 6, size: 64, opacity: 0.9, ripple: true },
+    ring: { width: 6, size: 52, opacity: 0.9, ripple: true },
     cursorStyle: "ring", arrowHead: "end", uiHidden: false, optionsOpen: false,
     autoErase: 0, spotlight: false, spotShape: "band", spotBand: 0.5, spotDim: 0.72,
     zoom: false, zoomScale: 2.0,
     textSize: 20, textBold: false, textColor: "#032841",
+    // ring.size の既定は 52（中）。64 から少し小さく。
     // ツールバーのカスタム（並べ替え・表示/非表示）
     toolOrder: ["rect", "highlighter", "arrow", "hline", "text", "pen", "cursor", "ellipse", "spotlight", "zoom"],
     toolHidden: {},
@@ -482,7 +483,7 @@
     groups.push(optGroup("ドック位置", "dockPos", state.dockPos, [["bottom-left", "", "左下"], ["bottom-right", "", "右下"], ["top-left", "", "左上"], ["top-right", "", "右上"]]));
     if (state.appOn && state.tool === "cursor") {
       groups.push(optGroup("カーソル", "cursorStyle", state.cursorStyle, [["ring", "◎", "リング"], ["arrow", "➤", "矢印"], ["dot", "●", "ドット"], ["ringdot", "◉", "両方"], ["halo", "✦", "ハロー"]]));
-      groups.push(optGroup("大きさ", "ringSize", state.ring.size, [[28, "", "極小"], [44, "", "小"], [60, "", "中"]]));
+      groups.push(optGroup("大きさ", "ringSize", state.ring.size, [[36, "", "小"], [52, "", "中"], [72, "", "大"]]));
     } else if (state.appOn && state.tool === "arrow")
       groups.push(optGroup("矢じり", "arrowHead", state.arrowHead, [["end", "→", "終点"], ["start", "←", "始点"], ["both", "↔", "両方"]]));
     if (state.appOn && state.spotlight) {
@@ -492,7 +493,7 @@
     }
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.2.3</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.2.4</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
