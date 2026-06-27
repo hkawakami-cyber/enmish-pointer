@@ -12,9 +12,10 @@
 
   // ---------- 定義 ----------
   // Enmishブランド規定色のみ
+  // 波長順（長波長＝赤系 → 短波長＝青系、無彩色は末尾）
   const PALETTE = [
-    "#6cbba5", "#31594e", "#032841", "#917d44",
-    "#c1677f", "#8df1d5", "#ffffff", "#5b6478",
+    "#c1677f", "#917d44", "#8df1d5", "#6cbba5",
+    "#31594e", "#032841", "#5b6478", "#ffffff",
   ];
   const DRAW_TOOLS = ["pen", "highlighter", "arrow", "hline", "ellipse", "rect", "text"];
   const TOOL_NAMES = {

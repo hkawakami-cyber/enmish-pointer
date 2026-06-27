@@ -5,15 +5,16 @@
   const EF = (window.EF = window.EF || {});
 
   // カラーパレット（Enmishブランド規定色のみ）
+  // 波長順（長波長＝赤系 → 短波長＝青系、無彩色は末尾）
   EF.PALETTE = [
+    { name: "rose", value: "#c1677f" },        // 赤系（長波長）
+    { name: "gold", value: "#917d44" },        // 黄
+    { name: "green-light", value: "#8df1d5" },
     { name: "green", value: "#6cbba5" },       // エンミッシュグリーン
     { name: "green-dark", value: "#31594e" },
-    { name: "ink", value: "#032841" },         // エンミッシュブラック
-    { name: "gold", value: "#917d44" },        // 強調
-    { name: "rose", value: "#c1677f" },        // 警告
-    { name: "green-light", value: "#8df1d5" },
-    { name: "white", value: "#ffffff" },
+    { name: "ink", value: "#032841" },         // 青（短波長）
     { name: "gray", value: "#5b6478" },
+    { name: "white", value: "#ffffff" },       // 無彩色
   ];
 
 
