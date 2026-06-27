@@ -126,12 +126,19 @@
       }
     },
 
+    // ポインターモード（アプリ）のかんたんON/OFF（パレットを出さない）
+    togglePointer() {
+      if (EF.state.appOn) this.toggleApp();
+      else this.toggleApp(true);
+    },
+
     // UI（ツールバー・サイドバー等）の表示/非表示
     toggleUI() {
       if (!EF.state.appOn) return;
       EF.state.uiHidden = !EF.state.uiHidden;
       document.body.classList.toggle("ef-ui-hidden", EF.state.uiHidden);
-      EF.toast(EF.state.uiHidden ? "UIを非表示にしました（⌘⇧Hで再表示）" : "UIを表示しました");
+      EF.dock.update();
+      EF.toast(EF.state.uiHidden ? "バーを非表示にしました（右下のドックで再表示）" : "バーを表示しました");
     },
 
     toggleApp(forceOn) {
@@ -158,6 +165,7 @@
       EF.cursor.update();
       EF.toolbar.sync();
       EF.options.render();
+      EF.dock.update();
       EF.setStatus();
     },
 
@@ -226,6 +234,24 @@
     },
   };
 
+  // 常駐ドック
+  EF.dock = {
+    init() {
+      document.getElementById("dock-power").addEventListener("click", () => EF.app.togglePointer());
+      document.getElementById("dock-bars").addEventListener("click", () => EF.app.toggleUI());
+      this.update();
+    },
+    update() {
+      const power = document.getElementById("dock-power");
+      const bars = document.getElementById("dock-bars");
+      power.classList.toggle("on", EF.state.appOn);
+      power.querySelector(".lbl").textContent = EF.state.appOn ? "ポインターON" : "ポインター";
+      bars.classList.toggle("dim", !EF.state.appOn);
+      bars.classList.toggle("on", EF.state.appOn && EF.state.uiHidden);
+      bars.querySelector(".lbl").textContent = EF.state.uiHidden ? "バー表示" : "バー隠す";
+    },
+  };
+
   // クイックパレット内ボタン
   function bindPalette() {
     const qp = document.getElementById("quick-palette");
@@ -261,6 +287,7 @@
     bindScenes();
     EF.options.bind();
     EF.options.render();
+    EF.dock.init();
 
     EF.toolbar.sync();
     EF.toast("Enmish Focus プロトタイプ — ⌘⇧E で起動", 2600);

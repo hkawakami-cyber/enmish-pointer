@@ -120,6 +120,11 @@
     .toast { bottom: 64px; left: 50%; transform: translateX(-50%) translateY(8px); background: #1b2130; color: #fff; padding: 10px 18px; border-radius: 11px; font-size: 13px; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .hint { bottom: 20px; left: 50%; transform: translateX(-50%); background: #6cbba5; color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 13px; pointer-events: none; }
+    .ef-dock { position: fixed; right: 16px; bottom: 16px; display: flex; gap: 6px; padding: 6px; background: rgba(3,40,65,.94); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.35); backdrop-filter: blur(14px); pointer-events: auto; }
+    .dock-btn { display: flex; align-items: center; gap: 6px; border: none; cursor: pointer; background: rgba(255,255,255,.06); color: #e8ecf4; padding: 8px 12px; border-radius: 10px; font-size: 12px; line-height: 1; }
+    .dock-btn:hover { background: rgba(255,255,255,.14); }
+    #dock-power.on { background: #6cbba5; color: #06251c; font-weight: 700; }
+    #dock-bars.on { background: #917d44; color: #fff; font-weight: 700; }
     .ef-text { position: fixed; transform: translateY(-4px); z-index: 10; pointer-events: auto; border: none; border-bottom: 2px solid currentColor; background: rgba(255,255,255,.92); font-weight: 700; padding: 2px 6px; border-radius: 4px; min-width: 120px; outline: none; }
     .tool-options { position: fixed; right: 92px; top: 50%; transform: translateY(-50%); background: rgba(3,40,65,.94); color: #e8ecf4; border-radius: 14px; padding: 11px; width: 158px; box-shadow: 0 10px 30px rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(14px); display: flex; flex-direction: column; gap: 11px; pointer-events: auto; }
     .to-group { display: flex; flex-direction: column; gap: 5px; }
@@ -187,12 +192,16 @@
     <div id="badge" class="badge" hidden></div>
     <div id="toast" class="toast" hidden></div>
     <div id="hint" class="hint" hidden>クリックした位置にラベルを配置（Escで取消）</div>
+    <div id="ef-dock" class="ef-dock" hidden>
+      <button class="dock-btn on" id="dock-power" title="ポインターモード ON/OFF (⌘⇧E)"><span>⏻</span><span class="lbl">ポインターON</span></button>
+      <button class="dock-btn" id="dock-bars" title="バーの表示/非表示 (⌘⇧H)"><span>▤</span><span class="lbl">バー隠す</span></button>
+    </div>
   `;
 
   const $ = (sel) => root.querySelector(sel);
   const annot = $("#annot"), spot = $("#spot"), ring = $("#ring");
   const tb = $("#tb"), sb = $("#sb"), reopen = $("#reopen");
-  const badgeEl = $("#badge"), toastEl = $("#toast"), hintEl = $("#hint"), optEl = $("#tool-options");
+  const badgeEl = $("#badge"), toastEl = $("#toast"), hintEl = $("#hint"), optEl = $("#tool-options"), dockEl = $("#ef-dock");
 
   // ---------- ユーティリティ ----------
   let toastT;
@@ -282,6 +291,13 @@
       (it[1] ? `<span>${it[1]}</span>` : "") + `<span>${it[2]}</span></button>`).join("");
     return `<div class="to-group"><div class="to-title">${title}</div><div class="to-btns">${btns}</div></div>`;
   }
+  function updateDock() {
+    dockEl.hidden = !state.appOn;
+    const bars = root.getElementById("dock-bars");
+    bars.classList.toggle("on", state.uiHidden);
+    bars.querySelector(".lbl").textContent = state.uiHidden ? "バー表示" : "バー隠す";
+  }
+
   function renderOptions() {
     if (!state.optionsOpen) { optEl.hidden = true; return; }
     const groups = [];
@@ -448,7 +464,8 @@
       state.uiHidden = !state.uiHidden;
       host.classList.toggle("ui-hidden", state.uiHidden);
       reserveGutter(!state.uiHidden);
-      toast(state.uiHidden ? "UIを非表示（⌘⇧Hで再表示）" : "UIを表示");
+      updateDock();
+      toast(state.uiHidden ? "バーを非表示（右下のドックで再表示）" : "バーを表示");
     },
     toggle(forceOn) {
       const next = forceOn === true ? true : !state.appOn;
@@ -464,7 +481,7 @@
         reserveGutter(true);
         toast("Enmish Focus 起動 — カーソル強調中");
       }
-      updateRing(); syncUI(); renderOptions(); setBadge();
+      updateRing(); syncUI(); renderOptions(); updateDock(); setBadge();
     },
     handleEscape() {
       if (state.uiHidden) { app.toggleUI(); return true; }
@@ -524,6 +541,9 @@
   });
   reopen.addEventListener("click", () => { sb.classList.remove("collapsed"); reopen.hidden = true; });
 
+  root.getElementById("dock-power").addEventListener("click", () => app.toggle());
+  root.getElementById("dock-bars").addEventListener("click", () => app.toggleUI());
+
   optEl.addEventListener("click", (e) => {
     const b = e.target.closest(".to-btn"); if (!b) return;
     const opt = b.dataset.opt; let v = b.dataset.val;
@@ -582,4 +602,5 @@
 
   syncUI();
   renderOptions();
+  updateDock();
 })();

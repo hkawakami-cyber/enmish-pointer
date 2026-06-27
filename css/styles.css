@@ -462,6 +462,24 @@ kbd {
   border-bottom-width: 2px; border-radius: 6px; padding: 1px 7px; font-size: 12px; color: #2c3550;
 }
 
+/* ============ 常駐ドック ============ */
+.ef-dock {
+  position: fixed; right: 16px; bottom: 16px; z-index: 9300;
+  display: flex; gap: 6px; padding: 6px;
+  background: var(--tb-bg); border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px; box-shadow: var(--shadow); backdrop-filter: blur(14px);
+}
+.dock-btn {
+  display: flex; align-items: center; gap: 6px; border: none; cursor: pointer;
+  background: rgba(255,255,255,.06); color: var(--tb-fg);
+  padding: 8px 12px; border-radius: 10px; font-size: 12px; line-height: 1;
+}
+.dock-btn:hover { background: rgba(255,255,255,.14); }
+.dock-btn .ico { font-size: 15px; }
+.dock-btn#dock-power.on { background: var(--ef-green); color: #06251c; font-weight: 700; }
+.dock-btn#dock-bars.on { background: var(--ef-gold); color: #fff; font-weight: 700; }
+.dock-btn.dim { opacity: .4; pointer-events: none; }
+
 /* ============ ステータスバッジ / トースト ============ */
 .status-badge {
   position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);

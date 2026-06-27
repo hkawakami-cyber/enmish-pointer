@@ -465,6 +465,24 @@ kbd {
   border-bottom-width: 2px; border-radius: 6px; padding: 1px 7px; font-size: 12px; color: #2c3550;
 }
 
+/* ============ 常駐ドック ============ */
+.ef-dock {
+  position: fixed; right: 16px; bottom: 16px; z-index: 9300;
+  display: flex; gap: 6px; padding: 6px;
+  background: var(--tb-bg); border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px; box-shadow: var(--shadow); backdrop-filter: blur(14px);
+}
+.dock-btn {
+  display: flex; align-items: center; gap: 6px; border: none; cursor: pointer;
+  background: rgba(255,255,255,.06); color: var(--tb-fg);
+  padding: 8px 12px; border-radius: 10px; font-size: 12px; line-height: 1;
+}
+.dock-btn:hover { background: rgba(255,255,255,.14); }
+.dock-btn .ico { font-size: 15px; }
+.dock-btn#dock-power.on { background: var(--ef-green); color: #06251c; font-weight: 700; }
+.dock-btn#dock-bars.on { background: var(--ef-gold); color: #fff; font-weight: 700; }
+.dock-btn.dim { opacity: .4; pointer-events: none; }
+
 /* ============ ステータスバッジ / トースト ============ */
 .status-badge {
   position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
@@ -733,6 +751,16 @@ kbd {
         <p class="note">※ Webプロトタイプではブラウザ予約のショートカット競合を避けるため、<kbd>Ctrl/⌘ + ⇧ + キー</kbd> を内部で横取りします。実機(macOSネイティブ)ではグローバルショートカットになります。</p>
       </section>
     </div>
+  </div>
+
+  <!-- 常駐ドック：ポインターON/OFF・バー表示/非表示（バーを隠しても残る） -->
+  <div id="ef-dock" class="ef-dock">
+    <button class="dock-btn" id="dock-power" title="ポインターモード ON/OFF (⌘⇧E)">
+      <span class="ico">⏻</span><span class="lbl">ポインター</span>
+    </button>
+    <button class="dock-btn" id="dock-bars" title="バーの表示/非表示 (⌘⇧H)">
+      <span class="ico">▤</span><span class="lbl">バー隠す</span>
+    </button>
   </div>
 
   <!-- 状態バッジ（現在のツール/モード表示） -->
@@ -1996,12 +2024,19 @@ kbd {
       }
     },
 
+    // ポインターモード（アプリ）のかんたんON/OFF（パレットを出さない）
+    togglePointer() {
+      if (EF.state.appOn) this.toggleApp();
+      else this.toggleApp(true);
+    },
+
     // UI（ツールバー・サイドバー等）の表示/非表示
     toggleUI() {
       if (!EF.state.appOn) return;
       EF.state.uiHidden = !EF.state.uiHidden;
       document.body.classList.toggle("ef-ui-hidden", EF.state.uiHidden);
-      EF.toast(EF.state.uiHidden ? "UIを非表示にしました（⌘⇧Hで再表示）" : "UIを表示しました");
+      EF.dock.update();
+      EF.toast(EF.state.uiHidden ? "バーを非表示にしました（右下のドックで再表示）" : "バーを表示しました");
     },
 
     toggleApp(forceOn) {
@@ -2028,6 +2063,7 @@ kbd {
       EF.cursor.update();
       EF.toolbar.sync();
       EF.options.render();
+      EF.dock.update();
       EF.setStatus();
     },
 
@@ -2096,6 +2132,24 @@ kbd {
     },
   };
 
+  // 常駐ドック
+  EF.dock = {
+    init() {
+      document.getElementById("dock-power").addEventListener("click", () => EF.app.togglePointer());
+      document.getElementById("dock-bars").addEventListener("click", () => EF.app.toggleUI());
+      this.update();
+    },
+    update() {
+      const power = document.getElementById("dock-power");
+      const bars = document.getElementById("dock-bars");
+      power.classList.toggle("on", EF.state.appOn);
+      power.querySelector(".lbl").textContent = EF.state.appOn ? "ポインターON" : "ポインター";
+      bars.classList.toggle("dim", !EF.state.appOn);
+      bars.classList.toggle("on", EF.state.appOn && EF.state.uiHidden);
+      bars.querySelector(".lbl").textContent = EF.state.uiHidden ? "バー表示" : "バー隠す";
+    },
+  };
+
   // クイックパレット内ボタン
   function bindPalette() {
     const qp = document.getElementById("quick-palette");
@@ -2131,6 +2185,7 @@ kbd {
     bindScenes();
     EF.options.bind();
     EF.options.render();
+    EF.dock.init();
 
     EF.toolbar.sync();
     EF.toast("Enmish Focus プロトタイプ — ⌘⇧E で起動", 2600);
