@@ -39,7 +39,16 @@
         tb.dataset.collapsed = tb.dataset.collapsed === "true" ? "false" : "true";
       });
 
+      this.fit();
+      window.addEventListener("resize", () => this.fit());
       this.sync();
+    },
+
+    // ウィンドウ高さに収まらなければアイコンのみのコンパクト表示に自動切替
+    fit() {
+      const tb = document.getElementById("toolbar");
+      tb.classList.remove("compact");
+      if (tb.scrollHeight > window.innerHeight - 16) tb.classList.add("compact");
     },
 
     // 状態をUIへ反映

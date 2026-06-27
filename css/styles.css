@@ -181,12 +181,24 @@ html, body {
   z-index: 9000;
   border: 1px solid rgba(255,255,255,.08);
   border-right: none;
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  overflow-x: hidden;
   transition: transform .25s ease, opacity .25s ease;
 }
+.toolbar::-webkit-scrollbar { width: 0; }
 /* アプリON中は共有画面を左に寄せ、右端ツールバーと被らないようにする */
 body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ease; }
 .toolbar[data-collapsed="true"] .tb-body { display: none; }
 .toolbar[data-collapsed="true"] { padding: 6px; }
+
+/* 自動フィット：ウィンドウに収まらない時はラベルを隠してアイコンのみ（コンパクト） */
+.toolbar.compact .tb-body { width: 46px; gap: 1px; }
+.toolbar.compact .tool { padding: 7px 3px; }
+.toolbar.compact .tool .lbl { display: none; }
+.toolbar.compact .tb-brand .ef-word, .toolbar.compact .tb-brand .ef-tag { display: none; }
+.toolbar.compact .tb-colors { grid-template-columns: repeat(2, 1fr); }
+.toolbar.compact .tb-sep { margin: 3px 4px; }
 .tb-handle {
   display: none;
   width: 32px; height: 32px; border-radius: 9px;

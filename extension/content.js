@@ -38,6 +38,8 @@
     mouse: { x: -999, y: -999 },
   };
 
+  let onboarded = false;
+
   // ---------- Shadow DOM 構築 ----------
   const host = document.createElement("div");
   host.id = "enmish-focus-host";
@@ -71,6 +73,12 @@
     }
     .toolbar.app-off .tool[data-tool], .toolbar.app-off .tool[data-toggle],
     .toolbar.app-off .tool[data-action="whiteboard"], .toolbar.app-off .colors { opacity: .35; pointer-events: none; }
+    .toolbar.compact { width: 46px; gap: 1px; }
+    .toolbar.compact .lbl { display: none; }
+    .toolbar.compact .tool { padding: 7px 3px; }
+    .toolbar.compact .brand .ef-word, .toolbar.compact .brand .ef-tag { display: none; }
+    .toolbar.compact .colors { grid-template-columns: repeat(2,1fr); }
+    .toolbar.compact .sep { margin: 3px 4px; }
     .brand { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 1px 0 6px; }
     .brand .ef-mark { width: 22px; height: 22px; border-radius: 50%; background: #6cbba5; position: relative; }
     .brand .ef-mark::after { content: ""; position: absolute; right: 4px; top: 4px; width: 6px; height: 6px; border-radius: 50%; background: #032841; }
@@ -278,6 +286,11 @@
       (it[1] ? `<span>${it[1]}</span>` : "") + `<span>${it[2]}</span></button>`).join("");
     return `<div class="to-group"><div class="to-title">${title}</div><div class="to-btns">${btns}</div></div>`;
   }
+  function fitToolbar() {
+    tb.classList.remove("compact");
+    if (tb.scrollHeight > window.innerHeight - 16) tb.classList.add("compact");
+  }
+
   function updateDock() {
     dockEl.hidden = !state.appOn;
     const bars = root.getElementById("dock-bars");
@@ -456,7 +469,12 @@
         toast("Enmish Focus を終了");
       } else {
         reserveGutter(true);
-        toast("Enmish Focus 起動 — カーソル強調中");
+        if (!onboarded) {
+          onboarded = true;
+          toast("ツールを選んでドラッグで注釈 ／ 左下ドックでON/OFF・バー表示 ／ ⚙設定で詳細", 4600);
+        } else {
+          toast("Enmish Focus 起動 — カーソル強調中");
+        }
       }
       updateRing(); syncUI(); renderOptions(); updateDock(); setBadge();
     },
@@ -576,4 +594,6 @@
   syncUI();
   renderOptions();
   updateDock();
+  fitToolbar();
+  window.addEventListener("resize", fitToolbar, true);
 })();

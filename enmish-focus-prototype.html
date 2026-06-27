@@ -184,12 +184,24 @@ html, body {
   z-index: 9000;
   border: 1px solid rgba(255,255,255,.08);
   border-right: none;
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  overflow-x: hidden;
   transition: transform .25s ease, opacity .25s ease;
 }
+.toolbar::-webkit-scrollbar { width: 0; }
 /* アプリON中は共有画面を左に寄せ、右端ツールバーと被らないようにする */
 body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ease; }
 .toolbar[data-collapsed="true"] .tb-body { display: none; }
 .toolbar[data-collapsed="true"] { padding: 6px; }
+
+/* 自動フィット：ウィンドウに収まらない時はラベルを隠してアイコンのみ（コンパクト） */
+.toolbar.compact .tb-body { width: 46px; gap: 1px; }
+.toolbar.compact .tool { padding: 7px 3px; }
+.toolbar.compact .tool .lbl { display: none; }
+.toolbar.compact .tb-brand .ef-word, .toolbar.compact .tb-brand .ef-tag { display: none; }
+.toolbar.compact .tb-colors { grid-template-columns: repeat(2, 1fr); }
+.toolbar.compact .tb-sep { margin: 3px 4px; }
 .tb-handle {
   display: none;
   width: 32px; height: 32px; border-radius: 9px;
@@ -663,6 +675,13 @@ kbd {
             <button data-cursor="halo">ハロー</button>
           </div>
         </label>
+        <label class="field" style="display:block">大きさ
+          <div class="seg seg-wrap" id="set-cursor-size" style="margin-top:8px">
+            <button data-size="28">極小</button>
+            <button data-size="44">小</button>
+            <button data-size="60">中</button>
+          </div>
+        </label>
         <label class="field">リングの太さ
           <input type="range" id="set-ring-width" min="2" max="14" step="1" />
           <output id="out-ring-width"></output>
@@ -794,7 +813,7 @@ kbd {
   EF.ICON_PATHS = {
     cursor: '<circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/>',
     pen: '<path d="M16.5 4.5l3 3-10.5 10.5-4 1 1-4z"/><path d="M14 7l3 3"/>',
-    highlighter: '<path d="M4 17l8-8 4 4-8 8H4z"/><path d="M12 9l3-3 4 4-3 3"/><path d="M4 21h7"/>',
+    highlighter: '<path d="M4 20.5h11" stroke-width="2.8"/><path d="M8.5 16.5l-3-3 8.5-8.5 3 3z"/><path d="M13 5l3 3"/>',
     arrow: '<path d="M6 18L18 6"/><path d="M9.5 6H18v8.5"/>',
     hline: '<path d="M3.5 12H20.5"/>',
     ellipse: '<circle cx="12" cy="12" r="8"/>',
@@ -1553,7 +1572,16 @@ kbd {
         tb.dataset.collapsed = tb.dataset.collapsed === "true" ? "false" : "true";
       });
 
+      this.fit();
+      window.addEventListener("resize", () => this.fit());
       this.sync();
+    },
+
+    // ウィンドウ高さに収まらなければアイコンのみのコンパクト表示に自動切替
+    fit() {
+      const tb = document.getElementById("toolbar");
+      tb.classList.remove("compact");
+      if (tb.scrollHeight > window.innerHeight - 16) tb.classList.add("compact");
     },
 
     // 状態をUIへ反映
@@ -1758,6 +1786,16 @@ kbd {
           if (EF.options) EF.options.render();
         }));
 
+      // カーソルの大きさ
+      $("set-cursor-size").querySelectorAll("button").forEach((b) =>
+        b.addEventListener("click", () => {
+          EF.state.ring.size = +b.dataset.size;
+          $("set-cursor-size").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+          $("set-ring-size").value = EF.state.ring.size; $("out-ring-size").textContent = EF.state.ring.size + "px";
+          EF.cursor.update();
+          if (EF.options) EF.options.render();
+        }));
+
       // オプションパネルの表示/非表示
       $("set-show-options").addEventListener("change", (e) => {
         EF.state.showOptions = e.target.checked;
@@ -1847,6 +1885,7 @@ kbd {
       const setActive = (id, attr, val) =>
         $(id).querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset[attr] === String(val)));
       setActive("set-cursor-style", "cursor", EF.state.cursorStyle);
+      setActive("set-cursor-size", "size", EF.state.ring.size);
       setActive("set-arrow-head", "head", EF.state.arrowHead);
       setActive("set-spot-shape", "shape", EF.state.spotShape);
       setActive("set-spot-band", "band", EF.state.spotBand);
@@ -2035,7 +2074,12 @@ kbd {
         if (!forceOn) this.openPalette();
         document.getElementById("stage").classList.add(
           EF.state.tool === "cursor" ? "tool-cursor" : "armed");
-        EF.toast("Enmish Focus 起動 — カーソル強調中");
+        if (!EF._onboarded) {
+          EF._onboarded = true;
+          EF.toast("ツールを選んでドラッグで注釈 ／ 左下ドックでON/OFF・バー表示 ／ ⚙設定で詳細設定", 4600);
+        } else {
+          EF.toast("Enmish Focus 起動 — カーソル強調中");
+        }
       }
       EF.cursor.update();
       EF.toolbar.sync();

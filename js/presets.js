@@ -37,6 +37,16 @@
           if (EF.options) EF.options.render();
         }));
 
+      // カーソルの大きさ
+      $("set-cursor-size").querySelectorAll("button").forEach((b) =>
+        b.addEventListener("click", () => {
+          EF.state.ring.size = +b.dataset.size;
+          $("set-cursor-size").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+          $("set-ring-size").value = EF.state.ring.size; $("out-ring-size").textContent = EF.state.ring.size + "px";
+          EF.cursor.update();
+          if (EF.options) EF.options.render();
+        }));
+
       // オプションパネルの表示/非表示
       $("set-show-options").addEventListener("change", (e) => {
         EF.state.showOptions = e.target.checked;
@@ -126,6 +136,7 @@
       const setActive = (id, attr, val) =>
         $(id).querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset[attr] === String(val)));
       setActive("set-cursor-style", "cursor", EF.state.cursorStyle);
+      setActive("set-cursor-size", "size", EF.state.ring.size);
       setActive("set-arrow-head", "head", EF.state.arrowHead);
       setActive("set-spot-shape", "shape", EF.state.spotShape);
       setActive("set-spot-band", "band", EF.state.spotBand);

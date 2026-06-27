@@ -173,7 +173,12 @@
         if (!forceOn) this.openPalette();
         document.getElementById("stage").classList.add(
           EF.state.tool === "cursor" ? "tool-cursor" : "armed");
-        EF.toast("Enmish Focus 起動 — カーソル強調中");
+        if (!EF._onboarded) {
+          EF._onboarded = true;
+          EF.toast("ツールを選んでドラッグで注釈 ／ 左下ドックでON/OFF・バー表示 ／ ⚙設定で詳細設定", 4600);
+        } else {
+          EF.toast("Enmish Focus 起動 — カーソル強調中");
+        }
       }
       EF.cursor.update();
       EF.toolbar.sync();
