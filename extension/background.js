@@ -28,10 +28,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         sendResponse({ ok: false, error: (chrome.runtime.lastError && chrome.runtime.lastError.message) || "capture failed" });
         return;
       }
-      chrome.downloads.download({ url: dataUrl, filename: msg.filename, saveAs: false }, () => {
-        if (chrome.runtime.lastError) { sendResponse({ ok: false, error: chrome.runtime.lastError.message }); return; }
-        sendResponse({ ok: true });
-      });
+      // 画像データを content へ返し、<a download> で保存させる（日本語ファイル名対応）
+      sendResponse({ ok: true, dataUrl });
     });
     return true; // 非同期レスポンス
   }

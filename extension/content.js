@@ -349,19 +349,29 @@
     },
     screenshot() {
       const d = new Date(), p = (n) => String(n).padStart(2, "0");
-      const title = (document.title || "画面").replace(/[\\/:*?"<>|]+/g, "").slice(0, 30).trim() || "画面";
+      // chrome.downloads はスペースや一部記号を弾くため安全な文字へ寄せる
+      const title = (document.title || "画面")
+        .replace(/[\s\\/:*?"<>|.~#%&{}$!'@+`=,;()\[\]]+/g, "_")
+        .replace(/_+/g, "_").replace(/^_+|_+$/g, "")
+        .slice(0, 30).replace(/_+$/, "") || "画面";
       const fn = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}_${title}_注釈.png`;
       // UI を一時的に隠してから撮る（注釈は残す）
-      const hide = [tb, sb, reopen, badgeEl, hintEl, ring];
+      const hide = [tb, sb, reopen, badgeEl, hintEl, ring, toastEl];
       const prev = hide.map((e) => e.style.visibility);
       hide.forEach((e) => (e.style.visibility = "hidden"));
       toast("スクリーンショットを保存中…", 1200);
       requestAnimationFrame(() => requestAnimationFrame(() => {
-        chrome.runtime.sendMessage({ type: "ef-capture", filename: fn }, (res) => {
+        chrome.runtime.sendMessage({ type: "ef-capture" }, (res) => {
           hide.forEach((e, i) => (e.style.visibility = prev[i]));
           if (chrome.runtime.lastError) { toast("保存に失敗: " + chrome.runtime.lastError.message, 2400); return; }
-          if (res && res.ok) toast("保存しました: " + fn, 2400);
-          else toast("保存に失敗しました" + (res && res.error ? "（" + res.error + "）" : ""), 2600);
+          if (res && res.ok && res.dataUrl) {
+            const a = document.createElement("a");
+            a.href = res.dataUrl; a.download = fn;
+            document.body.appendChild(a); a.click(); a.remove();
+            toast("保存しました: " + fn, 2400);
+          } else {
+            toast("保存に失敗しました" + (res && res.error ? "（" + res.error + "）" : ""), 2600);
+          }
         });
       }));
     },
