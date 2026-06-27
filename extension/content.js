@@ -65,14 +65,14 @@
     .toolbar, .stamp-bar, .reopen, .badge, .toast, .hint { pointer-events: auto; }
     .toolbar {
       position: fixed; top: 50%; right: 0; transform: translateY(-50%);
-      background: rgba(3,40,65,.94); color: #e8ecf4; border-radius: 16px 0 0 16px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.35); backdrop-filter: blur(14px);
-      padding: 9px 7px; border: 1px solid rgba(255,255,255,.08); border-right: none; width: 76px;
+      background: transparent; color: #fff; border-radius: 14px 0 0 14px;
+      box-shadow: none; backdrop-filter: blur(2px);
+      padding: 7px 6px; border: 1px solid rgba(176,184,196,.45); border-right: none; width: 76px;
       display: flex; flex-direction: column; gap: 2px; max-height: calc(100vh - 168px); overflow-y: auto;
     }
     /* 未起動でもツールは押せる（押すと自動的に起動して選択される）。視覚的にだけ少し淡く。 */
     .toolbar.app-off .tool[data-tool], .toolbar.app-off .tool[data-toggle], .toolbar.app-off .colors { opacity: .7; }
-    .toolbar.side-left { right: auto; left: 0; border-radius: 0 16px 16px 0; border-left: none; border-right: 1px solid rgba(255,255,255,.08); }
+    .toolbar.side-left { right: auto; left: 0; border-radius: 0 14px 14px 0; border-left: none; border-right: 1px solid rgba(176,184,196,.45); }
     .toolbar.compact { width: 46px; gap: 1px; }
     .toolbar.compact .lbl { display: none; }
     .toolbar.compact .tool { padding: 7px 3px; }
@@ -84,16 +84,18 @@
     .brand .ef-mark::after { content: ""; position: absolute; right: 4px; top: 4px; width: 6px; height: 6px; border-radius: 50%; background: #032841; }
     .brand .ef-word { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 13px; font-weight: 700; color: #f4f8f7; line-height: 1; }
     .brand .ef-tag { font-size: 8px; letter-spacing: .18em; color: #6cbba5; font-weight: 600; }
-    .sep { height: 1px; background: rgba(255,255,255,.10); margin: 4px 4px; }
+    .sep { height: 1px; background: rgba(150,160,175,.5); margin: 4px 4px; }
     .tool {
       display: flex; flex-direction: column; align-items: center; gap: 2px; border: none;
       background: transparent; color: #e8ecf4; padding: 6px 3px; border-radius: 9px;
       cursor: pointer; font-size: 10px; line-height: 1;
     }
-    .tool:hover { background: rgba(255,255,255,.10); }
-    .tool .ico { font-size: 16px; display: inline-flex; align-items: center; justify-content: center; height: 18px; } .tool .lbl { color: #97a0b5; }
+    .tool:hover { background: rgba(255,255,255,.18); }
+    /* 透明な帯の上でも、明るい/暗いどちらの背景でも読めるよう白＋濃い影 */
+    .tool .ico { font-size: 16px; display: inline-flex; align-items: center; justify-content: center; height: 18px; color: #fff; filter: drop-shadow(0 0 1px rgba(0,0,0,.7)) drop-shadow(0 1px 1.5px rgba(0,0,0,.85)); }
+    .tool .lbl { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.95); }
     .ico svg { display: block; }
-    .tool.active { background: #6cbba5; } .tool.active .lbl { color: #fff; }
+    .tool.active { background: #6cbba5; } .tool.active .ico { filter: none; } .tool.active .lbl { color: #fff; text-shadow: none; }
     .tool.toggled { background: rgba(108,187,165,.28); outline: 1.5px solid #6cbba5; }
     .tool.recording { background: rgba(193,103,127,.30); outline: 1.5px solid #c1677f; }
     .tool.recording .ico, .tool.recording .lbl { color: #c1677f; }

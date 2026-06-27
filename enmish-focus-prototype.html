@@ -172,15 +172,15 @@ html, body {
   top: 50%;
   right: 0;
   transform: translateY(-50%);
-  background: var(--tb-bg);
-  color: var(--tb-fg);
-  border-radius: 16px 0 0 16px;
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  padding: 10px 8px;
+  background: transparent;
+  color: #fff;
+  border-radius: 14px 0 0 14px;
+  box-shadow: none;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  padding: 8px 6px;
   z-index: 9000;
-  border: 1px solid rgba(255,255,255,.08);
+  border: 1px solid rgba(176,184,196,.45);
   border-right: none;
   max-height: calc(100vh - 168px);
   overflow-y: auto;
@@ -189,7 +189,7 @@ html, body {
 }
 .toolbar::-webkit-scrollbar { width: 0; }
 /* ツールバーを左端に配置 */
-.toolbar.side-left { right: auto; left: 0; border-radius: 0 16px 16px 0; border-right: 1px solid rgba(255,255,255,.08); border-left: none; }
+.toolbar.side-left { right: auto; left: 0; border-radius: 0 14px 14px 0; border-right: 1px solid rgba(176,184,196,.45); border-left: none; }
 /* アプリON中は共有画面を寄せ、端のツールバーと被らないようにする */
 body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ease, padding-left .25s ease; }
 body.ef-on.bar-left .scene-root { padding-right: 0; padding-left: 116px; }
@@ -223,7 +223,7 @@ body.ef-on.bar-left .scene-root { padding-right: 0; padding-left: 116px; }
 }
 .tb-brand .ef-word { font-family: var(--font-en); font-size: 13px; font-weight: 700; letter-spacing: -.01em; color: var(--tb-fg); line-height: 1; }
 .tb-brand .ef-tag { font-size: 8.5px; letter-spacing: .18em; color: var(--ef-green); font-weight: 600; }
-.tb-sep { height: 1px; background: rgba(255,255,255,.10); margin: 5px 4px; }
+.tb-sep { height: 1px; background: rgba(150,160,175,.5); margin: 5px 4px; }
 
 .tool {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
@@ -231,14 +231,16 @@ body.ef-on.bar-left .scene-root { padding-right: 0; padding-left: 116px; }
   padding: 7px 4px; border-radius: 9px; cursor: pointer;
   font-size: 10.5px; line-height: 1; transition: background .12s, transform .08s;
 }
-.tool:hover { background: rgba(255,255,255,.10); }
+.tool:hover { background: rgba(255,255,255,.18); }
 .tool:active { transform: scale(.94); }
-.tool .ico { font-size: 17px; display: inline-flex; align-items: center; justify-content: center; height: 20px; }
+/* 透明な帯の上でも、明るい/暗いどちらの背景でも読めるよう白＋濃い影 */
+.tool .ico { font-size: 17px; display: inline-flex; align-items: center; justify-content: center; height: 20px; color: #fff; filter: drop-shadow(0 0 1px rgba(0,0,0,.7)) drop-shadow(0 1px 1.5px rgba(0,0,0,.85)); }
 .ico svg { display: block; }
 .dock-btn .ico svg { display: block; }
-.tool .lbl { color: var(--tb-muted); }
+.tool .lbl { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.95); }
 .tool.active { background: var(--ef-blue); }
-.tool.active .lbl { color: #fff; }
+.tool.active .ico { filter: none; }
+.tool.active .lbl { color: #fff; text-shadow: none; }
 .tool.toggled { background: rgba(47,107,255,.28); outline: 1.5px solid var(--ef-blue); }
 .tool.recording { background: rgba(193,103,127,.30); outline: 1.5px solid var(--ef-rose, #c1677f); }
 .tool.recording .ico { color: var(--ef-rose, #c1677f); }
