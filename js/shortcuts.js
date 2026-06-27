@@ -10,21 +10,8 @@
     init() {
       window.addEventListener("keydown", (ev) => {
         const mod = ev.metaKey || ev.ctrlKey;
-        const key = ev.key.toLowerCase();
 
-        // クイックパレットが開いているとき
-        const palette = document.getElementById("quick-palette");
-        if (!palette.hidden) {
-          if (ev.key === "Escape") { EF.app.closePalette(); ev.preventDefault(); return; }
-          const map = { "1": "pen", "2": "arrow", "3": "ellipse", "4": "rect" };
-          if (map[ev.key]) { EF.app.setTool(map[ev.key]); EF.app.closePalette(); ev.preventDefault(); return; }
-          if (ev.key === "5") { EF.app.toggle("spotlight"); EF.app.closePalette(); ev.preventDefault(); return; }
-          if (ev.key === "6") { EF.app.toggle("zoom"); EF.app.closePalette(); ev.preventDefault(); return; }
-          if (ev.key === "Backspace" || ev.key === "Delete") { EF.annot.engine.undo(); EF.app.closePalette(); ev.preventDefault(); return; }
-          return;
-        }
-
-        // Esc: 注釈ツール解除→カーソルへ / 配置待ち解除 / WB閉じる / モーダル閉じる
+        // Esc: 注釈ツール解除→カーソルへ / モーダル閉じる
         if (ev.key === "Escape") {
           if (EF.app.handleEscape()) ev.preventDefault();
           return;

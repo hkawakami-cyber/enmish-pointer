@@ -1,5 +1,5 @@
-<title>Enmish Focus — 画面共有支援プロトタイプ</title>
-<meta name="description" content="商談・社内MTGの画面共有で相手の視線を誘導する、リアルタイム画面注釈アプリのプロトタイプ。⌘⇧Eで起動。">
+<title>Enmish Focus</title>
+<meta name="description" content="x">
 <style>
 /* ============================================================
    Enmish Focus — プロトタイプ スタイル
@@ -190,8 +190,11 @@ html, body {
   transition: transform .25s ease, opacity .25s ease;
 }
 .toolbar::-webkit-scrollbar { width: 0; }
-/* アプリON中は共有画面を左に寄せ、右端ツールバーと被らないようにする */
-body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ease; }
+/* ツールバーを左端に配置 */
+.toolbar.side-left { right: auto; left: 0; border-radius: 0 16px 16px 0; border-right: 1px solid rgba(255,255,255,.08); border-left: none; }
+/* アプリON中は共有画面を寄せ、端のツールバーと被らないようにする */
+body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ease, padding-left .25s ease; }
+body.ef-on.bar-left .scene-root { padding-right: 0; padding-left: 116px; }
 .toolbar[data-collapsed="true"] .tb-body { display: none; }
 .toolbar[data-collapsed="true"] { padding: 6px; }
 
@@ -239,6 +242,9 @@ body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ea
 .tool.active { background: var(--ef-blue); }
 .tool.active .lbl { color: #fff; }
 .tool.toggled { background: rgba(47,107,255,.28); outline: 1.5px solid var(--ef-blue); }
+.tool.recording { background: rgba(193,103,127,.30); outline: 1.5px solid var(--ef-rose, #c1677f); }
+.tool.recording .ico { color: var(--ef-rose, #c1677f); }
+.tool.recording .lbl { color: var(--ef-rose, #c1677f); }
 
 .tb-colors { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 2px; }
 .swatch { width: 15px; height: 15px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
@@ -249,6 +255,31 @@ body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ea
 .toolbar.app-off .tool[data-toggle],
 .toolbar.app-off .tool[data-action="whiteboard"],
 .toolbar.app-off .tb-colors { opacity: .35; pointer-events: none; }
+
+/* ツール群コンテナ（ツールバー内） */
+.tb-tools { display: flex; flex-direction: column; gap: 3px; }
+
+/* ============ 設定：ツールバー編集 ============ */
+.set-tools { display: flex; flex-direction: column; gap: 6px; }
+.set-tool-row { display: flex; align-items: center; gap: 6px; }
+.st-move {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border: 1px solid #dfe3ec; border-radius: 8px;
+  background: #fff; color: var(--ef-green-dark); cursor: pointer; padding: 0;
+}
+.st-move:hover { background: var(--ef-green-pale); border-color: var(--ef-green); }
+.st-move:disabled { opacity: .35; cursor: default; }
+.st-move svg { display: block; }
+.st-move .st-down, .st-move.st-down svg { transform: none; }
+.st-move.st-down svg { transform: rotate(180deg); }
+.st-label {
+  display: flex; align-items: center; gap: 8px; flex: 1;
+  font-size: 13.5px; color: #2c3550; cursor: pointer;
+  padding: 4px 8px; border: 1px solid #eef1f6; border-radius: 8px; background: #fafbfe;
+}
+.st-label input { accent-color: var(--ef-green); }
+.st-ico { display: inline-flex; align-items: center; color: var(--ef-green-dark); }
+.st-ico svg { display: block; }
 
 /* ============ 営業テンプレ / KPIマーカー バー ============ */
 .stamp-bar {
@@ -493,6 +524,9 @@ kbd {
 }
 
 /* ============ 常駐ドック ============ */
+.ef-dock.dock-bottom-right { left: auto; right: 16px; bottom: 16px; top: auto; }
+.ef-dock.dock-top-left { top: 16px; left: 16px; bottom: auto; right: auto; }
+.ef-dock.dock-top-right { top: 16px; right: 16px; bottom: auto; left: auto; }
 .ef-dock {
   position: fixed; left: 16px; bottom: 16px; z-index: 9300;
   display: flex; gap: 6px; padding: 6px;
@@ -571,39 +605,8 @@ kbd {
 
       <div class="tb-sep"></div>
 
-      <button class="tool" data-tool="cursor" id="btn-cursor" title="カーソル強調">
-        <span class="ico" data-ic="cursor"></span><span class="lbl">カーソル</span>
-      </button>
-      <button class="tool" data-tool="pen" title="ペン (⌘⇧1)">
-        <span class="ico" data-ic="pen"></span><span class="lbl">ペン</span>
-      </button>
-      <button class="tool" data-tool="highlighter" title="蛍光ペン">
-        <span class="ico" data-ic="highlighter"></span><span class="lbl">蛍光</span>
-      </button>
-      <button class="tool" data-tool="arrow" title="矢印 (⌘⇧2)">
-        <span class="ico" data-ic="arrow"></span><span class="lbl">矢印</span>
-      </button>
-      <button class="tool" data-tool="hline" title="横線（高さ固定・アンダーライン）">
-        <span class="ico" data-ic="hline"></span><span class="lbl">横線</span>
-      </button>
-      <button class="tool" data-tool="ellipse" title="丸囲み (⌘⇧3)">
-        <span class="ico" data-ic="ellipse"></span><span class="lbl">丸</span>
-      </button>
-      <button class="tool" data-tool="rect" title="四角囲み (⌘⇧4)">
-        <span class="ico" data-ic="rect"></span><span class="lbl">四角</span>
-      </button>
-      <button class="tool" data-tool="text" title="テキスト注釈">
-        <span class="ico" data-ic="text"></span><span class="lbl">文字</span>
-      </button>
-
-      <div class="tb-sep"></div>
-
-      <button class="tool" data-toggle="spotlight" id="btn-spotlight" title="スポットライト (⌘⇧5)">
-        <span class="ico" data-ic="spotlight"></span><span class="lbl">注目</span>
-      </button>
-      <button class="tool" data-toggle="zoom" id="btn-zoom" title="ズーム (⌘⇧6)">
-        <span class="ico" data-ic="zoom"></span><span class="lbl">ズーム</span>
-      </button>
+      <!-- ツール群（並べ替え・表示/非表示は設定で。JSで動的生成） -->
+      <div id="tb-tools" class="tb-tools"></div>
 
       <div class="tb-sep"></div>
 
@@ -620,6 +623,9 @@ kbd {
       </button>
       <button class="tool" data-action="screenshot" title="注釈付きスクショ保存">
         <span class="ico" data-ic="save"></span><span class="lbl">保存</span>
+      </button>
+      <button class="tool" data-action="record" title="画面録画 (webm保存)">
+        <span class="ico" data-ic="record"></span><span class="lbl">録画</span>
       </button>
       <button class="tool" data-action="settings" title="設定 / プリセット">
         <span class="ico" data-ic="options"></span><span class="lbl">設定</span>
@@ -638,24 +644,6 @@ kbd {
     <button class="ss-btn" data-scene="salesforce">商談画面</button>
   </div>
 
-  <!-- ============ クイックパレット (⌘⇧E のオーバーレイ) ============ -->
-  <div id="quick-palette" class="quick-palette" hidden>
-    <div class="qp-card">
-      <div class="qp-title">Enmish Focus — クイックパレット</div>
-      <div class="qp-grid">
-        <button class="qp-item" data-tool="pen"><kbd>1</kbd><span>ペン</span></button>
-        <button class="qp-item" data-tool="arrow"><kbd>2</kbd><span>矢印</span></button>
-        <button class="qp-item" data-tool="ellipse"><kbd>3</kbd><span>丸囲み</span></button>
-        <button class="qp-item" data-tool="rect"><kbd>4</kbd><span>四角囲み</span></button>
-        <button class="qp-item" data-toggle="spotlight"><kbd>5</kbd><span>スポットライト</span></button>
-        <button class="qp-item" data-toggle="zoom"><kbd>6</kbd><span>ズーム</span></button>
-        <button class="qp-item" data-action="undo"><kbd>⌫</kbd><span>1つ戻る</span></button>
-        <button class="qp-item" data-action="close-palette"><kbd>Esc</kbd><span>終了</span></button>
-      </div>
-      <div class="qp-hint">数字キーで選択 / Escで閉じる</div>
-    </div>
-  </div>
-
   <!-- ============ 設定 ============ -->
   <div id="settings" class="modal" hidden>
     <div class="modal-card">
@@ -668,6 +656,12 @@ kbd {
         <h3>カラーパレット</h3>
         <div class="palette-edit" id="palette-edit"></div>
         <p class="note">クリックして色を変更できます。変更内容は自動で保存されます。</p>
+      </section>
+
+      <section class="modal-section">
+        <h3>ツールバー</h3>
+        <div id="set-tools" class="set-tools"></div>
+        <p class="note">[↑][↓]で並べ替え、チェックで表示/非表示を切り替えます。アプリ起動・カラー・元に戻す・全消去・保存・設定は固定です。</p>
       </section>
 
       <section class="modal-section">
@@ -784,16 +778,21 @@ kbd {
       </section>
 
       <section class="modal-section">
-        <h3>ショートカット</h3>
-        <table class="shortcut-table">
-          <tr><td>アプリ ON/OFF</td><td><kbd>⌘⇧E</kbd></td></tr>
-          <tr><td>ペン / 矢印 / 丸 / 四角</td><td><kbd>⌘⇧1</kbd>〜<kbd>⌘⇧4</kbd></td></tr>
-          <tr><td>スポットライト / ズーム</td><td><kbd>⌘⇧5</kbd> / <kbd>⌘⇧6</kbd></td></tr>
-          <tr><td>UIの表示/非表示</td><td><kbd>⌘⇧H</kbd></td></tr>
-          <tr><td>元に戻す / 全消去</td><td><kbd>⌘Z</kbd> / <kbd>⌘⇧⌫</kbd></td></tr>
-          <tr><td>注釈終了 / パレット</td><td><kbd>Esc</kbd></td></tr>
-        </table>
-        <p class="note">※ Webプロトタイプではブラウザ予約のショートカット競合を避けるため、<kbd>Ctrl/⌘ + ⇧ + キー</kbd> を内部で横取りします。実機(macOSネイティブ)ではグローバルショートカットになります。</p>
+        <h3>バーの配置</h3>
+        <label class="field" style="display:block">ツールバー
+          <div class="seg seg-wrap" id="set-bar-side" style="margin-top:8px">
+            <button data-side="left">左</button>
+            <button data-side="right">右</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">ドック（ポインター/バー操作）
+          <div class="seg seg-wrap" id="set-dock-pos" style="margin-top:8px">
+            <button data-pos="bottom-left">左下</button>
+            <button data-pos="bottom-right">右下</button>
+            <button data-pos="top-left">左上</button>
+            <button data-pos="top-right">右上</button>
+          </div>
+        </label>
       </section>
     </div>
   </div>
@@ -861,6 +860,8 @@ kbd {
     save: '<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M8 7l1.6-2.6h4.8L16 7"/><circle cx="12" cy="13.3" r="3.3"/>',
     power: '<path d="M12 3.5v8"/><path d="M7.6 6.4a7 7 0 1 0 8.8 0"/>',
     bars: '<rect x="4" y="4.5" width="16" height="15" rx="2"/><path d="M4 9h16"/>',
+    record: '<circle cx="12" cy="12" r="7" fill="currentColor" stroke="none"/>',
+    stop: '<rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor" stroke="none"/>',
   };
 
   EF.iconSvg = function (name, size) {
@@ -924,6 +925,9 @@ kbd {
     // ツールバーのカスタム（並べ替え・表示/非表示）
     toolOrder: ["cursor", "pen", "highlighter", "arrow", "hline", "ellipse", "rect", "text", "spotlight", "zoom"],
     toolHidden: {},
+    // バーの配置
+    barSide: "right",    // ツールバーの左右: right | left
+    dockPos: "bottom-left", // ドック位置: bottom-left | bottom-right | top-left | top-right
     recording: false,
     mouse: { x: -999, y: -999, inStage: false },
   };
@@ -960,7 +964,7 @@ kbd {
   // --- 設定の永続化（localStorage） ---
   const STORE_KEY = "enmishFocus.settings.v1";
   const PERSIST = ["color", "strokeWidth", "textSize", "textBold", "textColor", "ring", "cursorStyle", "arrowHead",
-    "spotShape", "spotBand", "spotDim", "zoomScale", "showOptions", "toolOrder", "toolHidden"];
+    "spotShape", "spotBand", "spotDim", "zoomScale", "showOptions", "toolOrder", "toolHidden", "barSide", "dockPos"];
 
   EF.saveSettings = function () {
     try {
@@ -1579,6 +1583,21 @@ kbd {
 (function () {
   const EF = (window.EF = window.EF || {});
 
+  // 並べ替え・表示/非表示の対象ツール定義（key,label,ic,kind）
+  EF.TOOL_DEFS = [
+    { key: "cursor", label: "カーソル", ic: "cursor", kind: "tool" },
+    { key: "pen", label: "ペン", ic: "pen", kind: "tool" },
+    { key: "highlighter", label: "蛍光", ic: "highlighter", kind: "tool" },
+    { key: "arrow", label: "矢印", ic: "arrow", kind: "tool" },
+    { key: "hline", label: "横線", ic: "hline", kind: "tool" },
+    { key: "ellipse", label: "丸", ic: "ellipse", kind: "tool" },
+    { key: "rect", label: "四角", ic: "rect", kind: "tool" },
+    { key: "text", label: "文字", ic: "text", kind: "tool" },
+    { key: "spotlight", label: "注目", ic: "spotlight", kind: "toggle" },
+    { key: "zoom", label: "ズーム", ic: "zoom", kind: "toggle" },
+  ];
+  EF.toolDef = function (key) { return EF.TOOL_DEFS.find((d) => d.key === key); };
+
   EF.toolbar = {
     init() {
       const tb = document.getElementById("toolbar");
@@ -1587,13 +1606,16 @@ kbd {
       // カラースウォッチ生成
       this.buildColors();
 
-      // ツール選択
-      tb.querySelectorAll("[data-tool]").forEach((b) =>
-        b.addEventListener("click", () => EF.app.setTool(b.dataset.tool)));
+      // ツール群を動的生成（並べ替え・表示/非表示反映）
+      this.buildTools();
 
-      // トグル（スポットライト/ズーム）
-      tb.querySelectorAll("[data-toggle]").forEach((b) =>
-        b.addEventListener("click", () => EF.app.toggle(b.dataset.toggle)));
+      // ツール選択/トグルは #tb-tools へ委譲
+      const tbtools = document.getElementById("tb-tools");
+      tbtools.addEventListener("click", (e) => {
+        const b = e.target.closest("button"); if (!b) return;
+        if (b.dataset.tool) EF.app.setTool(b.dataset.tool);
+        else if (b.dataset.toggle) EF.app.toggle(b.dataset.toggle);
+      });
 
       // アクション
       tb.querySelectorAll("[data-action]").forEach((b) =>
@@ -1625,6 +1647,38 @@ kbd {
       this.sync();
     },
 
+    // ツール群（並べ替え順・表示/非表示を反映して再生成）
+    buildTools() {
+      const tbtools = document.getElementById("tb-tools");
+      if (!tbtools) return;
+      tbtools.innerHTML = "";
+      const titles = {
+        cursor: "カーソル強調", pen: "ペン (⌘⇧1)", highlighter: "蛍光ペン",
+        arrow: "矢印 (⌘⇧2)", hline: "横線（高さ固定・アンダーライン）",
+        ellipse: "丸囲み (⌘⇧3)", rect: "四角囲み (⌘⇧4)", text: "テキスト注釈",
+        spotlight: "スポットライト (⌘⇧5)", zoom: "ズーム (⌘⇧6)",
+      };
+      EF.state.toolOrder.forEach((key) => {
+        if (EF.state.toolHidden[key]) return;
+        const def = EF.toolDef(key);
+        if (!def) return;
+        const b = document.createElement("button");
+        b.className = "tool";
+        if (def.kind === "toggle") {
+          b.dataset.toggle = key;
+          b.id = key === "spotlight" ? "btn-spotlight" : key === "zoom" ? "btn-zoom" : "";
+        } else {
+          b.dataset.tool = key;
+          if (key === "cursor") b.id = "btn-cursor";
+        }
+        b.title = titles[key] || def.label;
+        b.innerHTML = `<span class="ico" data-ic="${def.ic}"></span><span class="lbl">${def.label}</span>`;
+        tbtools.appendChild(b);
+      });
+      if (EF.fillIcons) EF.fillIcons(tbtools);
+      this.sync();
+    },
+
     // ウィンドウ高さに収まらなければアイコンのみのコンパクト表示に自動切替
     fit() {
       const tb = document.getElementById("toolbar");
@@ -1641,9 +1695,9 @@ kbd {
         b.classList.toggle("active", EF.state.appOn && b.dataset.tool === EF.state.tool));
 
       const btnSpot = document.getElementById("btn-spotlight");
-      btnSpot.classList.toggle("toggled", EF.state.spotlight);
+      if (btnSpot) btnSpot.classList.toggle("toggled", EF.state.spotlight);
       const btnZoom = document.getElementById("btn-zoom");
-      btnZoom.classList.toggle("toggled", EF.state.zoom);
+      if (btnZoom) btnZoom.classList.toggle("toggled", EF.state.zoom);
 
       const btnApp = document.getElementById("btn-app");
       btnApp.classList.toggle("active", EF.state.appOn);
@@ -1670,21 +1724,8 @@ kbd {
     init() {
       window.addEventListener("keydown", (ev) => {
         const mod = ev.metaKey || ev.ctrlKey;
-        const key = ev.key.toLowerCase();
 
-        // クイックパレットが開いているとき
-        const palette = document.getElementById("quick-palette");
-        if (!palette.hidden) {
-          if (ev.key === "Escape") { EF.app.closePalette(); ev.preventDefault(); return; }
-          const map = { "1": "pen", "2": "arrow", "3": "ellipse", "4": "rect" };
-          if (map[ev.key]) { EF.app.setTool(map[ev.key]); EF.app.closePalette(); ev.preventDefault(); return; }
-          if (ev.key === "5") { EF.app.toggle("spotlight"); EF.app.closePalette(); ev.preventDefault(); return; }
-          if (ev.key === "6") { EF.app.toggle("zoom"); EF.app.closePalette(); ev.preventDefault(); return; }
-          if (ev.key === "Backspace" || ev.key === "Delete") { EF.annot.engine.undo(); EF.app.closePalette(); ev.preventDefault(); return; }
-          return;
-        }
-
-        // Esc: 注釈ツール解除→カーソルへ / 配置待ち解除 / WB閉じる / モーダル閉じる
+        // Esc: 注釈ツール解除→カーソルへ / モーダル閉じる
         if (ev.key === "Escape") {
           if (EF.app.handleEscape()) ev.preventDefault();
           return;
@@ -1809,6 +1850,9 @@ kbd {
       // カラーパレット編集
       this.buildPalette();
 
+      // ツールバー（並べ替え・表示/非表示）
+      this.buildToolList();
+
       // スライダー類（変更時に保存）
       this.bindRange("set-ring-width", "out-ring-width", (v) => { EF.state.ring.width = +v; EF.cursor.update(); }, (v) => v + "px");
       this.bindRange("set-ring-size", "out-ring-size", (v) => { EF.state.ring.size = +v; EF.cursor.update(); }, (v) => v + "px");
@@ -1838,6 +1882,10 @@ kbd {
       seg("set-spot-band", "band", (v) => { EF.state.spotBand = parseFloat(v); });
       seg("set-spot-dim", "dim", (v) => { EF.state.spotDim = parseFloat(v); });
       seg("set-zoom-scale", "zoom", (v) => { EF.state.zoomScale = parseFloat(v); EF.zoom.refresh(); EF.setStatus(); });
+
+      // バーの配置
+      seg("set-bar-side", "side", (v) => { EF.state.barSide = v; EF.app.applyLayout(); });
+      seg("set-dock-pos", "pos", (v) => { EF.state.dockPos = v; EF.app.applyLayout(); });
 
       // テキスト設定
       seg("set-text-size", "size", (v) => { EF.state.textSize = +v; });
@@ -1888,6 +1936,72 @@ kbd {
       });
     },
 
+    // ツールバーの並べ替え・表示/非表示リスト
+    buildToolList() {
+      const box = $("set-tools");
+      if (!box) return;
+      box.innerHTML = "";
+      const order = EF.state.toolOrder;
+      order.forEach((key, idx) => {
+        const def = EF.toolDef ? EF.toolDef(key) : null;
+        if (!def) return;
+        const row = document.createElement("div");
+        row.className = "set-tool-row";
+
+        const up = document.createElement("button");
+        up.type = "button";
+        up.className = "st-move";
+        up.innerHTML = EF.iconSvg ? EF.iconSvg("arrow", 14) : "↑";
+        up.title = "上へ";
+        up.disabled = idx === 0;
+        up.addEventListener("click", () => this.moveTool(idx, -1));
+
+        const down = document.createElement("button");
+        down.type = "button";
+        down.className = "st-move st-down";
+        down.innerHTML = EF.iconSvg ? EF.iconSvg("arrow", 14) : "↓";
+        down.title = "下へ";
+        down.disabled = idx === order.length - 1;
+        down.addEventListener("click", () => this.moveTool(idx, 1));
+
+        const lab = document.createElement("label");
+        lab.className = "st-label";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = !EF.state.toolHidden[key];
+        cb.addEventListener("change", () => {
+          if (cb.checked) delete EF.state.toolHidden[key];
+          else EF.state.toolHidden[key] = true;
+          if (EF.toolbar) EF.toolbar.buildTools();
+          save();
+          this.buildToolList();
+        });
+        const icoSpan = document.createElement("span");
+        icoSpan.className = "st-ico";
+        icoSpan.innerHTML = EF.iconSvg ? EF.iconSvg(def.ic, 16) : "";
+        const txt = document.createElement("span");
+        txt.textContent = def.label;
+        lab.appendChild(cb);
+        lab.appendChild(icoSpan);
+        lab.appendChild(txt);
+
+        row.appendChild(up);
+        row.appendChild(down);
+        row.appendChild(lab);
+        box.appendChild(row);
+      });
+    },
+
+    moveTool(idx, dir) {
+      const order = EF.state.toolOrder;
+      const j = idx + dir;
+      if (j < 0 || j >= order.length) return;
+      const tmp = order[idx]; order[idx] = order[j]; order[j] = tmp;
+      if (EF.toolbar) EF.toolbar.buildTools();
+      save();
+      this.buildToolList();
+    },
+
     // テキスト色（パレットから選択）
     buildTextColors() {
       const box = $("set-text-color");
@@ -1922,13 +2036,15 @@ kbd {
       setActive("set-spot-band", "band", EF.state.spotBand);
       setActive("set-spot-dim", "dim", EF.state.spotDim);
       setActive("set-zoom-scale", "zoom", EF.state.zoomScale);
+      setActive("set-bar-side", "side", EF.state.barSide);
+      setActive("set-dock-pos", "pos", EF.state.dockPos);
       setActive("set-text-size", "size", EF.state.textSize);
       setActive("set-text-weight", "weight", EF.state.textBold ? "bold" : "normal");
       $("set-text-color").querySelectorAll(".swatch").forEach((s) =>
         s.classList.toggle("active", s.dataset.color === EF.state.textColor));
     },
 
-    openModal() { this.syncUI(); $("settings").hidden = false; },
+    openModal() { this.syncUI(); this.buildToolList(); $("settings").hidden = false; },
     closeModal() { $("settings").hidden = true; },
   };
 })();
@@ -2075,8 +2191,91 @@ kbd {
           EF.toast("注釈を全消去しました");
           break;
         case "screenshot": EF.screenshot.capture(); break;
+        case "record": this.toggleRecord(); break;
         case "settings": EF.presets.openModal(); break;
         case "hide-ui": this.toggleUI(); break;
+      }
+    },
+
+    // 画面録画ボタンの見た目を更新（録画中=赤・停止アイコン）
+    _syncRecordBtn() {
+      const btn = document.querySelector('.tool[data-action="record"]');
+      if (!btn) return;
+      const rec = !!EF.state.recording;
+      btn.classList.toggle("recording", rec);
+      const ico = btn.querySelector(".ico");
+      if (ico) {
+        const name = rec ? "stop" : "record";
+        ico.dataset.ic = name;
+        if (EF.iconSvg) ico.innerHTML = EF.iconSvg(name);
+      }
+      const lbl = btn.querySelector(".lbl");
+      if (lbl) lbl.textContent = rec ? "停止" : "録画";
+      btn.title = rec ? "録画を停止" : "画面録画 (webm保存)";
+    },
+
+    // 画面録画のトグル（getDisplayMedia + MediaRecorder）
+    toggleRecord() {
+      if (EF.state.recording) { this._stopRecord(); return; }
+      this._startRecord();
+    },
+
+    async _startRecord() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        EF.toast("この環境では画面録画に対応していません", 2600);
+        return;
+      }
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 30 }, audio: true });
+      } catch (err) {
+        EF.toast("画面録画を開始できませんでした（権限が許可されていない可能性があります）", 2800);
+        return;
+      }
+      let rec;
+      try {
+        const opt = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+          ? { mimeType: "video/webm;codecs=vp9" } : { mimeType: "video/webm" };
+        rec = new MediaRecorder(stream, opt);
+      } catch (err) {
+        stream.getTracks().forEach((t) => t.stop());
+        EF.toast("録画の初期化に失敗しました", 2600);
+        return;
+      }
+      const chunks = [];
+      rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+      rec.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunks, { type: "video/webm" });
+        const d = new Date(), p = (n) => String(n).padStart(2, "0");
+        const fn = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}_画面録画.webm`;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = fn;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        EF._recorder = null;
+        EF.state.recording = false;
+        this._syncRecordBtn();
+        EF.toast("録画を保存しました: " + fn, 2600);
+      };
+      // ユーザーが共有を停止した場合も録画停止
+      const vt = stream.getVideoTracks()[0];
+      if (vt) vt.onended = () => { if (EF.state.recording) this._stopRecord(); };
+      EF._recorder = rec;
+      EF.state.recording = true;
+      this._syncRecordBtn();
+      rec.start();
+      EF.toast("画面録画を開始しました（もう一度押すと停止）", 2600);
+    },
+
+    _stopRecord() {
+      const rec = EF._recorder;
+      if (rec && rec.state !== "inactive") {
+        try { rec.stop(); } catch (e) { /* noop */ }
+      } else {
+        EF.state.recording = false;
+        this._syncRecordBtn();
       }
     },
 
@@ -2110,16 +2309,16 @@ kbd {
         document.getElementById("stage").classList.remove("armed", "tool-cursor");
         EF.toast("Enmish Focus を終了");
       } else {
-        if (!forceOn) this.openPalette();
         document.getElementById("stage").classList.add(
           EF.state.tool === "cursor" ? "tool-cursor" : "armed");
         if (!EF._onboarded) {
           EF._onboarded = true;
-          EF.toast("ツールを選んでドラッグで注釈 ／ 左下ドックでON/OFF・バー表示 ／ ⚙設定で詳細設定", 4600);
+          EF.toast("ツールを選んでドラッグで注釈 ／ 右下ドックでON/OFF・バー表示 ／ ⚙設定で配置や詳細を変更", 4600);
         } else {
           EF.toast("Enmish Focus 起動 — カーソル強調中");
         }
       }
+      document.body.classList.toggle("bar-left", EF.state.barSide === "left");
       EF.cursor.update();
       EF.toolbar.sync();
       EF.options.render();
@@ -2127,13 +2326,22 @@ kbd {
       EF.setStatus();
     },
 
-    openPalette() { document.getElementById("quick-palette").hidden = false; },
-    closePalette() { document.getElementById("quick-palette").hidden = true; },
+    // バーの配置（ツールバー左右・ドック位置）を反映
+    applyLayout() {
+      const tb = document.getElementById("toolbar");
+      if (tb) tb.classList.toggle("side-left", EF.state.barSide === "left");
+      document.body.classList.toggle("bar-left", EF.state.barSide === "left");
+      const dock = document.getElementById("ef-dock");
+      if (dock) {
+        dock.classList.remove("dock-bottom-right", "dock-top-left", "dock-top-right");
+        if (EF.state.dockPos && EF.state.dockPos !== "bottom-left") dock.classList.add("dock-" + EF.state.dockPos);
+      }
+      if (EF.toolbar && EF.toolbar.fit) EF.toolbar.fit();
+    },
 
     // Esc処理。何か閉じたら true。
     handleEscape() {
       if (!document.getElementById("settings").hidden) { EF.presets.closeModal(); return true; }
-      if (!document.getElementById("quick-palette").hidden) { this.closePalette(); return true; }
       if (EF.state.uiHidden) { this.toggleUI(); return true; }
       if (EF.state.zoom) { EF.state.zoom = false; EF.zoom.refresh(); EF.toolbar.sync(); EF.setStatus(); return true; }
       if (EF.state.spotlight) { EF.state.spotlight = false; EF.toolbar.sync(); EF.setStatus(); return true; }
@@ -2210,20 +2418,6 @@ kbd {
     },
   };
 
-  // クイックパレット内ボタン
-  function bindPalette() {
-    const qp = document.getElementById("quick-palette");
-    qp.querySelectorAll("[data-tool]").forEach((b) =>
-      b.addEventListener("click", () => { EF.app.setTool(b.dataset.tool); EF.app.closePalette(); }));
-    qp.querySelectorAll("[data-toggle]").forEach((b) =>
-      b.addEventListener("click", () => { EF.app.toggle(b.dataset.toggle); EF.app.closePalette(); }));
-    qp.querySelectorAll("[data-action]").forEach((b) =>
-      b.addEventListener("click", () => {
-        if (b.dataset.action === "close-palette") EF.app.closePalette();
-        else { EF.app.action(b.dataset.action); EF.app.closePalette(); }
-      }));
-  }
-
   // シーン切替
   function bindScenes() {
     document.querySelectorAll(".ss-btn").forEach((b) =>
@@ -2240,11 +2434,11 @@ kbd {
     EF.toolbar.init();
     EF.shortcuts.init();
     EF.presets.init();
-    bindPalette();
     bindScenes();
     EF.options.bind();
     EF.options.render();
     EF.dock.init();
+    EF.app.applyLayout();
 
     EF.toolbar.sync();
     EF.toast("Enmish Focus プロトタイプ — ⌘⇧E で起動", 2600);

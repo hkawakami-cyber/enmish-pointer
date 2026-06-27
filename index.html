@@ -46,39 +46,8 @@
 
       <div class="tb-sep"></div>
 
-      <button class="tool" data-tool="cursor" id="btn-cursor" title="カーソル強調">
-        <span class="ico" data-ic="cursor"></span><span class="lbl">カーソル</span>
-      </button>
-      <button class="tool" data-tool="pen" title="ペン (⌘⇧1)">
-        <span class="ico" data-ic="pen"></span><span class="lbl">ペン</span>
-      </button>
-      <button class="tool" data-tool="highlighter" title="蛍光ペン">
-        <span class="ico" data-ic="highlighter"></span><span class="lbl">蛍光</span>
-      </button>
-      <button class="tool" data-tool="arrow" title="矢印 (⌘⇧2)">
-        <span class="ico" data-ic="arrow"></span><span class="lbl">矢印</span>
-      </button>
-      <button class="tool" data-tool="hline" title="横線（高さ固定・アンダーライン）">
-        <span class="ico" data-ic="hline"></span><span class="lbl">横線</span>
-      </button>
-      <button class="tool" data-tool="ellipse" title="丸囲み (⌘⇧3)">
-        <span class="ico" data-ic="ellipse"></span><span class="lbl">丸</span>
-      </button>
-      <button class="tool" data-tool="rect" title="四角囲み (⌘⇧4)">
-        <span class="ico" data-ic="rect"></span><span class="lbl">四角</span>
-      </button>
-      <button class="tool" data-tool="text" title="テキスト注釈">
-        <span class="ico" data-ic="text"></span><span class="lbl">文字</span>
-      </button>
-
-      <div class="tb-sep"></div>
-
-      <button class="tool" data-toggle="spotlight" id="btn-spotlight" title="スポットライト (⌘⇧5)">
-        <span class="ico" data-ic="spotlight"></span><span class="lbl">注目</span>
-      </button>
-      <button class="tool" data-toggle="zoom" id="btn-zoom" title="ズーム (⌘⇧6)">
-        <span class="ico" data-ic="zoom"></span><span class="lbl">ズーム</span>
-      </button>
+      <!-- ツール群（並べ替え・表示/非表示は設定で。JSで動的生成） -->
+      <div id="tb-tools" class="tb-tools"></div>
 
       <div class="tb-sep"></div>
 
@@ -95,6 +64,9 @@
       </button>
       <button class="tool" data-action="screenshot" title="注釈付きスクショ保存">
         <span class="ico" data-ic="save"></span><span class="lbl">保存</span>
+      </button>
+      <button class="tool" data-action="record" title="画面録画 (webm保存)">
+        <span class="ico" data-ic="record"></span><span class="lbl">録画</span>
       </button>
       <button class="tool" data-action="settings" title="設定 / プリセット">
         <span class="ico" data-ic="options"></span><span class="lbl">設定</span>
@@ -113,24 +85,6 @@
     <button class="ss-btn" data-scene="salesforce">商談画面</button>
   </div>
 
-  <!-- ============ クイックパレット (⌘⇧E のオーバーレイ) ============ -->
-  <div id="quick-palette" class="quick-palette" hidden>
-    <div class="qp-card">
-      <div class="qp-title">Enmish Focus — クイックパレット</div>
-      <div class="qp-grid">
-        <button class="qp-item" data-tool="pen"><kbd>1</kbd><span>ペン</span></button>
-        <button class="qp-item" data-tool="arrow"><kbd>2</kbd><span>矢印</span></button>
-        <button class="qp-item" data-tool="ellipse"><kbd>3</kbd><span>丸囲み</span></button>
-        <button class="qp-item" data-tool="rect"><kbd>4</kbd><span>四角囲み</span></button>
-        <button class="qp-item" data-toggle="spotlight"><kbd>5</kbd><span>スポットライト</span></button>
-        <button class="qp-item" data-toggle="zoom"><kbd>6</kbd><span>ズーム</span></button>
-        <button class="qp-item" data-action="undo"><kbd>⌫</kbd><span>1つ戻る</span></button>
-        <button class="qp-item" data-action="close-palette"><kbd>Esc</kbd><span>終了</span></button>
-      </div>
-      <div class="qp-hint">数字キーで選択 / Escで閉じる</div>
-    </div>
-  </div>
-
   <!-- ============ 設定 ============ -->
   <div id="settings" class="modal" hidden>
     <div class="modal-card">
@@ -143,6 +97,12 @@
         <h3>カラーパレット</h3>
         <div class="palette-edit" id="palette-edit"></div>
         <p class="note">クリックして色を変更できます。変更内容は自動で保存されます。</p>
+      </section>
+
+      <section class="modal-section">
+        <h3>ツールバー</h3>
+        <div id="set-tools" class="set-tools"></div>
+        <p class="note">[↑][↓]で並べ替え、チェックで表示/非表示を切り替えます。アプリ起動・カラー・元に戻す・全消去・保存・設定は固定です。</p>
       </section>
 
       <section class="modal-section">
@@ -259,16 +219,21 @@
       </section>
 
       <section class="modal-section">
-        <h3>ショートカット</h3>
-        <table class="shortcut-table">
-          <tr><td>アプリ ON/OFF</td><td><kbd>⌘⇧E</kbd></td></tr>
-          <tr><td>ペン / 矢印 / 丸 / 四角</td><td><kbd>⌘⇧1</kbd>〜<kbd>⌘⇧4</kbd></td></tr>
-          <tr><td>スポットライト / ズーム</td><td><kbd>⌘⇧5</kbd> / <kbd>⌘⇧6</kbd></td></tr>
-          <tr><td>UIの表示/非表示</td><td><kbd>⌘⇧H</kbd></td></tr>
-          <tr><td>元に戻す / 全消去</td><td><kbd>⌘Z</kbd> / <kbd>⌘⇧⌫</kbd></td></tr>
-          <tr><td>注釈終了 / パレット</td><td><kbd>Esc</kbd></td></tr>
-        </table>
-        <p class="note">※ Webプロトタイプではブラウザ予約のショートカット競合を避けるため、<kbd>Ctrl/⌘ + ⇧ + キー</kbd> を内部で横取りします。実機(macOSネイティブ)ではグローバルショートカットになります。</p>
+        <h3>バーの配置</h3>
+        <label class="field" style="display:block">ツールバー
+          <div class="seg seg-wrap" id="set-bar-side" style="margin-top:8px">
+            <button data-side="left">左</button>
+            <button data-side="right">右</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">ドック（ポインター/バー操作）
+          <div class="seg seg-wrap" id="set-dock-pos" style="margin-top:8px">
+            <button data-pos="bottom-left">左下</button>
+            <button data-pos="bottom-right">右下</button>
+            <button data-pos="top-left">左上</button>
+            <button data-pos="top-right">右上</button>
+          </div>
+        </label>
       </section>
     </div>
   </div>

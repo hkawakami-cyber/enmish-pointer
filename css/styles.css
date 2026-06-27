@@ -187,8 +187,11 @@ html, body {
   transition: transform .25s ease, opacity .25s ease;
 }
 .toolbar::-webkit-scrollbar { width: 0; }
-/* アプリON中は共有画面を左に寄せ、右端ツールバーと被らないようにする */
-body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ease; }
+/* ツールバーを左端に配置 */
+.toolbar.side-left { right: auto; left: 0; border-radius: 0 16px 16px 0; border-right: 1px solid rgba(255,255,255,.08); border-left: none; }
+/* アプリON中は共有画面を寄せ、端のツールバーと被らないようにする */
+body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ease, padding-left .25s ease; }
+body.ef-on.bar-left .scene-root { padding-right: 0; padding-left: 116px; }
 .toolbar[data-collapsed="true"] .tb-body { display: none; }
 .toolbar[data-collapsed="true"] { padding: 6px; }
 
@@ -236,6 +239,9 @@ body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ea
 .tool.active { background: var(--ef-blue); }
 .tool.active .lbl { color: #fff; }
 .tool.toggled { background: rgba(47,107,255,.28); outline: 1.5px solid var(--ef-blue); }
+.tool.recording { background: rgba(193,103,127,.30); outline: 1.5px solid var(--ef-rose, #c1677f); }
+.tool.recording .ico { color: var(--ef-rose, #c1677f); }
+.tool.recording .lbl { color: var(--ef-rose, #c1677f); }
 
 .tb-colors { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 2px; }
 .swatch { width: 15px; height: 15px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
@@ -246,6 +252,31 @@ body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ea
 .toolbar.app-off .tool[data-toggle],
 .toolbar.app-off .tool[data-action="whiteboard"],
 .toolbar.app-off .tb-colors { opacity: .35; pointer-events: none; }
+
+/* ツール群コンテナ（ツールバー内） */
+.tb-tools { display: flex; flex-direction: column; gap: 3px; }
+
+/* ============ 設定：ツールバー編集 ============ */
+.set-tools { display: flex; flex-direction: column; gap: 6px; }
+.set-tool-row { display: flex; align-items: center; gap: 6px; }
+.st-move {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border: 1px solid #dfe3ec; border-radius: 8px;
+  background: #fff; color: var(--ef-green-dark); cursor: pointer; padding: 0;
+}
+.st-move:hover { background: var(--ef-green-pale); border-color: var(--ef-green); }
+.st-move:disabled { opacity: .35; cursor: default; }
+.st-move svg { display: block; }
+.st-move .st-down, .st-move.st-down svg { transform: none; }
+.st-move.st-down svg { transform: rotate(180deg); }
+.st-label {
+  display: flex; align-items: center; gap: 8px; flex: 1;
+  font-size: 13.5px; color: #2c3550; cursor: pointer;
+  padding: 4px 8px; border: 1px solid #eef1f6; border-radius: 8px; background: #fafbfe;
+}
+.st-label input { accent-color: var(--ef-green); }
+.st-ico { display: inline-flex; align-items: center; color: var(--ef-green-dark); }
+.st-ico svg { display: block; }
 
 /* ============ 営業テンプレ / KPIマーカー バー ============ */
 .stamp-bar {
@@ -490,6 +521,9 @@ kbd {
 }
 
 /* ============ 常駐ドック ============ */
+.ef-dock.dock-bottom-right { left: auto; right: 16px; bottom: 16px; top: auto; }
+.ef-dock.dock-top-left { top: 16px; left: 16px; bottom: auto; right: auto; }
+.ef-dock.dock-top-right { top: 16px; right: 16px; bottom: auto; left: auto; }
 .ef-dock {
   position: fixed; left: 16px; bottom: 16px; z-index: 9300;
   display: flex; gap: 6px; padding: 6px;

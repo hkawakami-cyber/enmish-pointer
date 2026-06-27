@@ -12,6 +12,9 @@
       // カラーパレット編集
       this.buildPalette();
 
+      // ツールバー（並べ替え・表示/非表示）
+      this.buildToolList();
+
       // スライダー類（変更時に保存）
       this.bindRange("set-ring-width", "out-ring-width", (v) => { EF.state.ring.width = +v; EF.cursor.update(); }, (v) => v + "px");
       this.bindRange("set-ring-size", "out-ring-size", (v) => { EF.state.ring.size = +v; EF.cursor.update(); }, (v) => v + "px");
@@ -41,6 +44,10 @@
       seg("set-spot-band", "band", (v) => { EF.state.spotBand = parseFloat(v); });
       seg("set-spot-dim", "dim", (v) => { EF.state.spotDim = parseFloat(v); });
       seg("set-zoom-scale", "zoom", (v) => { EF.state.zoomScale = parseFloat(v); EF.zoom.refresh(); EF.setStatus(); });
+
+      // バーの配置
+      seg("set-bar-side", "side", (v) => { EF.state.barSide = v; EF.app.applyLayout(); });
+      seg("set-dock-pos", "pos", (v) => { EF.state.dockPos = v; EF.app.applyLayout(); });
 
       // テキスト設定
       seg("set-text-size", "size", (v) => { EF.state.textSize = +v; });
@@ -91,6 +98,72 @@
       });
     },
 
+    // ツールバーの並べ替え・表示/非表示リスト
+    buildToolList() {
+      const box = $("set-tools");
+      if (!box) return;
+      box.innerHTML = "";
+      const order = EF.state.toolOrder;
+      order.forEach((key, idx) => {
+        const def = EF.toolDef ? EF.toolDef(key) : null;
+        if (!def) return;
+        const row = document.createElement("div");
+        row.className = "set-tool-row";
+
+        const up = document.createElement("button");
+        up.type = "button";
+        up.className = "st-move";
+        up.innerHTML = EF.iconSvg ? EF.iconSvg("arrow", 14) : "↑";
+        up.title = "上へ";
+        up.disabled = idx === 0;
+        up.addEventListener("click", () => this.moveTool(idx, -1));
+
+        const down = document.createElement("button");
+        down.type = "button";
+        down.className = "st-move st-down";
+        down.innerHTML = EF.iconSvg ? EF.iconSvg("arrow", 14) : "↓";
+        down.title = "下へ";
+        down.disabled = idx === order.length - 1;
+        down.addEventListener("click", () => this.moveTool(idx, 1));
+
+        const lab = document.createElement("label");
+        lab.className = "st-label";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = !EF.state.toolHidden[key];
+        cb.addEventListener("change", () => {
+          if (cb.checked) delete EF.state.toolHidden[key];
+          else EF.state.toolHidden[key] = true;
+          if (EF.toolbar) EF.toolbar.buildTools();
+          save();
+          this.buildToolList();
+        });
+        const icoSpan = document.createElement("span");
+        icoSpan.className = "st-ico";
+        icoSpan.innerHTML = EF.iconSvg ? EF.iconSvg(def.ic, 16) : "";
+        const txt = document.createElement("span");
+        txt.textContent = def.label;
+        lab.appendChild(cb);
+        lab.appendChild(icoSpan);
+        lab.appendChild(txt);
+
+        row.appendChild(up);
+        row.appendChild(down);
+        row.appendChild(lab);
+        box.appendChild(row);
+      });
+    },
+
+    moveTool(idx, dir) {
+      const order = EF.state.toolOrder;
+      const j = idx + dir;
+      if (j < 0 || j >= order.length) return;
+      const tmp = order[idx]; order[idx] = order[j]; order[j] = tmp;
+      if (EF.toolbar) EF.toolbar.buildTools();
+      save();
+      this.buildToolList();
+    },
+
     // テキスト色（パレットから選択）
     buildTextColors() {
       const box = $("set-text-color");
@@ -125,13 +198,15 @@
       setActive("set-spot-band", "band", EF.state.spotBand);
       setActive("set-spot-dim", "dim", EF.state.spotDim);
       setActive("set-zoom-scale", "zoom", EF.state.zoomScale);
+      setActive("set-bar-side", "side", EF.state.barSide);
+      setActive("set-dock-pos", "pos", EF.state.dockPos);
       setActive("set-text-size", "size", EF.state.textSize);
       setActive("set-text-weight", "weight", EF.state.textBold ? "bold" : "normal");
       $("set-text-color").querySelectorAll(".swatch").forEach((s) =>
         s.classList.toggle("active", s.dataset.color === EF.state.textColor));
     },
 
-    openModal() { this.syncUI(); $("settings").hidden = false; },
+    openModal() { this.syncUI(); this.buildToolList(); $("settings").hidden = false; },
     closeModal() { $("settings").hidden = true; },
   };
 })();

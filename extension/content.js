@@ -29,6 +29,11 @@
     autoErase: 0, spotlight: false, spotShape: "band", spotBand: 0.5, spotDim: 0.72,
     zoom: false, zoomScale: 2.0,
     textSize: 28, textBold: true, textColor: "#032841",
+    // ツールバーのカスタム（並べ替え・表示/非表示）
+    toolOrder: ["cursor", "pen", "highlighter", "arrow", "hline", "ellipse", "rect", "text", "spotlight", "zoom"],
+    toolHidden: {},
+    barSide: "right", dockPos: "bottom-left",
+    recording: false,
     mouse: { x: -999, y: -999 },
   };
 
@@ -67,6 +72,7 @@
     }
     .toolbar.app-off .tool[data-tool], .toolbar.app-off .tool[data-toggle],
     .toolbar.app-off .tool[data-action="whiteboard"], .toolbar.app-off .colors { opacity: .35; pointer-events: none; }
+    .toolbar.side-left { right: auto; left: 0; border-radius: 0 16px 16px 0; border-left: none; border-right: 1px solid rgba(255,255,255,.08); }
     .toolbar.compact { width: 46px; gap: 1px; }
     .toolbar.compact .lbl { display: none; }
     .toolbar.compact .tool { padding: 7px 3px; }
@@ -89,6 +95,8 @@
     .ico svg { display: block; }
     .tool.active { background: #6cbba5; } .tool.active .lbl { color: #fff; }
     .tool.toggled { background: rgba(108,187,165,.28); outline: 1.5px solid #6cbba5; }
+    .tool.recording { background: rgba(193,103,127,.30); outline: 1.5px solid #c1677f; }
+    .tool.recording .ico, .tool.recording .lbl { color: #c1677f; }
     .colors { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; padding: 2px; }
     .swatch { width: 14px; height: 14px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
     .swatch.active { border-color: #fff; box-shadow: 0 0 0 1.5px rgba(0,0,0,.4); }
@@ -112,6 +120,9 @@
     .toast { bottom: 64px; left: 50%; transform: translateX(-50%) translateY(8px); background: #1b2130; color: #fff; padding: 10px 18px; border-radius: 11px; font-size: 13px; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .hint { bottom: 20px; left: 50%; transform: translateX(-50%); background: #6cbba5; color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 13px; pointer-events: none; }
+    .ef-dock.dock-bottom-right { left: auto; right: 16px; bottom: 16px; top: auto; }
+    .ef-dock.dock-top-left { top: 16px; left: 16px; bottom: auto; right: auto; }
+    .ef-dock.dock-top-right { top: 16px; right: 16px; bottom: auto; left: auto; }
     .ef-dock { position: fixed; left: 16px; bottom: 16px; display: flex; gap: 6px; padding: 6px; background: rgba(3,40,65,.94); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.35); backdrop-filter: blur(14px); pointer-events: auto; }
     .dock-btn { display: flex; align-items: center; gap: 6px; border: none; cursor: pointer; background: rgba(255,255,255,.06); color: #e8ecf4; padding: 8px 12px; border-radius: 10px; font-size: 12px; line-height: 1; }
     .dock-btn:hover { background: rgba(255,255,255,.14); }
@@ -125,12 +136,25 @@
     .to-btn { display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); color: #e8ecf4; border-radius: 8px; padding: 5px 8px; font-size: 11px; cursor: pointer; line-height: 1; }
     .to-btn:hover { background: rgba(255,255,255,.12); }
     .to-btn.on { background: #6cbba5; border-color: #6cbba5; color: #06251c; font-weight: 700; }
+    .tb-tools { display: flex; flex-direction: column; gap: 2px; }
+    /* 設定フライアウト内：ツールバー編集 */
+    .to-tool-row { display: flex; align-items: center; gap: 5px; }
+    .to-tool-row .to-chk { display: inline-flex; align-items: center; gap: 5px; flex: 1; font-size: 11px; color: #e8ecf4; cursor: pointer; padding: 3px 6px; border: 1px solid rgba(255,255,255,.14); border-radius: 7px; background: rgba(255,255,255,.05); }
+    .to-tool-row .to-chk.off { opacity: .5; }
+    .to-tool-row .to-chk input { accent-color: #6cbba5; margin: 0; }
+    .to-tool-row .to-chk .tt-ico { display: inline-flex; align-items: center; }
+    .to-tool-row .to-chk .tt-ico svg { display: block; }
+    .to-mv { width: 24px; height: 24px; flex: none; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); color: #e8ecf4; border-radius: 7px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+    .to-mv:hover { background: rgba(255,255,255,.14); }
+    .to-mv:disabled { opacity: .3; cursor: default; }
+    .to-mv svg { display: block; }
+    .to-mv.dn svg { transform: rotate(180deg); }
     [hidden] { display: none !important; }
   `;
 
-  const TOOL_BTNS = [
+  // 並べ替え・表示/非表示の対象ツール定義（kind,key,fallbackアイコン,ラベル）
+  const TOOL_DEFS = [
     ["tool", "cursor", "◎", "カーソル"],
-    ["sep"],
     ["tool", "pen", "✎", "ペン"],
     ["tool", "highlighter", "▰", "蛍光"],
     ["tool", "arrow", "↗", "矢印"],
@@ -138,9 +162,15 @@
     ["tool", "ellipse", "◯", "丸"],
     ["tool", "rect", "▢", "四角"],
     ["tool", "text", "T", "文字"],
-    ["sep"],
     ["toggle", "spotlight", "☀", "注目"],
     ["toggle", "zoom", "🔍", "ズーム"],
+  ];
+  const toolDef = (key) => TOOL_DEFS.find((d) => d[1] === key);
+
+  // 固定部（並べ替え対象外）。"tools" の位置に動的ツール群を差し込む。
+  const TOOL_BTNS = [
+    ["tools"],
+    ["sep"],
     ["action", "options", "⚙", "設定"],
     ["sep"],
     ["colors"],
@@ -148,18 +178,36 @@
     ["action", "undo", "↶", "戻る"],
     ["action", "clear", "🗑", "全消去"],
     ["action", "screenshot", "📷", "保存"],
+    ["action", "record", "⏺", "録画"],
   ];
+
+  function toolBtnHtml(kind, key, fallback, label) {
+    const attr = kind === "tool" ? `data-tool="${key}"` : kind === "toggle" ? `data-toggle="${key}"` : `data-action="${key}"`;
+    const id = key === "spotlight" ? 'id="btn-spot"' : key === "zoom" ? 'id="btn-zoom"' : key === "options" ? 'id="btn-options"' : "";
+    const icoName = key === "screenshot" ? "save" : key;
+    const ico = (EF.iconSvg && EF.iconSvg(icoName)) || fallback;
+    return `<button class="tool" ${attr} ${id}><span class="ico">${ico}</span><span class="lbl">${label}</span></button>`;
+  }
+
+  // 動的ツール群（state.toolOrder 順・state.toolHidden 除外）
+  function toolsHtml() {
+    let html = "";
+    state.toolOrder.forEach((key) => {
+      if (state.toolHidden[key]) return;
+      const d = toolDef(key);
+      if (!d) return;
+      html += toolBtnHtml(d[0], d[1], d[2], d[3]);
+    });
+    return html;
+  }
 
   function buildToolbar() {
     let html = '<div class="brand"><span class="ef-mark"></span><span class="ef-word">enmish</span><span class="ef-tag">FOCUS</span></div>';
     for (const b of TOOL_BTNS) {
       if (b[0] === "sep") { html += '<div class="sep"></div>'; continue; }
       if (b[0] === "colors") { html += '<div class="colors" id="colors"></div>'; continue; }
-      const attr = b[0] === "tool" ? `data-tool="${b[1]}"` : b[0] === "toggle" ? `data-toggle="${b[1]}"` : `data-action="${b[1]}"`;
-      const id = b[1] === "spotlight" ? 'id="btn-spot"' : b[1] === "zoom" ? 'id="btn-zoom"' : b[1] === "options" ? 'id="btn-options"' : "";
-      const icoName = b[1] === "screenshot" ? "save" : b[1];
-      const ico = (EF.iconSvg && EF.iconSvg(icoName)) || b[2];
-      html += `<button class="tool" ${attr} ${id}><span class="ico">${ico}</span><span class="lbl">${b[3]}</span></button>`;
+      if (b[0] === "tools") { html += `<div class="tb-tools" id="tb-tools">${toolsHtml()}</div>`; continue; }
+      html += toolBtnHtml(b[0], b[1], b[2], b[3]);
     }
     return html;
   }
@@ -287,9 +335,43 @@
     if (tb.scrollHeight > window.innerHeight - 16) tb.classList.add("compact");
   }
 
+  // ツール群だけ再生成（順序・表示/非表示の変更を反映）
+  function rebuildTools() {
+    const tt = root.getElementById("tb-tools");
+    if (tt) tt.innerHTML = toolsHtml();
+    syncUI();
+    fitToolbar();
+  }
+
+  // 設定フライアウト用：ツールバー編集グループ（チェック+↑↓）
+  function toolbarGroup() {
+    const order = state.toolOrder;
+    const rows = order.map((key, idx) => {
+      const d = toolDef(key); if (!d) return "";
+      const ico = (EF.iconSvg && EF.iconSvg(d[1], 14)) || d[2];
+      const on = !state.toolHidden[key];
+      const up = `<button class="to-mv up" data-mv="up" data-key="${key}" ${idx === 0 ? "disabled" : ""}>${(EF.iconSvg && EF.iconSvg("arrow", 13)) || "↑"}</button>`;
+      const dn = `<button class="to-mv dn" data-mv="dn" data-key="${key}" ${idx === order.length - 1 ? "disabled" : ""}>${(EF.iconSvg && EF.iconSvg("arrow", 13)) || "↓"}</button>`;
+      return `<div class="to-tool-row">${up}${dn}` +
+        `<label class="to-chk${on ? "" : " off"}"><input type="checkbox" data-tool-show="${key}" ${on ? "checked" : ""}>` +
+        `<span class="tt-ico">${ico}</span><span>${d[3]}</span></label></div>`;
+    }).join("");
+    return `<div class="to-group"><div class="to-title">ツールバー</div>${rows}</div>`;
+  }
+
   // 設定の永続化（chrome.storage.local）
   const PERSIST = ["color", "strokeWidth", "ring", "cursorStyle", "arrowHead",
-    "spotShape", "spotBand", "spotDim", "zoomScale", "textSize", "textBold", "textColor"];
+    "spotShape", "spotBand", "spotDim", "zoomScale", "textSize", "textBold", "textColor",
+    "toolOrder", "toolHidden", "barSide", "dockPos"];
+  // 保存済み順序に新規ツールが欠けていたら補完、未知のキーは除去
+  function normalizeToolOrder() {
+    if (!Array.isArray(state.toolOrder)) state.toolOrder = TOOL_DEFS.map((d) => d[1]);
+    const valid = TOOL_DEFS.map((d) => d[1]);
+    state.toolOrder = state.toolOrder.filter((k) => valid.indexOf(k) !== -1);
+    valid.forEach((k) => { if (state.toolOrder.indexOf(k) === -1) state.toolOrder.push(k); });
+    if (!state.toolHidden || typeof state.toolHidden !== "object") state.toolHidden = {};
+  }
+
   function saveSettings() {
     try {
       const o = {}; PERSIST.forEach((k) => { o[k] = state[k]; });
@@ -305,6 +387,7 @@
           if (k === "ring") state.ring = Object.assign({}, state.ring, o.ring);
           else state[k] = o[k];
         });
+        normalizeToolOrder();
         done && done();
       });
     } catch (e) { done && done(); }
@@ -325,6 +408,8 @@
     groups.push(optGroup("ズーム倍率", "zoomScale", state.zoomScale, [[1.5, "", "×1.5"], [2, "", "×2"], [3, "", "×3"]]));
     groups.push(optGroup("クリック波紋", "ripple", state.ring.ripple ? "on" : "off", [["on", "", "ON"], ["off", "", "OFF"]]));
     groups.push(optGroup("注目の濃さ", "spotDim", state.spotDim, [[0.55, "", "薄"], [0.72, "", "標準"], [0.88, "", "濃"]]));
+    groups.push(optGroup("ツールバー位置", "barSide", state.barSide, [["left", "", "左"], ["right", "", "右"]]));
+    groups.push(optGroup("ドック位置", "dockPos", state.dockPos, [["bottom-left", "", "左下"], ["bottom-right", "", "右下"], ["top-left", "", "左上"], ["top-right", "", "右上"]]));
     if (state.appOn && state.tool === "cursor") {
       groups.push(optGroup("カーソル", "cursorStyle", state.cursorStyle, [["ring", "◎", "リング"], ["arrow", "➤", "矢印"], ["dot", "●", "ドット"], ["ringdot", "◉", "両方"], ["halo", "✦", "ハロー"]]));
       groups.push(optGroup("大きさ", "ringSize", state.ring.size, [[28, "", "極小"], [44, "", "小"], [60, "", "中"]]));
@@ -335,6 +420,8 @@
       if (state.spotShape === "band")
         groups.push(optGroup("帯の高さ", "spotBand", state.spotBand, [[0.25, "", "25%"], [0.5, "", "50%"], [0.75, "", "75%"]]));
     }
+    // ツールバー編集（並べ替え・表示/非表示）
+    groups.push(toolbarGroup());
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -407,8 +494,16 @@
   const GUTTER = 86;
   function reserveGutter(on) {
     const el = document.documentElement;
-    if (on) el.style.setProperty("margin-right", GUTTER + "px", "important");
-    else el.style.removeProperty("margin-right");
+    el.style.removeProperty("margin-right");
+    el.style.removeProperty("margin-left");
+    if (on) el.style.setProperty(state.barSide === "left" ? "margin-left" : "margin-right", GUTTER + "px", "important");
+  }
+  function applyLayout() {
+    tb.classList.toggle("side-left", state.barSide === "left");
+    dockEl.classList.remove("dock-bottom-right", "dock-top-left", "dock-top-right");
+    if (state.dockPos && state.dockPos !== "bottom-left") dockEl.classList.add("dock-" + state.dockPos);
+    if (state.appOn && !state.uiHidden) reserveGutter(true);
+    fitToolbar();
   }
 
   // ---------- ズーム（ページ本体を拡大・表示専用） ----------
@@ -450,6 +545,7 @@
       if (name === "undo") engine.undo();
       else if (name === "clear") { engine.clear(); toast("注釈を全消去しました"); }
       else if (name === "screenshot") app.screenshot();
+      else if (name === "record") app.toggleRecord();
       else if (name === "options") {
         if (!state.appOn) app.toggle(true);
         state.optionsOpen = !state.optionsOpen;
@@ -522,7 +618,79 @@
         });
       }));
     },
+    // 録画ボタンの見た目を更新（録画中=赤・停止アイコン）
+    _syncRecordBtn() {
+      const btn = tb.querySelector('.tool[data-action="record"]');
+      if (!btn) return;
+      const rec = !!state.recording;
+      btn.classList.toggle("recording", rec);
+      const ico = btn.querySelector(".ico");
+      if (ico && EF.iconSvg) ico.innerHTML = EF.iconSvg(rec ? "stop" : "record");
+      const lbl = btn.querySelector(".lbl");
+      if (lbl) lbl.textContent = rec ? "停止" : "録画";
+      btn.title = rec ? "録画を停止" : "画面録画 (webm保存)";
+    },
+    toggleRecord() {
+      if (state.recording) { app._stopRecord(); return; }
+      app._startRecord();
+    },
+    async _startRecord() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        toast("この環境では画面録画に対応していません", 2600);
+        return;
+      }
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 30 }, audio: true });
+      } catch (err) {
+        toast("画面録画を開始できませんでした（権限が許可されていない可能性があります）", 2800);
+        return;
+      }
+      let rec;
+      try {
+        const opt = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+          ? { mimeType: "video/webm;codecs=vp9" } : { mimeType: "video/webm" };
+        rec = new MediaRecorder(stream, opt);
+      } catch (err) {
+        stream.getTracks().forEach((t) => t.stop());
+        toast("録画の初期化に失敗しました", 2600);
+        return;
+      }
+      const chunks = [];
+      rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+      rec.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunks, { type: "video/webm" });
+        const d = new Date(), p = (n) => String(n).padStart(2, "0");
+        const fn = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}_画面録画.webm`;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = fn;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        recorder = null;
+        state.recording = false;
+        app._syncRecordBtn();
+        toast("録画を保存しました: " + fn, 2600);
+      };
+      const vt = stream.getVideoTracks()[0];
+      if (vt) vt.onended = () => { if (state.recording) app._stopRecord(); };
+      recorder = rec;
+      state.recording = true;
+      app._syncRecordBtn();
+      rec.start();
+      toast("画面録画を開始しました（もう一度押すと停止）", 2600);
+    },
+    _stopRecord() {
+      if (recorder && recorder.state !== "inactive") {
+        try { recorder.stop(); } catch (e) { /* noop */ }
+      } else {
+        state.recording = false;
+        app._syncRecordBtn();
+      }
+    },
   };
+  let recorder = null;
 
   // ---------- イベント配線 ----------
   // カラースウォッチ
@@ -541,6 +709,17 @@
   root.getElementById("dock-bars").addEventListener("click", () => app.toggleUI());
 
   optEl.addEventListener("click", (e) => {
+    // ツールバー：並べ替え（↑↓）
+    const mv = e.target.closest(".to-mv");
+    if (mv) {
+      const key = mv.dataset.key, dir = mv.dataset.mv === "up" ? -1 : 1;
+      const order = state.toolOrder, i = order.indexOf(key), j = i + dir;
+      if (i >= 0 && j >= 0 && j < order.length) {
+        const t = order[i]; order[i] = order[j]; order[j] = t;
+        rebuildTools(); renderOptions(); saveSettings();
+      }
+      return;
+    }
     const b = e.target.closest(".to-btn"); if (!b) return;
     const opt = b.dataset.opt; let v = b.dataset.val;
     if (opt === "ringSize") state.ring.size = parseFloat(v);
@@ -549,8 +728,18 @@
     else if (opt === "strokeWidth") state.strokeWidth = parseFloat(v);
     else if (opt === "zoomScale") { state.zoomScale = parseFloat(v); applyZoom(); }
     else if (opt === "ripple") state.ring.ripple = (v === "on");
+    else if (opt === "barSide" || opt === "dockPos") { state[opt] = v; applyLayout(); }
     else state[opt] = v;
     updateRing(); renderOptions(); setBadge(); saveSettings();
+  });
+
+  // ツールバー：表示/非表示チェック
+  optEl.addEventListener("change", (e) => {
+    const cb = e.target.closest("[data-tool-show]"); if (!cb) return;
+    const key = cb.dataset.toolShow;
+    if (cb.checked) delete state.toolHidden[key];
+    else state.toolHidden[key] = true;
+    rebuildTools(); renderOptions(); saveSettings();
   });
 
   // ---------- ショートカット ----------
@@ -597,5 +786,5 @@
   updateDock();
   fitToolbar();
   window.addEventListener("resize", fitToolbar, true);
-  loadSettings(() => { updateRing(); syncUI(); renderOptions(); fitToolbar(); }); // 保存済み設定を反映
+  loadSettings(() => { updateRing(); rebuildTools(); renderOptions(); applyLayout(); }); // 保存済み設定を反映（ツール群も再生成・配置も）
 })();

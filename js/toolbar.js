@@ -4,6 +4,21 @@
 (function () {
   const EF = (window.EF = window.EF || {});
 
+  // 並べ替え・表示/非表示の対象ツール定義（key,label,ic,kind）
+  EF.TOOL_DEFS = [
+    { key: "cursor", label: "カーソル", ic: "cursor", kind: "tool" },
+    { key: "pen", label: "ペン", ic: "pen", kind: "tool" },
+    { key: "highlighter", label: "蛍光", ic: "highlighter", kind: "tool" },
+    { key: "arrow", label: "矢印", ic: "arrow", kind: "tool" },
+    { key: "hline", label: "横線", ic: "hline", kind: "tool" },
+    { key: "ellipse", label: "丸", ic: "ellipse", kind: "tool" },
+    { key: "rect", label: "四角", ic: "rect", kind: "tool" },
+    { key: "text", label: "文字", ic: "text", kind: "tool" },
+    { key: "spotlight", label: "注目", ic: "spotlight", kind: "toggle" },
+    { key: "zoom", label: "ズーム", ic: "zoom", kind: "toggle" },
+  ];
+  EF.toolDef = function (key) { return EF.TOOL_DEFS.find((d) => d.key === key); };
+
   EF.toolbar = {
     init() {
       const tb = document.getElementById("toolbar");
@@ -12,13 +27,16 @@
       // カラースウォッチ生成
       this.buildColors();
 
-      // ツール選択
-      tb.querySelectorAll("[data-tool]").forEach((b) =>
-        b.addEventListener("click", () => EF.app.setTool(b.dataset.tool)));
+      // ツール群を動的生成（並べ替え・表示/非表示反映）
+      this.buildTools();
 
-      // トグル（スポットライト/ズーム）
-      tb.querySelectorAll("[data-toggle]").forEach((b) =>
-        b.addEventListener("click", () => EF.app.toggle(b.dataset.toggle)));
+      // ツール選択/トグルは #tb-tools へ委譲
+      const tbtools = document.getElementById("tb-tools");
+      tbtools.addEventListener("click", (e) => {
+        const b = e.target.closest("button"); if (!b) return;
+        if (b.dataset.tool) EF.app.setTool(b.dataset.tool);
+        else if (b.dataset.toggle) EF.app.toggle(b.dataset.toggle);
+      });
 
       // アクション
       tb.querySelectorAll("[data-action]").forEach((b) =>
@@ -50,6 +68,38 @@
       this.sync();
     },
 
+    // ツール群（並べ替え順・表示/非表示を反映して再生成）
+    buildTools() {
+      const tbtools = document.getElementById("tb-tools");
+      if (!tbtools) return;
+      tbtools.innerHTML = "";
+      const titles = {
+        cursor: "カーソル強調", pen: "ペン (⌘⇧1)", highlighter: "蛍光ペン",
+        arrow: "矢印 (⌘⇧2)", hline: "横線（高さ固定・アンダーライン）",
+        ellipse: "丸囲み (⌘⇧3)", rect: "四角囲み (⌘⇧4)", text: "テキスト注釈",
+        spotlight: "スポットライト (⌘⇧5)", zoom: "ズーム (⌘⇧6)",
+      };
+      EF.state.toolOrder.forEach((key) => {
+        if (EF.state.toolHidden[key]) return;
+        const def = EF.toolDef(key);
+        if (!def) return;
+        const b = document.createElement("button");
+        b.className = "tool";
+        if (def.kind === "toggle") {
+          b.dataset.toggle = key;
+          b.id = key === "spotlight" ? "btn-spotlight" : key === "zoom" ? "btn-zoom" : "";
+        } else {
+          b.dataset.tool = key;
+          if (key === "cursor") b.id = "btn-cursor";
+        }
+        b.title = titles[key] || def.label;
+        b.innerHTML = `<span class="ico" data-ic="${def.ic}"></span><span class="lbl">${def.label}</span>`;
+        tbtools.appendChild(b);
+      });
+      if (EF.fillIcons) EF.fillIcons(tbtools);
+      this.sync();
+    },
+
     // ウィンドウ高さに収まらなければアイコンのみのコンパクト表示に自動切替
     fit() {
       const tb = document.getElementById("toolbar");
@@ -66,9 +116,9 @@
         b.classList.toggle("active", EF.state.appOn && b.dataset.tool === EF.state.tool));
 
       const btnSpot = document.getElementById("btn-spotlight");
-      btnSpot.classList.toggle("toggled", EF.state.spotlight);
+      if (btnSpot) btnSpot.classList.toggle("toggled", EF.state.spotlight);
       const btnZoom = document.getElementById("btn-zoom");
-      btnZoom.classList.toggle("toggled", EF.state.zoom);
+      if (btnZoom) btnZoom.classList.toggle("toggled", EF.state.zoom);
 
       const btnApp = document.getElementById("btn-app");
       btnApp.classList.toggle("active", EF.state.appOn);

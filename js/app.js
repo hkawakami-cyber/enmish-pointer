@@ -138,8 +138,91 @@
           EF.toast("注釈を全消去しました");
           break;
         case "screenshot": EF.screenshot.capture(); break;
+        case "record": this.toggleRecord(); break;
         case "settings": EF.presets.openModal(); break;
         case "hide-ui": this.toggleUI(); break;
+      }
+    },
+
+    // 画面録画ボタンの見た目を更新（録画中=赤・停止アイコン）
+    _syncRecordBtn() {
+      const btn = document.querySelector('.tool[data-action="record"]');
+      if (!btn) return;
+      const rec = !!EF.state.recording;
+      btn.classList.toggle("recording", rec);
+      const ico = btn.querySelector(".ico");
+      if (ico) {
+        const name = rec ? "stop" : "record";
+        ico.dataset.ic = name;
+        if (EF.iconSvg) ico.innerHTML = EF.iconSvg(name);
+      }
+      const lbl = btn.querySelector(".lbl");
+      if (lbl) lbl.textContent = rec ? "停止" : "録画";
+      btn.title = rec ? "録画を停止" : "画面録画 (webm保存)";
+    },
+
+    // 画面録画のトグル（getDisplayMedia + MediaRecorder）
+    toggleRecord() {
+      if (EF.state.recording) { this._stopRecord(); return; }
+      this._startRecord();
+    },
+
+    async _startRecord() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        EF.toast("この環境では画面録画に対応していません", 2600);
+        return;
+      }
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 30 }, audio: true });
+      } catch (err) {
+        EF.toast("画面録画を開始できませんでした（権限が許可されていない可能性があります）", 2800);
+        return;
+      }
+      let rec;
+      try {
+        const opt = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+          ? { mimeType: "video/webm;codecs=vp9" } : { mimeType: "video/webm" };
+        rec = new MediaRecorder(stream, opt);
+      } catch (err) {
+        stream.getTracks().forEach((t) => t.stop());
+        EF.toast("録画の初期化に失敗しました", 2600);
+        return;
+      }
+      const chunks = [];
+      rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+      rec.onstop = () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(chunks, { type: "video/webm" });
+        const d = new Date(), p = (n) => String(n).padStart(2, "0");
+        const fn = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}_画面録画.webm`;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url; a.download = fn;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+        EF._recorder = null;
+        EF.state.recording = false;
+        this._syncRecordBtn();
+        EF.toast("録画を保存しました: " + fn, 2600);
+      };
+      // ユーザーが共有を停止した場合も録画停止
+      const vt = stream.getVideoTracks()[0];
+      if (vt) vt.onended = () => { if (EF.state.recording) this._stopRecord(); };
+      EF._recorder = rec;
+      EF.state.recording = true;
+      this._syncRecordBtn();
+      rec.start();
+      EF.toast("画面録画を開始しました（もう一度押すと停止）", 2600);
+    },
+
+    _stopRecord() {
+      const rec = EF._recorder;
+      if (rec && rec.state !== "inactive") {
+        try { rec.stop(); } catch (e) { /* noop */ }
+      } else {
+        EF.state.recording = false;
+        this._syncRecordBtn();
       }
     },
 
@@ -173,16 +256,16 @@
         document.getElementById("stage").classList.remove("armed", "tool-cursor");
         EF.toast("Enmish Focus を終了");
       } else {
-        if (!forceOn) this.openPalette();
         document.getElementById("stage").classList.add(
           EF.state.tool === "cursor" ? "tool-cursor" : "armed");
         if (!EF._onboarded) {
           EF._onboarded = true;
-          EF.toast("ツールを選んでドラッグで注釈 ／ 左下ドックでON/OFF・バー表示 ／ ⚙設定で詳細設定", 4600);
+          EF.toast("ツールを選んでドラッグで注釈 ／ 右下ドックでON/OFF・バー表示 ／ ⚙設定で配置や詳細を変更", 4600);
         } else {
           EF.toast("Enmish Focus 起動 — カーソル強調中");
         }
       }
+      document.body.classList.toggle("bar-left", EF.state.barSide === "left");
       EF.cursor.update();
       EF.toolbar.sync();
       EF.options.render();
@@ -190,13 +273,22 @@
       EF.setStatus();
     },
 
-    openPalette() { document.getElementById("quick-palette").hidden = false; },
-    closePalette() { document.getElementById("quick-palette").hidden = true; },
+    // バーの配置（ツールバー左右・ドック位置）を反映
+    applyLayout() {
+      const tb = document.getElementById("toolbar");
+      if (tb) tb.classList.toggle("side-left", EF.state.barSide === "left");
+      document.body.classList.toggle("bar-left", EF.state.barSide === "left");
+      const dock = document.getElementById("ef-dock");
+      if (dock) {
+        dock.classList.remove("dock-bottom-right", "dock-top-left", "dock-top-right");
+        if (EF.state.dockPos && EF.state.dockPos !== "bottom-left") dock.classList.add("dock-" + EF.state.dockPos);
+      }
+      if (EF.toolbar && EF.toolbar.fit) EF.toolbar.fit();
+    },
 
     // Esc処理。何か閉じたら true。
     handleEscape() {
       if (!document.getElementById("settings").hidden) { EF.presets.closeModal(); return true; }
-      if (!document.getElementById("quick-palette").hidden) { this.closePalette(); return true; }
       if (EF.state.uiHidden) { this.toggleUI(); return true; }
       if (EF.state.zoom) { EF.state.zoom = false; EF.zoom.refresh(); EF.toolbar.sync(); EF.setStatus(); return true; }
       if (EF.state.spotlight) { EF.state.spotlight = false; EF.toolbar.sync(); EF.setStatus(); return true; }
@@ -273,20 +365,6 @@
     },
   };
 
-  // クイックパレット内ボタン
-  function bindPalette() {
-    const qp = document.getElementById("quick-palette");
-    qp.querySelectorAll("[data-tool]").forEach((b) =>
-      b.addEventListener("click", () => { EF.app.setTool(b.dataset.tool); EF.app.closePalette(); }));
-    qp.querySelectorAll("[data-toggle]").forEach((b) =>
-      b.addEventListener("click", () => { EF.app.toggle(b.dataset.toggle); EF.app.closePalette(); }));
-    qp.querySelectorAll("[data-action]").forEach((b) =>
-      b.addEventListener("click", () => {
-        if (b.dataset.action === "close-palette") EF.app.closePalette();
-        else { EF.app.action(b.dataset.action); EF.app.closePalette(); }
-      }));
-  }
-
   // シーン切替
   function bindScenes() {
     document.querySelectorAll(".ss-btn").forEach((b) =>
@@ -303,11 +381,11 @@
     EF.toolbar.init();
     EF.shortcuts.init();
     EF.presets.init();
-    bindPalette();
     bindScenes();
     EF.options.bind();
     EF.options.render();
     EF.dock.init();
+    EF.app.applyLayout();
 
     EF.toolbar.sync();
     EF.toast("Enmish Focus プロトタイプ — ⌘⇧E で起動", 2600);

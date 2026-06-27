@@ -23,6 +23,8 @@
     save: '<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M8 7l1.6-2.6h4.8L16 7"/><circle cx="12" cy="13.3" r="3.3"/>',
     power: '<path d="M12 3.5v8"/><path d="M7.6 6.4a7 7 0 1 0 8.8 0"/>',
     bars: '<rect x="4" y="4.5" width="16" height="15" rx="2"/><path d="M4 9h16"/>',
+    record: '<circle cx="12" cy="12" r="7" fill="currentColor" stroke="none"/>',
+    stop: '<rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor" stroke="none"/>',
   };
 
   EF.iconSvg = function (name, size) {
