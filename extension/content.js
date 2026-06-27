@@ -34,6 +34,7 @@
     toolOrder: ["rect", "highlighter", "arrow", "hline", "text", "pen", "cursor", "ellipse", "spotlight", "zoom"],
     toolHidden: {},
     barSide: "right", dockPos: "bottom-left",
+    autoHide: true, // 右端ホバーで自動表示（Mac のドック風）
     recording: false,
     mouse: { x: -999, y: -999 },
   };
@@ -71,10 +72,20 @@
       box-shadow: none; backdrop-filter: blur(2px);
       padding: 7px 6px; border: 1px solid rgba(176,184,196,.45); border-right: none; width: 76px;
       display: flex; flex-direction: column; gap: 2px; max-height: calc(100vh - 168px); overflow-y: auto;
+      transition: transform .22s ease, opacity .22s ease;
     }
     /* 未起動でもツールは押せる（押すと自動的に起動して選択される）。視覚的にだけ少し淡く。 */
     .toolbar.app-off .tool[data-tool], .toolbar.app-off .tool[data-toggle], .toolbar.app-off .colors { opacity: .7; }
     .toolbar.side-left { right: auto; left: 0; border-radius: 0 14px 14px 0; border-left: none; border-right: 1px solid rgba(176,184,196,.45); }
+    /* 右端ホバーで自動表示（Macのドック風）：普段は画面外へスライド、近づくと出る */
+    .toolbar.auto-hide { transform: translate(calc(100% + 6px), -50%); opacity: 0; }
+    .toolbar.auto-hide.revealed { transform: translate(0, -50%); opacity: 1; }
+    .toolbar.auto-hide.side-left { transform: translate(calc(-100% - 6px), -50%); }
+    .toolbar.auto-hide.side-left.revealed { transform: translate(0, -50%); }
+    .toolbar.auto-hide .tool[data-action="collapse"] { display: none; } /* 自動表示中は最小化ボタン不要 */
+    /* 自動表示モードのヒント（右端の細い帯） */
+    .edge-hint { position: fixed; right: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 116px; border-radius: 4px 0 0 4px; background: rgba(108,187,165,.6); box-shadow: 0 0 10px rgba(0,0,0,.25); pointer-events: none; transition: opacity .2s ease; }
+    .edge-hint.side-left { right: auto; left: 0; border-radius: 0 4px 4px 0; }
     .toolbar.compact { width: 46px; gap: 1px; }
     .toolbar.compact .lbl { display: none; }
     .toolbar.compact .tool { padding: 7px 3px; }
@@ -235,6 +246,7 @@
     <div id="ring" class="ring" hidden><i class="cdot"></i><svg class="carrow" viewBox="0 0 24 24"><path d="M3 2 L3 21 L8 16 L11.5 23.5 L14.5 22 L11 15 L18 15 Z" stroke="#fff" stroke-width="1.1" stroke-linejoin="round"></path></svg></div>
     <div id="tb" class="toolbar app-off">${buildToolbar()}</div>
     <button id="reopen" class="reopen" hidden title="ツールバーを表示"><span class="ico">${(EF.iconSvg && EF.iconSvg("collapse", 18)) || "«"}</span></button>
+    <div id="edge-hint" class="edge-hint" hidden></div>
     <div id="tool-options" class="tool-options" hidden></div>
     <div id="badge" class="badge" hidden></div>
     <div id="toast" class="toast" hidden></div>
@@ -246,7 +258,7 @@
   const $ = (sel) => root.querySelector(sel);
   const annot = $("#annot"), spot = $("#spot"), ring = $("#ring");
   const tb = $("#tb");
-  const badgeEl = $("#badge"), toastEl = $("#toast"), optEl = $("#tool-options"), dockEl = $("#ef-dock"), reopenEl = $("#reopen");
+  const badgeEl = $("#badge"), toastEl = $("#toast"), optEl = $("#tool-options"), dockEl = $("#ef-dock"), reopenEl = $("#reopen"), hintEl = $("#edge-hint");
 
   // ---------- ユーティリティ ----------
   let toastT;
@@ -286,7 +298,40 @@
     updateRing();
     if (state.zoom) applyZoom();
     if (drawing) engine.move(ev.clientX, ev.clientY);
+    updateReveal(ev.clientX, ev.clientY);
   }, true);
+
+  // ---- 右端ホバーで自動表示（Macのドック風）----
+  const HOT = 32; // 端から何pxで反応するか
+  let revealTimer = null, revealed = false;
+  function autoHideActive() { return state.appOn && state.autoHide && !state.uiHidden; }
+  function setReveal(on) {
+    revealed = on;
+    tb.classList.toggle("revealed", on);
+    hintEl.hidden = on || !autoHideActive();
+  }
+  function reveal(on) {
+    if (on) { if (revealTimer) { clearTimeout(revealTimer); revealTimer = null; } if (!revealed) setReveal(true); }
+    else if (revealed && !revealTimer) { revealTimer = setTimeout(() => { revealTimer = null; setReveal(false); }, 320); }
+  }
+  function updateReveal(x, y) {
+    if (!autoHideActive()) return;
+    const left = state.barSide === "left";
+    const nearEdge = left ? x <= HOT : x >= window.innerWidth - HOT;
+    let overBar = false;
+    if (revealed) { const r = tb.getBoundingClientRect(); overBar = x >= r.left - 10 && x <= r.right + 10 && y >= r.top - 10 && y <= r.bottom + 10; }
+    reveal(nearEdge || overBar);
+  }
+  function refreshAutoHide() {
+    const active = autoHideActive();
+    tb.classList.toggle("auto-hide", active);
+    hintEl.classList.toggle("side-left", state.barSide === "left");
+    if (!active) {
+      tb.classList.remove("revealed"); revealed = false;
+      if (revealTimer) { clearTimeout(revealTimer); revealTimer = null; }
+    }
+    hintEl.hidden = !active || revealed;
+  }
   annot.addEventListener("mousedown", (ev) => {
     if (!state.appOn || ev.button !== 0) return;
     if (state.zoom) return;
@@ -380,7 +425,7 @@
   // 設定の永続化（chrome.storage.local）
   const PERSIST = ["color", "strokeWidth", "ring", "cursorStyle", "arrowHead",
     "spotShape", "spotBand", "spotDim", "zoomScale", "textSize", "textBold", "textColor",
-    "toolOrder", "toolHidden", "barSide", "dockPos"];
+    "toolOrder", "toolHidden", "barSide", "dockPos", "autoHide"];
   // 保存済み順序に新規ツールが欠けていたら補完、未知のキーは除去
   function normalizeToolOrder() {
     if (!Array.isArray(state.toolOrder)) state.toolOrder = TOOL_DEFS.map((d) => d[1]);
@@ -420,6 +465,7 @@
     // 最小化中だけ、右端の再表示タブを出す
     reopenEl.hidden = !(state.appOn && state.uiHidden);
     reopenEl.classList.toggle("side-left", state.barSide === "left");
+    refreshAutoHide();
   }
 
   function renderOptions() {
@@ -430,6 +476,7 @@
     groups.push(optGroup("ズーム倍率", "zoomScale", state.zoomScale, [[1.5, "", "×1.5"], [2, "", "×2"], [3, "", "×3"]]));
     groups.push(optGroup("クリック波紋", "ripple", state.ring.ripple ? "on" : "off", [["on", "", "ON"], ["off", "", "OFF"]]));
     groups.push(optGroup("注目の濃さ", "spotDim", state.spotDim, [[0.55, "", "薄"], [0.72, "", "標準"], [0.88, "", "濃"]]));
+    groups.push(optGroup("自動表示（右端ホバー）", "autoHide", state.autoHide ? "on" : "off", [["on", "", "ON"], ["off", "", "OFF"]]));
     groups.push(optGroup("ツールバー位置", "barSide", state.barSide, [["left", "", "左"], ["right", "", "右"]]));
     groups.push(optGroup("ドック位置", "dockPos", state.dockPos, [["bottom-left", "", "左下"], ["bottom-right", "", "右下"], ["top-left", "", "左上"], ["top-right", "", "右上"]]));
     if (state.appOn && state.tool === "cursor") {
@@ -524,7 +571,9 @@
     tb.classList.toggle("side-left", state.barSide === "left");
     dockEl.classList.remove("dock-bottom-right", "dock-top-left", "dock-top-right");
     if (state.dockPos && state.dockPos !== "bottom-left") dockEl.classList.add("dock-" + state.dockPos);
-    if (state.appOn && !state.uiHidden) reserveGutter(true);
+    // 自動表示モードはバーが浮いて出るのでガターは取らない
+    reserveGutter(state.appOn && !state.uiHidden && !state.autoHide);
+    refreshAutoHide();
     fitToolbar();
   }
 
@@ -581,7 +630,7 @@
       if (!state.appOn) return;
       state.uiHidden = !state.uiHidden;
       host.classList.toggle("ui-hidden", state.uiHidden);
-      reserveGutter(!state.uiHidden);
+      reserveGutter(!state.uiHidden && !state.autoHide);
       updateDock();
       toast(state.uiHidden ? "ツールバーを最小化（端のマークで再表示）" : "ツールバーを表示");
     },
@@ -596,15 +645,21 @@
         reserveGutter(false);
         toast("Enmish Pointer を終了");
       } else {
-        reserveGutter(true);
+        reserveGutter(!state.autoHide);
         if (!onboarded) {
           onboarded = true;
-          toast("ツールを選んでドラッグで注釈 ／ 左下マークでON/OFF ／ バー下の » で最小化 ／ ⚙設定で詳細", 4600);
+          toast("ツールを選んでドラッグで注釈 ／ 左下マークでON/OFF ／ 右端にマウスでバー表示 ／ ⚙設定で詳細", 4600);
         } else {
           toast("Enmish Pointer 起動 — カーソル強調中");
         }
       }
       updateRing(); syncUI(); renderOptions(); updateDock(); setBadge();
+      // 自動表示モードは、起動時に一度だけバーを覗かせてから引っ込める（場所の気づき用）
+      if (next && state.autoHide && !state.uiHidden) {
+        setReveal(true);
+        if (revealTimer) { clearTimeout(revealTimer); }
+        revealTimer = setTimeout(() => { revealTimer = null; setReveal(false); }, 1700);
+      }
     },
     handleEscape() {
       if (state.uiHidden) { app.toggleUI(); return true; }
@@ -751,6 +806,7 @@
     else if (opt === "strokeWidth") state.strokeWidth = parseFloat(v);
     else if (opt === "zoomScale") { state.zoomScale = parseFloat(v); applyZoom(); }
     else if (opt === "ripple") state.ring.ripple = (v === "on");
+    else if (opt === "autoHide") { state.autoHide = (v === "on"); applyLayout(); }
     else if (opt === "barSide" || opt === "dockPos") { state[opt] = v; applyLayout(); }
     else state[opt] = v;
     updateRing(); renderOptions(); setBadge(); saveSettings();

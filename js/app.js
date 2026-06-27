@@ -238,6 +238,7 @@
       EF.state.uiHidden = !EF.state.uiHidden;
       document.body.classList.toggle("ef-ui-hidden", EF.state.uiHidden);
       EF.dock.update();
+      this.refreshAutoHide();
       EF.toast(EF.state.uiHidden ? "ツールバーを最小化（端のマークで再表示）" : "ツールバーを表示");
     },
 
@@ -271,6 +272,13 @@
       EF.options.render();
       EF.dock.update();
       EF.setStatus();
+      this.refreshAutoHide();
+      // 自動表示モードは起動時に一度だけ覗かせてから引っ込める（場所の気づき用）
+      if (next && EF.state.autoHide && !EF.state.uiHidden) {
+        this.setReveal(true);
+        if (this._revealTimer) clearTimeout(this._revealTimer);
+        this._revealTimer = setTimeout(() => { this._revealTimer = null; this.setReveal(false); }, 1700);
+      }
     },
 
     // バーの配置（ツールバー左右・ドック位置）を反映
@@ -284,6 +292,43 @@
         if (EF.state.dockPos && EF.state.dockPos !== "bottom-left") dock.classList.add("dock-" + EF.state.dockPos);
       }
       if (EF.toolbar && EF.toolbar.fit) EF.toolbar.fit();
+      this.refreshAutoHide();
+    },
+
+    // ---- 右端ホバーで自動表示（Macのドック風）----
+    refreshAutoHide() {
+      const tb = document.getElementById("toolbar");
+      const hint = document.getElementById("edge-hint");
+      const active = EF.state.appOn && EF.state.autoHide && !EF.state.uiHidden;
+      if (tb) tb.classList.toggle("auto-hide", active);
+      document.body.classList.toggle("ef-autohide", active);
+      if (hint) hint.classList.toggle("side-left", EF.state.barSide === "left");
+      if (!active) {
+        if (tb) tb.classList.remove("revealed");
+        this._revealed = false;
+        if (this._revealTimer) { clearTimeout(this._revealTimer); this._revealTimer = null; }
+      }
+      if (hint) hint.hidden = !active || this._revealed;
+    },
+    setReveal(on) {
+      const tb = document.getElementById("toolbar");
+      const hint = document.getElementById("edge-hint");
+      this._revealed = on;
+      if (tb) tb.classList.toggle("revealed", on);
+      const active = EF.state.appOn && EF.state.autoHide && !EF.state.uiHidden;
+      if (hint) hint.hidden = on || !active;
+    },
+    reveal(on) {
+      if (on) { if (this._revealTimer) { clearTimeout(this._revealTimer); this._revealTimer = null; } if (!this._revealed) this.setReveal(true); }
+      else if (this._revealed && !this._revealTimer) { this._revealTimer = setTimeout(() => { this._revealTimer = null; this.setReveal(false); }, 320); }
+    },
+    updateReveal(x, y) {
+      if (!(EF.state.appOn && EF.state.autoHide && !EF.state.uiHidden)) return;
+      const HOT = 32, left = EF.state.barSide === "left";
+      const nearEdge = left ? x <= HOT : x >= window.innerWidth - HOT;
+      let overBar = false;
+      if (this._revealed) { const tb = document.getElementById("toolbar"); if (tb) { const r = tb.getBoundingClientRect(); overBar = x >= r.left - 10 && x <= r.right + 10 && y >= r.top - 10 && y <= r.bottom + 10; } }
+      this.reveal(nearEdge || overBar);
     },
 
     // Esc処理。何か閉じたら true。
@@ -392,6 +437,8 @@
     EF.app.applyLayout();
 
     EF.toolbar.sync();
+    // 自動表示（右端ホバー）用に、ウィンドウ全体のマウス位置を監視
+    window.addEventListener("mousemove", (e) => EF.app.updateReveal(e.clientX, e.clientY), true);
     EF.toast("Enmish Pointer プロトタイプ — ⌘⇧E で起動", 2600);
   });
 })();

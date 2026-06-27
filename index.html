@@ -70,6 +70,8 @@
 
   <!-- 最小化中の再表示タブ -->
   <button id="reopen" class="reopen" hidden title="ツールバーを表示"><span class="ico" data-ic="collapse"></span></button>
+  <!-- 自動表示モードのヒント（右端の細い帯） -->
+  <div id="edge-hint" class="edge-hint" hidden></div>
 
   <!-- ============ ツール別オプション（カーソル形状/矢じり向き/注目の帯） ============ -->
   <div id="tool-options" class="tool-options" hidden></div>
@@ -217,6 +219,12 @@
 
       <section class="modal-section">
         <h3>バーの配置</h3>
+        <label class="field" style="display:block">自動表示（マウスを端に近づけると出る）
+          <div class="seg seg-wrap" id="set-auto-hide" style="margin-top:8px">
+            <button data-auto="on">ON</button>
+            <button data-auto="off">OFF</button>
+          </div>
+        </label>
         <label class="field" style="display:block">ツールバー
           <div class="seg seg-wrap" id="set-bar-side" style="margin-top:8px">
             <button data-side="left">左</button>

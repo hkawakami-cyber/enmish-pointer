@@ -189,9 +189,18 @@ html, body {
 .toolbar::-webkit-scrollbar { width: 0; }
 /* ツールバーを左端に配置 */
 .toolbar.side-left { right: auto; left: 0; border-radius: 0 14px 14px 0; border-right: 1px solid rgba(176,184,196,.45); border-left: none; }
-/* アプリON中は共有画面を寄せ、端のツールバーと被らないようにする */
+/* 右端ホバーで自動表示（Macのドック風）：普段は画面外、近づくと出る */
+.toolbar.auto-hide { transform: translate(calc(100% + 6px), -50%); opacity: 0; }
+.toolbar.auto-hide.revealed { transform: translate(0, -50%); opacity: 1; }
+.toolbar.auto-hide.side-left { transform: translate(calc(-100% - 6px), -50%); }
+.toolbar.auto-hide.side-left.revealed { transform: translate(0, -50%); }
+.toolbar.auto-hide .tool[data-action="hide-ui"] { display: none; }
+.edge-hint { position: fixed; right: 0; top: 50%; transform: translateY(-50%); width: 4px; height: 116px; border-radius: 4px 0 0 4px; background: rgba(108,187,165,.6); box-shadow: 0 0 10px rgba(0,0,0,.25); pointer-events: none; z-index: 9000; transition: opacity .2s ease; }
+.edge-hint.side-left { right: auto; left: 0; border-radius: 0 4px 4px 0; }
+/* アプリON中は共有画面を寄せ、端のツールバーと被らないようにする（自動表示モードは寄せない） */
 body.ef-on .scene-root { padding-right: 116px; transition: padding-right .25s ease, padding-left .25s ease; }
 body.ef-on.bar-left .scene-root { padding-right: 0; padding-left: 116px; }
+body.ef-on.ef-autohide .scene-root { padding-right: 0; padding-left: 0; }
 .toolbar[data-collapsed="true"] .tb-body { display: none; }
 .toolbar[data-collapsed="true"] { padding: 6px; }
 
