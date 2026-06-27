@@ -261,22 +261,24 @@ body.ef-on.bar-left .scene-root { padding-right: 0; padding-left: 116px; }
 
 /* ============ 設定：ツールバー編集 ============ */
 .set-tools { display: flex; flex-direction: column; gap: 6px; }
-.set-tool-row { display: flex; align-items: center; gap: 6px; }
-.st-move {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; border: 1px solid #dfe3ec; border-radius: 8px;
-  background: #fff; color: var(--ef-green-dark); cursor: pointer; padding: 0;
+.set-tool-row {
+  display: flex; align-items: center; gap: 8px;
+  border: 1px solid #eef1f6; border-radius: 9px; background: #fafbfe;
+  padding: 4px 10px 4px 6px; transition: border-color .12s, background .12s, opacity .12s;
 }
-.st-move:hover { background: var(--ef-green-pale); border-color: var(--ef-green); }
-.st-move:disabled { opacity: .35; cursor: default; }
-.st-move svg { display: block; }
-.st-move .st-down, .st-move.st-down svg { transform: none; }
-.st-move.st-down svg { transform: rotate(180deg); }
+.set-tool-row.dragging { opacity: .45; }
+.set-tool-row.drag-over { border-color: var(--ef-green); background: var(--ef-green-pale); }
+.st-grip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 28px; color: var(--ef-muted); cursor: grab; flex: none;
+}
+.st-grip:active { cursor: grabbing; }
+.st-grip svg { display: block; }
 .st-label {
   display: flex; align-items: center; gap: 8px; flex: 1;
   font-size: 13.5px; color: #2c3550; cursor: pointer;
-  padding: 4px 8px; border: 1px solid #eef1f6; border-radius: 8px; background: #fafbfe;
 }
+.st-label input { accent-color: var(--ef-green); }
 .st-label input { accent-color: var(--ef-green); }
 .st-ico { display: inline-flex; align-items: center; color: var(--ef-green-dark); }
 .st-ico svg { display: block; }
@@ -661,7 +663,7 @@ kbd {
       <section class="modal-section">
         <h3>ツールバー</h3>
         <div id="set-tools" class="set-tools"></div>
-        <p class="note">[↑][↓]で並べ替え、チェックで表示/非表示を切り替えます。アプリ起動・カラー・元に戻す・全消去・保存・設定は固定です。</p>
+        <p class="note">行をドラッグして並べ替え、チェックで表示/非表示を切り替えます。アプリ起動・カラー・元に戻す・全消去・保存・設定は固定です。</p>
       </section>
 
       <section class="modal-section">
@@ -862,6 +864,7 @@ kbd {
     bars: '<rect x="4" y="4.5" width="16" height="15" rx="2"/><path d="M4 9h16"/>',
     record: '<circle cx="12" cy="12" r="7" fill="currentColor" stroke="none"/>',
     stop: '<rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor" stroke="none"/>',
+    grip: '<circle cx="9" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="18" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="18" r="1.4" fill="currentColor" stroke="none"/>',
   };
 
   EF.iconSvg = function (name, size) {
@@ -1936,33 +1939,24 @@ kbd {
       });
     },
 
-    // ツールバーの並べ替え・表示/非表示リスト
+    // ツールバーの並べ替え（ドラッグ＆ドロップ）・表示/非表示リスト
     buildToolList() {
       const box = $("set-tools");
       if (!box) return;
       box.innerHTML = "";
       const order = EF.state.toolOrder;
-      order.forEach((key, idx) => {
+      order.forEach((key) => {
         const def = EF.toolDef ? EF.toolDef(key) : null;
         if (!def) return;
         const row = document.createElement("div");
         row.className = "set-tool-row";
+        row.draggable = true;
+        row.dataset.key = key;
 
-        const up = document.createElement("button");
-        up.type = "button";
-        up.className = "st-move";
-        up.innerHTML = EF.iconSvg ? EF.iconSvg("arrow", 14) : "↑";
-        up.title = "上へ";
-        up.disabled = idx === 0;
-        up.addEventListener("click", () => this.moveTool(idx, -1));
-
-        const down = document.createElement("button");
-        down.type = "button";
-        down.className = "st-move st-down";
-        down.innerHTML = EF.iconSvg ? EF.iconSvg("arrow", 14) : "↓";
-        down.title = "下へ";
-        down.disabled = idx === order.length - 1;
-        down.addEventListener("click", () => this.moveTool(idx, 1));
+        const grip = document.createElement("span");
+        grip.className = "st-grip";
+        grip.title = "ドラッグで並べ替え";
+        grip.innerHTML = EF.iconSvg ? EF.iconSvg("grip", 16) : "⋮⋮";
 
         const lab = document.createElement("label");
         lab.className = "st-label";
@@ -1974,7 +1968,6 @@ kbd {
           else EF.state.toolHidden[key] = true;
           if (EF.toolbar) EF.toolbar.buildTools();
           save();
-          this.buildToolList();
         });
         const icoSpan = document.createElement("span");
         icoSpan.className = "st-ico";
@@ -1985,18 +1978,32 @@ kbd {
         lab.appendChild(icoSpan);
         lab.appendChild(txt);
 
-        row.appendChild(up);
-        row.appendChild(down);
+        row.appendChild(grip);
         row.appendChild(lab);
+
+        // ドラッグ＆ドロップ並べ替え
+        row.addEventListener("dragstart", (e) => {
+          this._dragKey = key;
+          e.dataTransfer.effectAllowed = "move";
+          row.classList.add("dragging");
+        });
+        row.addEventListener("dragend", () => row.classList.remove("dragging"));
+        row.addEventListener("dragover", (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; row.classList.add("drag-over"); });
+        row.addEventListener("dragleave", () => row.classList.remove("drag-over"));
+        row.addEventListener("drop", (e) => { e.preventDefault(); row.classList.remove("drag-over"); this.reorderTool(this._dragKey, key); });
+
         box.appendChild(row);
       });
     },
 
-    moveTool(idx, dir) {
+    reorderTool(fromKey, toKey) {
+      if (!fromKey || fromKey === toKey) return;
       const order = EF.state.toolOrder;
-      const j = idx + dir;
-      if (j < 0 || j >= order.length) return;
-      const tmp = order[idx]; order[idx] = order[j]; order[j] = tmp;
+      const fi = order.indexOf(fromKey);
+      if (fi < 0) return;
+      order.splice(fi, 1);
+      const ti = order.indexOf(toKey);
+      order.splice(ti < 0 ? order.length : ti, 0, fromKey); // ドロップ先の前に挿入
       if (EF.toolbar) EF.toolbar.buildTools();
       save();
       this.buildToolList();

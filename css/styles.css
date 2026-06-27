@@ -258,22 +258,24 @@ body.ef-on.bar-left .scene-root { padding-right: 0; padding-left: 116px; }
 
 /* ============ 設定：ツールバー編集 ============ */
 .set-tools { display: flex; flex-direction: column; gap: 6px; }
-.set-tool-row { display: flex; align-items: center; gap: 6px; }
-.st-move {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; border: 1px solid #dfe3ec; border-radius: 8px;
-  background: #fff; color: var(--ef-green-dark); cursor: pointer; padding: 0;
+.set-tool-row {
+  display: flex; align-items: center; gap: 8px;
+  border: 1px solid #eef1f6; border-radius: 9px; background: #fafbfe;
+  padding: 4px 10px 4px 6px; transition: border-color .12s, background .12s, opacity .12s;
 }
-.st-move:hover { background: var(--ef-green-pale); border-color: var(--ef-green); }
-.st-move:disabled { opacity: .35; cursor: default; }
-.st-move svg { display: block; }
-.st-move .st-down, .st-move.st-down svg { transform: none; }
-.st-move.st-down svg { transform: rotate(180deg); }
+.set-tool-row.dragging { opacity: .45; }
+.set-tool-row.drag-over { border-color: var(--ef-green); background: var(--ef-green-pale); }
+.st-grip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 28px; color: var(--ef-muted); cursor: grab; flex: none;
+}
+.st-grip:active { cursor: grabbing; }
+.st-grip svg { display: block; }
 .st-label {
   display: flex; align-items: center; gap: 8px; flex: 1;
   font-size: 13.5px; color: #2c3550; cursor: pointer;
-  padding: 4px 8px; border: 1px solid #eef1f6; border-radius: 8px; background: #fafbfe;
 }
+.st-label input { accent-color: var(--ef-green); }
 .st-label input { accent-color: var(--ef-green); }
 .st-ico { display: inline-flex; align-items: center; color: var(--ef-green-dark); }
 .st-ico svg { display: block; }

@@ -98,33 +98,24 @@
       });
     },
 
-    // ツールバーの並べ替え・表示/非表示リスト
+    // ツールバーの並べ替え（ドラッグ＆ドロップ）・表示/非表示リスト
     buildToolList() {
       const box = $("set-tools");
       if (!box) return;
       box.innerHTML = "";
       const order = EF.state.toolOrder;
-      order.forEach((key, idx) => {
+      order.forEach((key) => {
         const def = EF.toolDef ? EF.toolDef(key) : null;
         if (!def) return;
         const row = document.createElement("div");
         row.className = "set-tool-row";
+        row.draggable = true;
+        row.dataset.key = key;
 
-        const up = document.createElement("button");
-        up.type = "button";
-        up.className = "st-move";
-        up.innerHTML = EF.iconSvg ? EF.iconSvg("arrow", 14) : "↑";
-        up.title = "上へ";
-        up.disabled = idx === 0;
-        up.addEventListener("click", () => this.moveTool(idx, -1));
-
-        const down = document.createElement("button");
-        down.type = "button";
-        down.className = "st-move st-down";
-        down.innerHTML = EF.iconSvg ? EF.iconSvg("arrow", 14) : "↓";
-        down.title = "下へ";
-        down.disabled = idx === order.length - 1;
-        down.addEventListener("click", () => this.moveTool(idx, 1));
+        const grip = document.createElement("span");
+        grip.className = "st-grip";
+        grip.title = "ドラッグで並べ替え";
+        grip.innerHTML = EF.iconSvg ? EF.iconSvg("grip", 16) : "⋮⋮";
 
         const lab = document.createElement("label");
         lab.className = "st-label";
@@ -136,7 +127,6 @@
           else EF.state.toolHidden[key] = true;
           if (EF.toolbar) EF.toolbar.buildTools();
           save();
-          this.buildToolList();
         });
         const icoSpan = document.createElement("span");
         icoSpan.className = "st-ico";
@@ -147,18 +137,32 @@
         lab.appendChild(icoSpan);
         lab.appendChild(txt);
 
-        row.appendChild(up);
-        row.appendChild(down);
+        row.appendChild(grip);
         row.appendChild(lab);
+
+        // ドラッグ＆ドロップ並べ替え
+        row.addEventListener("dragstart", (e) => {
+          this._dragKey = key;
+          e.dataTransfer.effectAllowed = "move";
+          row.classList.add("dragging");
+        });
+        row.addEventListener("dragend", () => row.classList.remove("dragging"));
+        row.addEventListener("dragover", (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; row.classList.add("drag-over"); });
+        row.addEventListener("dragleave", () => row.classList.remove("drag-over"));
+        row.addEventListener("drop", (e) => { e.preventDefault(); row.classList.remove("drag-over"); this.reorderTool(this._dragKey, key); });
+
         box.appendChild(row);
       });
     },
 
-    moveTool(idx, dir) {
+    reorderTool(fromKey, toKey) {
+      if (!fromKey || fromKey === toKey) return;
       const order = EF.state.toolOrder;
-      const j = idx + dir;
-      if (j < 0 || j >= order.length) return;
-      const tmp = order[idx]; order[idx] = order[j]; order[j] = tmp;
+      const fi = order.indexOf(fromKey);
+      if (fi < 0) return;
+      order.splice(fi, 1);
+      const ti = order.indexOf(toKey);
+      order.splice(ti < 0 ? order.length : ti, 0, fromKey); // ドロップ先の前に挿入
       if (EF.toolbar) EF.toolbar.buildTools();
       save();
       this.buildToolList();
