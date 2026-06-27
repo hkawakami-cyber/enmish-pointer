@@ -188,12 +188,13 @@
     render() {
       const el = document.getElementById("tool-options");
       if (!el) return;
+      if (!EF.state.showOptions) { el.hidden = true; return; }
       const groups = [];
       if (EF.state.appOn && EF.state.tool === "cursor") {
         groups.push(optGroup("カーソル", "cursorStyle", EF.state.cursorStyle,
           [["ring", "◎", "リング"], ["arrow", "➤", "矢印"], ["dot", "●", "ドット"], ["ringdot", "◉", "両方"], ["halo", "✦", "ハロー"]]));
         groups.push(optGroup("大きさ", "ringSize", EF.state.ring.size,
-          [[40, "", "小"], [64, "", "中"], [90, "", "大"]]));
+          [[28, "", "極小"], [44, "", "小"], [60, "", "中"]]));
       } else if (EF.state.appOn && EF.state.tool === "arrow") {
         groups.push(optGroup("矢じり", "arrowHead", EF.state.arrowHead,
           [["end", "→", "終点"], ["start", "←", "始点"], ["both", "↔", "両方"]]));

@@ -161,6 +161,14 @@
       </section>
 
       <section class="modal-section">
+        <h3>表示</h3>
+        <label class="checkfield">
+          <input type="checkbox" id="set-show-options" /> ツール選択時にオプションを画面に表示する
+        </label>
+        <p class="note">オフにすると、カーソル形状・矢印向き・注目の帯などの操作パネルを画面に出しません（投影中もすっきり）。ここ（設定）からいつでも変更できます。</p>
+      </section>
+
+      <section class="modal-section">
         <h3>カーソル強調</h3>
         <label class="field" style="display:block">カーソルの形
           <div class="seg seg-wrap" id="set-cursor-style">
@@ -196,6 +204,32 @@
           <button data-autoerase="5">5秒</button>
           <button data-autoerase="10">10秒</button>
         </div>
+      </section>
+
+      <section class="modal-section">
+        <h3>矢印の向き</h3>
+        <div class="seg" id="set-arrow-head">
+          <button data-head="end">→ 終点</button>
+          <button data-head="start">← 始点</button>
+          <button data-head="both">↔ 両方</button>
+        </div>
+      </section>
+
+      <section class="modal-section">
+        <h3>注目（スポットライト）</h3>
+        <label class="field" style="display:block">形
+          <div class="seg seg-wrap" id="set-spot-shape" style="margin-top:8px">
+            <button data-shape="band">▭ 帯</button>
+            <button data-shape="circle">◯ 丸</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">帯の高さ
+          <div class="seg seg-wrap" id="set-spot-band" style="margin-top:8px">
+            <button data-band="0.25">25%</button>
+            <button data-band="0.5">50%</button>
+            <button data-band="0.75">75%</button>
+          </div>
+        </label>
       </section>
 
       <section class="modal-section">

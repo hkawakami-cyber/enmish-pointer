@@ -28,10 +28,10 @@
     ["次アクション", "#6cbba5"],
   ];
   const PRESETS = {
-    proposal: { name: "商談", color: "#6cbba5", strokeWidth: 6, ring: { width: 6, size: 64, opacity: 0.9, ripple: true }, cursorStyle: "ring", autoErase: 5 },
-    review: { name: "社内", color: "#032841", strokeWidth: 4, ring: { width: 4, size: 40, opacity: 0.55, ripple: false }, cursorStyle: "dot", autoErase: 0 },
-    record: { name: "録画", color: "#917d44", strokeWidth: 7, ring: { width: 8, size: 90, opacity: 1, ripple: true }, cursorStyle: "arrow", autoErase: 0 },
-    demo: { name: "デモ", color: "#31594e", strokeWidth: 5, ring: { width: 6, size: 56, opacity: 0.85, ripple: true }, cursorStyle: "halo", autoErase: 3 },
+    proposal: { name: "商談", color: "#6cbba5", strokeWidth: 6, ring: { width: 6, size: 60, opacity: 0.9, ripple: true }, cursorStyle: "ring", autoErase: 5 },
+    review: { name: "社内", color: "#032841", strokeWidth: 4, ring: { width: 4, size: 44, opacity: 0.55, ripple: false }, cursorStyle: "dot", autoErase: 0 },
+    record: { name: "録画", color: "#917d44", strokeWidth: 7, ring: { width: 8, size: 60, opacity: 1, ripple: true }, cursorStyle: "arrow", autoErase: 0 },
+    demo: { name: "デモ", color: "#31594e", strokeWidth: 5, ring: { width: 6, size: 44, opacity: 0.85, ripple: true }, cursorStyle: "halo", autoErase: 3 },
   };
   const DRAW_TOOLS = ["pen", "highlighter", "arrow", "hline", "ellipse", "rect", "text"];
   const TOOL_NAMES = {
@@ -42,7 +42,7 @@
   const state = {
     appOn: false, tool: "cursor", color: "#6cbba5", strokeWidth: 6,
     ring: { width: 6, size: 64, opacity: 0.9, ripple: true },
-    cursorStyle: "ring", arrowHead: "end", uiHidden: false,
+    cursorStyle: "ring", arrowHead: "end", uiHidden: false, optionsOpen: false,
     autoErase: 0, spotlight: false, spotShape: "band", spotBand: 0.5,
     zoom: false, zoomScale: 2.0,
     preset: "proposal", armedStamp: null,
@@ -144,6 +144,7 @@
     ["sep"],
     ["toggle", "spotlight", "☀", "注目"],
     ["toggle", "zoom", "🔍", "ズーム"],
+    ["action", "options", "⚙", "詳細"],
     ["sep"],
     ["colors"],
     ["sep"],
@@ -158,7 +159,7 @@
       if (b[0] === "sep") { html += '<div class="sep"></div>'; continue; }
       if (b[0] === "colors") { html += '<div class="colors" id="colors"></div>'; continue; }
       const attr = b[0] === "tool" ? `data-tool="${b[1]}"` : b[0] === "toggle" ? `data-toggle="${b[1]}"` : `data-action="${b[1]}"`;
-      const id = b[1] === "spotlight" ? 'id="btn-spot"' : b[1] === "zoom" ? 'id="btn-zoom"' : "";
+      const id = b[1] === "spotlight" ? 'id="btn-spot"' : b[1] === "zoom" ? 'id="btn-zoom"' : b[1] === "options" ? 'id="btn-options"' : "";
       html += `<button class="tool" ${attr} ${id}><span class="ico">${b[2]}</span><span class="lbl">${b[3]}</span></button>`;
     }
     return html;
@@ -282,10 +283,11 @@
     return `<div class="to-group"><div class="to-title">${title}</div><div class="to-btns">${btns}</div></div>`;
   }
   function renderOptions() {
+    if (!state.optionsOpen) { optEl.hidden = true; return; }
     const groups = [];
     if (state.appOn && state.tool === "cursor") {
       groups.push(optGroup("カーソル", "cursorStyle", state.cursorStyle, [["ring", "◎", "リング"], ["arrow", "➤", "矢印"], ["dot", "●", "ドット"], ["ringdot", "◉", "両方"], ["halo", "✦", "ハロー"]]));
-      groups.push(optGroup("大きさ", "ringSize", state.ring.size, [[40, "", "小"], [64, "", "中"], [90, "", "大"]]));
+      groups.push(optGroup("大きさ", "ringSize", state.ring.size, [[28, "", "極小"], [44, "", "小"], [60, "", "中"]]));
     } else if (state.appOn && state.tool === "arrow")
       groups.push(optGroup("矢じり", "arrowHead", state.arrowHead, [["end", "→", "終点"], ["start", "←", "始点"], ["both", "↔", "両方"]]));
     if (state.appOn && state.spotlight) {
@@ -433,6 +435,13 @@
       if (name === "undo") engine.undo();
       else if (name === "clear") { engine.clear(); toast("注釈を全消去しました"); }
       else if (name === "screenshot") app.screenshot();
+      else if (name === "options") {
+        if (!state.appOn) app.toggle(true);
+        state.optionsOpen = !state.optionsOpen;
+        const btn = root.getElementById("btn-options");
+        if (btn) btn.classList.toggle("toggled", state.optionsOpen);
+        renderOptions();
+      }
     },
     toggleUI() {
       if (!state.appOn) return;
@@ -447,6 +456,8 @@
       if (!next) {
         state.spotlight = false; state.zoom = false; applyZoom(); disarmStamp();
         state.uiHidden = false; host.classList.remove("ui-hidden");
+        state.optionsOpen = false;
+        const ob = root.getElementById("btn-options"); if (ob) ob.classList.remove("toggled");
         reserveGutter(false);
         toast("Enmish Focus を終了");
       } else {

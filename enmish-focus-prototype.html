@@ -641,6 +641,14 @@ kbd {
       </section>
 
       <section class="modal-section">
+        <h3>表示</h3>
+        <label class="checkfield">
+          <input type="checkbox" id="set-show-options" /> ツール選択時にオプションを画面に表示する
+        </label>
+        <p class="note">オフにすると、カーソル形状・矢印向き・注目の帯などの操作パネルを画面に出しません（投影中もすっきり）。ここ（設定）からいつでも変更できます。</p>
+      </section>
+
+      <section class="modal-section">
         <h3>カーソル強調</h3>
         <label class="field" style="display:block">カーソルの形
           <div class="seg seg-wrap" id="set-cursor-style">
@@ -676,6 +684,32 @@ kbd {
           <button data-autoerase="5">5秒</button>
           <button data-autoerase="10">10秒</button>
         </div>
+      </section>
+
+      <section class="modal-section">
+        <h3>矢印の向き</h3>
+        <div class="seg" id="set-arrow-head">
+          <button data-head="end">→ 終点</button>
+          <button data-head="start">← 始点</button>
+          <button data-head="both">↔ 両方</button>
+        </div>
+      </section>
+
+      <section class="modal-section">
+        <h3>注目（スポットライト）</h3>
+        <label class="field" style="display:block">形
+          <div class="seg seg-wrap" id="set-spot-shape" style="margin-top:8px">
+            <button data-shape="band">▭ 帯</button>
+            <button data-shape="circle">◯ 丸</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">帯の高さ
+          <div class="seg seg-wrap" id="set-spot-band" style="margin-top:8px">
+            <button data-band="0.25">25%</button>
+            <button data-band="0.5">50%</button>
+            <button data-band="0.75">75%</button>
+          </div>
+        </label>
       </section>
 
       <section class="modal-section">
@@ -778,7 +812,7 @@ kbd {
       desc: "顧客向け提案。グリーン中心・リングカーソル中・自動消去5秒。",
       color: "#6cbba5",
       strokeWidth: 6,
-      ring: { width: 6, size: 64, opacity: 0.9, ripple: true },
+      ring: { width: 6, size: 60, opacity: 0.9, ripple: true },
       cursorStyle: "ring",
       autoErase: 5,
     },
@@ -787,7 +821,7 @@ kbd {
       desc: "KPI・資料レビュー。ブラックで薄め・ドット小・残す設定。",
       color: "#032841",
       strokeWidth: 4,
-      ring: { width: 4, size: 40, opacity: 0.55, ripple: false },
+      ring: { width: 4, size: 44, opacity: 0.55, ripple: false },
       cursorStyle: "dot",
       autoErase: 0,
     },
@@ -796,7 +830,7 @@ kbd {
       desc: "マニュアル・研修動画。Gold強調・矢印カーソル大・波紋あり。",
       color: "#917d44",
       strokeWidth: 7,
-      ring: { width: 8, size: 90, opacity: 1.0, ripple: true },
+      ring: { width: 8, size: 60, opacity: 1.0, ripple: true },
       cursorStyle: "arrow",
       autoErase: 0,
     },
@@ -805,7 +839,7 @@ kbd {
       desc: "SaaS画面説明。スポットライト・ズーム優先・ハローカーソル。",
       color: "#31594e",
       strokeWidth: 5,
-      ring: { width: 6, size: 56, opacity: 0.85, ripple: true },
+      ring: { width: 6, size: 44, opacity: 0.85, ripple: true },
       cursorStyle: "halo",
       autoErase: 3,
     },
@@ -818,8 +852,10 @@ kbd {
     color: "#6cbba5",
     strokeWidth: 6,
     ring: { width: 6, size: 64, opacity: 0.9, ripple: true },
-    cursorStyle: "ring", // ring | dot | halo | ringdot
+    cursorStyle: "ring", // ring | dot | halo | ringdot | arrow
     arrowHead: "end",    // end | start | both
+    showOptions: false,  // ツールオプションのフライアウトを画面に表示するか
+    uiHidden: false,
     autoErase: 0,        // 秒（0で残す）
     spotlight: false,
     spotShape: "band",   // band（横帯） | circle
@@ -1731,6 +1767,34 @@ kbd {
           if (EF.options) EF.options.render();
         }));
 
+      // オプションパネルの表示/非表示
+      $("set-show-options").addEventListener("change", (e) => {
+        EF.state.showOptions = e.target.checked;
+        if (EF.options) EF.options.render();
+      });
+
+      // 矢印の向き
+      $("set-arrow-head").querySelectorAll("button").forEach((b) =>
+        b.addEventListener("click", () => {
+          EF.state.arrowHead = b.dataset.head;
+          $("set-arrow-head").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+          if (EF.options) EF.options.render();
+        }));
+
+      // 注目：形と帯の高さ
+      $("set-spot-shape").querySelectorAll("button").forEach((b) =>
+        b.addEventListener("click", () => {
+          EF.state.spotShape = b.dataset.shape;
+          $("set-spot-shape").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+          if (EF.options) EF.options.render();
+        }));
+      $("set-spot-band").querySelectorAll("button").forEach((b) =>
+        b.addEventListener("click", () => {
+          EF.state.spotBand = parseFloat(b.dataset.band);
+          $("set-spot-band").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+          if (EF.options) EF.options.render();
+        }));
+
       // 自動消去セグメント
       $("autoerase-seg").querySelectorAll("button").forEach((b) =>
         b.addEventListener("click", () => this.setAutoErase(+b.dataset.autoerase)));
@@ -1787,7 +1851,17 @@ kbd {
       if (!silent) EF.toast(`プリセット: ${p.name}`);
     },
 
-    openModal() { $("settings").hidden = false; },
+    openModal() {
+      // 現在の状態をUIへ反映
+      $("set-show-options").checked = EF.state.showOptions;
+      const setActive = (id, attr, val) =>
+        $(id).querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset[attr] === String(val)));
+      setActive("set-cursor-style", "cursor", EF.state.cursorStyle);
+      setActive("set-arrow-head", "head", EF.state.arrowHead);
+      setActive("set-spot-shape", "shape", EF.state.spotShape);
+      setActive("set-spot-band", "band", EF.state.spotBand);
+      $("settings").hidden = false;
+    },
     closeModal() { $("settings").hidden = true; },
   };
 })();
@@ -1984,12 +2058,13 @@ kbd {
     render() {
       const el = document.getElementById("tool-options");
       if (!el) return;
+      if (!EF.state.showOptions) { el.hidden = true; return; }
       const groups = [];
       if (EF.state.appOn && EF.state.tool === "cursor") {
         groups.push(optGroup("カーソル", "cursorStyle", EF.state.cursorStyle,
           [["ring", "◎", "リング"], ["arrow", "➤", "矢印"], ["dot", "●", "ドット"], ["ringdot", "◉", "両方"], ["halo", "✦", "ハロー"]]));
         groups.push(optGroup("大きさ", "ringSize", EF.state.ring.size,
-          [[40, "", "小"], [64, "", "中"], [90, "", "大"]]));
+          [[28, "", "極小"], [44, "", "小"], [60, "", "中"]]));
       } else if (EF.state.appOn && EF.state.tool === "arrow") {
         groups.push(optGroup("矢じり", "arrowHead", EF.state.arrowHead,
           [["end", "→", "終点"], ["start", "←", "始点"], ["both", "↔", "両方"]]));

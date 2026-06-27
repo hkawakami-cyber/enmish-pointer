@@ -47,7 +47,7 @@
       desc: "顧客向け提案。グリーン中心・リングカーソル中・自動消去5秒。",
       color: "#6cbba5",
       strokeWidth: 6,
-      ring: { width: 6, size: 64, opacity: 0.9, ripple: true },
+      ring: { width: 6, size: 60, opacity: 0.9, ripple: true },
       cursorStyle: "ring",
       autoErase: 5,
     },
@@ -56,7 +56,7 @@
       desc: "KPI・資料レビュー。ブラックで薄め・ドット小・残す設定。",
       color: "#032841",
       strokeWidth: 4,
-      ring: { width: 4, size: 40, opacity: 0.55, ripple: false },
+      ring: { width: 4, size: 44, opacity: 0.55, ripple: false },
       cursorStyle: "dot",
       autoErase: 0,
     },
@@ -65,7 +65,7 @@
       desc: "マニュアル・研修動画。Gold強調・矢印カーソル大・波紋あり。",
       color: "#917d44",
       strokeWidth: 7,
-      ring: { width: 8, size: 90, opacity: 1.0, ripple: true },
+      ring: { width: 8, size: 60, opacity: 1.0, ripple: true },
       cursorStyle: "arrow",
       autoErase: 0,
     },
@@ -74,7 +74,7 @@
       desc: "SaaS画面説明。スポットライト・ズーム優先・ハローカーソル。",
       color: "#31594e",
       strokeWidth: 5,
-      ring: { width: 6, size: 56, opacity: 0.85, ripple: true },
+      ring: { width: 6, size: 44, opacity: 0.85, ripple: true },
       cursorStyle: "halo",
       autoErase: 3,
     },
@@ -87,8 +87,10 @@
     color: "#6cbba5",
     strokeWidth: 6,
     ring: { width: 6, size: 64, opacity: 0.9, ripple: true },
-    cursorStyle: "ring", // ring | dot | halo | ringdot
+    cursorStyle: "ring", // ring | dot | halo | ringdot | arrow
     arrowHead: "end",    // end | start | both
+    showOptions: false,  // ツールオプションのフライアウトを画面に表示するか
+    uiHidden: false,
     autoErase: 0,        // 秒（0で残す）
     spotlight: false,
     spotShape: "band",   // band（横帯） | circle

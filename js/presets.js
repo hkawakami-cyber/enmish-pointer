@@ -37,6 +37,34 @@
           if (EF.options) EF.options.render();
         }));
 
+      // オプションパネルの表示/非表示
+      $("set-show-options").addEventListener("change", (e) => {
+        EF.state.showOptions = e.target.checked;
+        if (EF.options) EF.options.render();
+      });
+
+      // 矢印の向き
+      $("set-arrow-head").querySelectorAll("button").forEach((b) =>
+        b.addEventListener("click", () => {
+          EF.state.arrowHead = b.dataset.head;
+          $("set-arrow-head").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+          if (EF.options) EF.options.render();
+        }));
+
+      // 注目：形と帯の高さ
+      $("set-spot-shape").querySelectorAll("button").forEach((b) =>
+        b.addEventListener("click", () => {
+          EF.state.spotShape = b.dataset.shape;
+          $("set-spot-shape").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+          if (EF.options) EF.options.render();
+        }));
+      $("set-spot-band").querySelectorAll("button").forEach((b) =>
+        b.addEventListener("click", () => {
+          EF.state.spotBand = parseFloat(b.dataset.band);
+          $("set-spot-band").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+          if (EF.options) EF.options.render();
+        }));
+
       // 自動消去セグメント
       $("autoerase-seg").querySelectorAll("button").forEach((b) =>
         b.addEventListener("click", () => this.setAutoErase(+b.dataset.autoerase)));
@@ -93,7 +121,17 @@
       if (!silent) EF.toast(`プリセット: ${p.name}`);
     },
 
-    openModal() { $("settings").hidden = false; },
+    openModal() {
+      // 現在の状態をUIへ反映
+      $("set-show-options").checked = EF.state.showOptions;
+      const setActive = (id, attr, val) =>
+        $(id).querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset[attr] === String(val)));
+      setActive("set-cursor-style", "cursor", EF.state.cursorStyle);
+      setActive("set-arrow-head", "head", EF.state.arrowHead);
+      setActive("set-spot-shape", "shape", EF.state.spotShape);
+      setActive("set-spot-band", "band", EF.state.spotBand);
+      $("settings").hidden = false;
+    },
     closeModal() { $("settings").hidden = true; },
   };
 })();
