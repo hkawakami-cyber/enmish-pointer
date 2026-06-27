@@ -152,6 +152,7 @@
     .tool-options { position: fixed; right: 92px; top: 50%; transform: translateY(-50%); background: rgba(3,40,65,.94); color: #e8ecf4; border-radius: 14px; padding: 13px; width: 168px; max-height: 88vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(14px); display: flex; flex-direction: column; gap: 11px; pointer-events: auto; }
     .to-group { display: flex; flex-direction: column; gap: 5px; }
     .to-title { font-size: 10.5px; color: #9fc6bb; }
+    .opt-ver { font-size: 10px; color: rgba(255,255,255,.45); text-align: center; padding-top: 2px; }
     .to-btns { display: flex; flex-wrap: wrap; gap: 5px; }
     .to-btn { display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); color: #e8ecf4; border-radius: 8px; padding: 5px 8px; font-size: 11px; cursor: pointer; line-height: 1; }
     .to-btn:hover { background: rgba(255,255,255,.12); }
@@ -489,6 +490,7 @@
     }
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
+    groups.push('<div class="opt-ver">Enmish Pointer v0.2.0</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
