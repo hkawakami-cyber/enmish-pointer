@@ -205,11 +205,9 @@ body.ef-on.ef-autohide .scene-root { padding-right: 0; padding-left: 0; }
 .toolbar[data-collapsed="true"] { padding: 6px; }
 
 /* 自動フィット：ウィンドウに収まらない時はラベルを隠してアイコンのみ（コンパクト） */
-.toolbar.compact .tb-body { width: 46px; gap: 1px; }
+.toolbar.compact .tb-body { width: 82px; gap: 2px; }
 .toolbar.compact .tool { padding: 7px 3px; }
 .toolbar.compact .tool .lbl { display: none; }
-.toolbar.compact .tb-brand .ef-word, .toolbar.compact .tb-brand .ef-tag { display: none; }
-.toolbar.compact .tb-colors { grid-template-columns: repeat(2, 1fr); }
 .toolbar.compact .tb-sep { margin: 3px 4px; }
 .tb-handle {
   display: none;
@@ -219,7 +217,10 @@ body.ef-on.ef-autohide .scene-root { padding-right: 0; padding-left: 0; }
 }
 .toolbar[data-collapsed="true"] .tb-handle { display: block; }
 
-.tb-body { display: flex; flex-direction: column; gap: 3px; width: 78px; }
+.tb-body { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; width: 124px; align-content: start; }
+/* 仕切り線・カラー・設定・最小化・ツール群コンテナは横いっぱい（2列をまたぐ） */
+.tb-body > .tb-tools, .tb-body > .tb-sep, .tb-body > .tb-colors,
+.tb-body > [data-action="settings"], .tb-body > [data-action="hide-ui"] { grid-column: 1 / -1; }
 .tb-brand { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 2px 0 7px; }
 .tb-brand .ef-mark {
   width: 22px; height: 22px; border-radius: 50%; background: var(--ef-green);
@@ -264,7 +265,7 @@ body.ef-on.ef-autohide .scene-root { padding-right: 0; padding-left: 0; }
 .toolbar.app-off { display: none !important; }
 
 /* ツール群コンテナ（ツールバー内） */
-.tb-tools { display: flex; flex-direction: column; gap: 3px; }
+.tb-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
 
 /* ============ 設定：ツールバー編集 ============ */
 .set-tools { display: flex; flex-direction: column; gap: 6px; }
@@ -601,5 +602,5 @@ kbd {
 /* レスポンシブ：狭い画面ではツールバーを横下に */
 @media (max-width: 680px) {
   .stamp-bar { display: none; }
-  .tb-body { width: 64px; }
+  .tb-body { width: 112px; }
 }

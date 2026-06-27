@@ -67,10 +67,13 @@
       position: fixed; top: 50%; right: 0; transform: translateY(-50%);
       background: rgba(6,32,52,.92); color: #fff; border-radius: 14px 0 0 14px;
       box-shadow: 0 8px 26px rgba(0,0,0,.32); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-      padding: 7px 6px; border: 1px solid rgba(255,255,255,.16); border-right: none; width: 76px;
-      display: flex; flex-direction: column; gap: 2px; max-height: calc(100vh - 168px); overflow-y: auto;
+      padding: 7px 7px; border: 1px solid rgba(255,255,255,.16); border-right: none; width: 124px;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 3px; align-content: start; max-height: calc(100vh - 24px); overflow-y: auto;
       transition: transform .22s ease, opacity .22s ease;
     }
+    /* 仕切り線・カラー・設定・最小化は横いっぱい（2列をまたぐ） */
+    .toolbar > .sep, .toolbar > .colors,
+    .toolbar > .tool[data-action="options"], .toolbar > .tool[data-action="collapse"] { grid-column: 1 / -1; }
     /* 未起動でもツールは押せる（押すと自動的に起動して選択される）。視覚的にだけ少し淡く。 */
     .toolbar.app-off .tool[data-tool], .toolbar.app-off .tool[data-toggle], .toolbar.app-off .colors { opacity: .7; }
     .toolbar.side-left { right: auto; left: 0; border-radius: 0 14px 14px 0; border-left: none; border-right: 1px solid rgba(176,184,196,.45); }
@@ -83,11 +86,9 @@
     /* 自動表示モードのヒント（右端の細い帯） */
     .edge-hint { position: fixed; right: 0; top: 50%; transform: translateY(-50%); width: 6px; height: 130px; border-radius: 5px 0 0 5px; background: rgba(108,187,165,.85); box-shadow: 0 0 12px rgba(0,0,0,.3); pointer-events: none; transition: opacity .2s ease; }
     .edge-hint.side-left { right: auto; left: 0; border-radius: 0 4px 4px 0; }
-    .toolbar.compact { width: 46px; gap: 1px; }
+    .toolbar.compact { width: 82px; gap: 2px; }
     .toolbar.compact .lbl { display: none; }
     .toolbar.compact .tool { padding: 7px 3px; }
-    .toolbar.compact .brand .ef-word, .toolbar.compact .brand .ef-tag { display: none; }
-    .toolbar.compact .colors { grid-template-columns: repeat(2,1fr); }
     .toolbar.compact .sep { margin: 3px 4px; }
     .brand { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 1px 0 6px; }
     .brand .ef-mark { width: 22px; height: 22px; border-radius: 50%; background: #6cbba5; position: relative; }
@@ -157,7 +158,8 @@
     .to-btn { display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); color: #e8ecf4; border-radius: 8px; padding: 5px 8px; font-size: 11px; cursor: pointer; line-height: 1; }
     .to-btn:hover { background: rgba(255,255,255,.12); }
     .to-btn.on { background: #6cbba5; border-color: #6cbba5; color: #06251c; font-weight: 700; }
-    .tb-tools { display: flex; flex-direction: column; gap: 2px; }
+    .tb-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+    .toolbar > .tb-tools { grid-column: 1 / -1; }
     /* 設定フライアウト内：ツールバー編集 */
     .to-tool-row { display: flex; align-items: center; gap: 5px; }
     .to-tool-row .to-chk { display: inline-flex; align-items: center; gap: 5px; flex: 1; font-size: 11px; color: #e8ecf4; cursor: pointer; padding: 3px 6px; border: 1px solid rgba(255,255,255,.14); border-radius: 7px; background: rgba(255,255,255,.05); }
@@ -393,8 +395,8 @@
   }
   function fitToolbar() {
     tb.classList.remove("compact");
-    // Meet/Slides 等のボタンと被らないよう、上下に余白を確保して早めにコンパクト化（アイコンのみ）
-    if (tb.scrollHeight > window.innerHeight - 168) tb.classList.add("compact");
+    // 2列でも収まらない短い画面のときだけ、アイコンのみのコンパクト表示に
+    if (tb.scrollHeight > window.innerHeight - 24) tb.classList.add("compact");
   }
 
   // ツール群だけ再生成（順序・表示/非表示の変更を反映）
@@ -490,7 +492,7 @@
     }
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.2.1</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.2.2</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
