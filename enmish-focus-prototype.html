@@ -574,6 +574,13 @@ kbd {
 .toolbar.labels-off .tb-body { width: 86px; }
 .toolbar.labels-off .tool .lbl { display: none; }
 
+/* プロファイル（設定モーダル内） */
+.prof-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.prof-name { flex: 1; font-size: 13px; color: var(--ef-ink, #032841); }
+.prof-btn { border: 1px solid #c4ccd6; background: #fff; color: #2c3550; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; }
+.prof-btn.save { border-color: var(--ef-green, #6cbba5); color: #2f7d68; }
+.prof-btn:hover { background: #f1f4f8; }
+
 /* 最小化中の再表示タブ（バーと同じ端に小さく出す） */
 .reopen {
   position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 9300;
@@ -654,6 +661,9 @@ kbd {
       </button>
       <button class="tool" data-action="screenshot" title="注釈付きスクショ保存">
         <span class="ico" data-ic="save"></span><span class="lbl">保存</span>
+      </button>
+      <button class="tool" data-action="copy" title="注釈付きスクショをクリップボードにコピー">
+        <span class="ico" data-ic="copy"></span><span class="lbl">コピー</span>
       </button>
       <button class="tool" data-action="record" title="画面録画 (webm保存)">
         <span class="ico" data-ic="record"></span><span class="lbl">録画</span>
@@ -854,6 +864,20 @@ kbd {
           </div>
         </label>
       </section>
+
+      <section class="modal-section">
+        <h3>プロファイル（現在の設定を保存／適用）</h3>
+        <div class="prof-row">
+          <span class="prof-name">商談</span>
+          <button class="prof-btn" data-prof="shodan" data-pact="apply">適用</button>
+          <button class="prof-btn save" data-prof="shodan" data-pact="save">保存</button>
+        </div>
+        <div class="prof-row">
+          <span class="prof-name">社内</span>
+          <button class="prof-btn" data-prof="shanai" data-pact="apply">適用</button>
+          <button class="prof-btn save" data-prof="shanai" data-pact="save">保存</button>
+        </div>
+      </section>
     </div>
   </div>
 
@@ -921,6 +945,8 @@ kbd {
     stop: '<rect x="6" y="6" width="12" height="12" rx="2.5" fill="currentColor" stroke="none"/>',
     grip: '<circle cx="9" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="9" cy="18" r="1.4" fill="currentColor" stroke="none"/><circle cx="15" cy="18" r="1.4" fill="currentColor" stroke="none"/>',
     collapse: '<path d="M9 5l7 7-7 7"/>',
+    stamp: '<path d="M12 21s6-5.4 6-10.2A6 6 0 1 0 6 10.8C6 15.6 12 21 12 21z"/><circle cx="12" cy="10.6" r="2.4"/>',
+    copy: '<rect x="9" y="9" width="11" height="11" rx="2.2"/><path d="M5 15H4.2A1.2 1.2 0 0 1 3 13.8V4.2A1.2 1.2 0 0 1 4.2 3h9.6A1.2 1.2 0 0 1 15 4.2V5"/>',
   };
 
   EF.iconSvg = function (name, size) {
@@ -979,7 +1005,7 @@ kbd {
     zoom: false,
     zoomScale: 2.0,
     // ツールバーのカスタム（並べ替え・表示/非表示）
-    toolOrder: ["rect", "highlighter", "arrow", "hline", "text", "pen", "cursor", "ellipse", "spotlight", "zoom"],
+    toolOrder: ["rect", "highlighter", "arrow", "hline", "text", "pen", "cursor", "ellipse", "stamp", "spotlight", "zoom"],
     toolHidden: {},
     // バーの配置
     barSide: "right",    // ツールバーの左右: right | left
@@ -1028,6 +1054,7 @@ kbd {
   const STORE_KEY = "enmishFocus.settings.v1";
   const PERSIST = ["color", "strokeWidth", "textSize", "textBold", "textColor", "ring", "cursorStyle", "arrowHead",
     "spotShape", "spotBand", "spotDim", "zoomScale", "showOptions", "toolOrder", "toolHidden", "barSide", "dockPos", "autoHide", "showLabels", "autoErase", "tool"];
+  EF.PERSIST = PERSIST; // プロファイル機能などから参照
 
   EF.saveSettings = function () {
     try {
@@ -1678,6 +1705,7 @@ kbd {
     { key: "ellipse", label: "丸", ic: "ellipse", kind: "tool" },
     { key: "rect", label: "四角", ic: "rect", kind: "tool" },
     { key: "text", label: "文字", ic: "text", kind: "tool" },
+    { key: "stamp", label: "番号", ic: "stamp", kind: "tool" },
     { key: "spotlight", label: "注目", ic: "spotlight", kind: "toggle" },
     { key: "zoom", label: "ズーム", ic: "zoom", kind: "toggle" },
   ];
@@ -1736,6 +1764,10 @@ kbd {
     buildTools() {
       const tbtools = document.getElementById("tb-tools");
       if (!tbtools) return;
+      // 保存済み順序に新規ツール（番号など）が欠けていたら補完、未知のキーは除去
+      const valid = EF.TOOL_DEFS.map((d) => d.key);
+      EF.state.toolOrder = (Array.isArray(EF.state.toolOrder) ? EF.state.toolOrder : valid.slice()).filter((k) => valid.indexOf(k) !== -1);
+      valid.forEach((k) => { if (EF.state.toolOrder.indexOf(k) === -1) EF.state.toolOrder.push(k); });
       tbtools.innerHTML = "";
       const titles = {
         cursor: "カーソル強調", pen: "ペン (⌘⇧1)", highlighter: "蛍光ペン",
@@ -1918,6 +1950,26 @@ kbd {
         EF.toast("スクショ生成に失敗しました");
       }
     },
+
+    // 注釈付きスクショをクリップボードにコピー（チャット等にすぐ貼れる）
+    copy() {
+      if (typeof html2canvas !== "function") { EF.toast("html2canvas が読み込めませんでした"); return; }
+      if (!navigator.clipboard || !window.ClipboardItem) { EF.toast("この環境ではコピー未対応です"); return; }
+      const stage = document.getElementById("stage");
+      // ジェスチャ保持のため write は同期で呼び、Blob を Promise で渡す
+      const blobP = html2canvas(stage, {
+        backgroundColor: "#0f1626",
+        scale: Math.min(2, window.devicePixelRatio || 1),
+        logging: false,
+        ignoreElements: (el) => el.id === "toolbar" || el.id === "stamp-bar" ||
+          el.id === "scene-switch" || el.id === "status-badge" || el.id === "ef-dock" ||
+          el.id === "reopen" || el.id === "edge-hint" ||
+          el.id === "toast" || el.id === "cursor-ring" || el.id === "stamp-hint",
+      }).then((canvas) => new Promise((res) => canvas.toBlob(res, "image/png")));
+      navigator.clipboard.write([new ClipboardItem({ "image/png": blobP })])
+        .then(() => EF.toast("画像をクリップボードにコピーしました", 2200))
+        .catch(() => EF.toast("コピーに失敗しました（保存をお試しください）", 2400));
+    },
   };
 })();
 
@@ -1988,6 +2040,13 @@ kbd {
         if (EF.options) EF.options.render();
         save();
       });
+
+      // プロファイル（商談/社内）
+      document.querySelectorAll(".prof-btn").forEach((b) =>
+        b.addEventListener("click", () => {
+          if (b.dataset.pact === "save") this.saveProfile(b.dataset.prof);
+          else this.applyProfile(b.dataset.prof);
+        }));
 
       // 閉じる
       document.querySelectorAll('[data-action="close-settings"]').forEach((b) =>
@@ -2141,6 +2200,34 @@ kbd {
         s.classList.toggle("active", s.dataset.color === EF.state.textColor));
     },
 
+    // ---- プロファイル（商談/社内）----
+    PROF_KEY: "enmishFocus.profiles.v1",
+    PROF_NAMES: { shodan: "商談", shanai: "社内" },
+    _profiles() { try { return JSON.parse(localStorage.getItem(this.PROF_KEY) || "{}"); } catch (e) { return {}; } },
+    saveProfile(key) {
+      const snap = {};
+      (EF.PERSIST || []).forEach((k) => { if (k !== "tool") snap[k] = EF.state[k]; });
+      snap.palette = EF.PALETTE.map((c) => c.value);
+      const all = this._profiles(); all[key] = snap;
+      try { localStorage.setItem(this.PROF_KEY, JSON.stringify(all)); } catch (e) { /* noop */ }
+      EF.toast(this.PROF_NAMES[key] + "プロファイルに現在の設定を保存しました", 2200);
+      this.syncUI();
+    },
+    applyProfile(key) {
+      const o = this._profiles()[key];
+      if (!o) { EF.toast(this.PROF_NAMES[key] + "は未保存です（先に保存）", 2200); return; }
+      if (Array.isArray(o.palette)) o.palette.forEach((v, i) => { if (EF.PALETTE[i]) EF.PALETTE[i].value = v; });
+      (EF.PERSIST || []).forEach((k) => {
+        if (k === "tool" || o[k] === undefined) return;
+        if (k === "ring") EF.state.ring = Object.assign({}, EF.state.ring, o.ring);
+        else EF.state[k] = o[k];
+      });
+      save();
+      EF.toolbar.buildColors(); EF.toolbar.buildTools(); EF.cursor.update();
+      EF.app.applyLayout(); if (EF.options) EF.options.render(); this.syncUI();
+      EF.toast(this.PROF_NAMES[key] + "プロファイルを適用しました", 2000);
+    },
+
     openModal() { this.syncUI(); this.buildToolList(); $("settings").hidden = false; },
     closeModal() { $("settings").hidden = true; },
   };
@@ -2181,6 +2268,11 @@ kbd {
           ev.preventDefault();
           const hit = this.engine.hitText(p.x, p.y);
           EF.app.showTextInput(p, hit);
+          return;
+        }
+        if (EF.state.tool === "stamp") {
+          ev.preventDefault();
+          this.engine.addStamp(p.x, p.y, String(EF.app._stampN++), EF.state.color);
           return;
         }
         if (DRAW_TOOLS.indexOf(EF.state.tool) === -1) return;
@@ -2286,14 +2378,17 @@ kbd {
         case "undo": if (EF.state.appOn) EF.annot.engine.undo(); break;
         case "clear":
           EF.annot.engine.clear();
-          EF.toast("注釈を全消去しました");
+          this._stampN = 1;
+          EF.toast("全消去（『戻る』で復元できます）");
           break;
         case "screenshot": EF.screenshot.capture(); break;
+        case "copy": EF.screenshot.copy(); break;
         case "record": this.toggleRecord(); break;
         case "settings": EF.presets.openModal(); break;
         case "hide-ui": this.toggleUI(); break;
       }
     },
+    _stampN: 1,
 
     // 画面録画ボタンの見た目を更新（録画中=赤・停止アイコン）
     _syncRecordBtn() {

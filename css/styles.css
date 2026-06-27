@@ -573,6 +573,13 @@ kbd {
 .toolbar.labels-off .tb-body { width: 86px; }
 .toolbar.labels-off .tool .lbl { display: none; }
 
+/* プロファイル（設定モーダル内） */
+.prof-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.prof-name { flex: 1; font-size: 13px; color: var(--ef-ink, #032841); }
+.prof-btn { border: 1px solid #c4ccd6; background: #fff; color: #2c3550; border-radius: 8px; padding: 6px 12px; font-size: 12px; cursor: pointer; }
+.prof-btn.save { border-color: var(--ef-green, #6cbba5); color: #2f7d68; }
+.prof-btn:hover { background: #f1f4f8; }
+
 /* 最小化中の再表示タブ（バーと同じ端に小さく出す） */
 .reopen {
   position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 9300;

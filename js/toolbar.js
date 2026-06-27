@@ -14,6 +14,7 @@
     { key: "ellipse", label: "丸", ic: "ellipse", kind: "tool" },
     { key: "rect", label: "四角", ic: "rect", kind: "tool" },
     { key: "text", label: "文字", ic: "text", kind: "tool" },
+    { key: "stamp", label: "番号", ic: "stamp", kind: "tool" },
     { key: "spotlight", label: "注目", ic: "spotlight", kind: "toggle" },
     { key: "zoom", label: "ズーム", ic: "zoom", kind: "toggle" },
   ];
@@ -72,6 +73,10 @@
     buildTools() {
       const tbtools = document.getElementById("tb-tools");
       if (!tbtools) return;
+      // 保存済み順序に新規ツール（番号など）が欠けていたら補完、未知のキーは除去
+      const valid = EF.TOOL_DEFS.map((d) => d.key);
+      EF.state.toolOrder = (Array.isArray(EF.state.toolOrder) ? EF.state.toolOrder : valid.slice()).filter((k) => valid.indexOf(k) !== -1);
+      valid.forEach((k) => { if (EF.state.toolOrder.indexOf(k) === -1) EF.state.toolOrder.push(k); });
       tbtools.innerHTML = "";
       const titles = {
         cursor: "カーソル強調", pen: "ペン (⌘⇧1)", highlighter: "蛍光ペン",

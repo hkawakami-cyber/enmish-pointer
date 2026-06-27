@@ -33,6 +33,11 @@
           EF.app.showTextInput(p, hit);
           return;
         }
+        if (EF.state.tool === "stamp") {
+          ev.preventDefault();
+          this.engine.addStamp(p.x, p.y, String(EF.app._stampN++), EF.state.color);
+          return;
+        }
         if (DRAW_TOOLS.indexOf(EF.state.tool) === -1) return;
         this.drawing = true;
         this.engine.start(p.x, p.y);
@@ -136,14 +141,17 @@
         case "undo": if (EF.state.appOn) EF.annot.engine.undo(); break;
         case "clear":
           EF.annot.engine.clear();
-          EF.toast("注釈を全消去しました");
+          this._stampN = 1;
+          EF.toast("全消去（『戻る』で復元できます）");
           break;
         case "screenshot": EF.screenshot.capture(); break;
+        case "copy": EF.screenshot.copy(); break;
         case "record": this.toggleRecord(); break;
         case "settings": EF.presets.openModal(); break;
         case "hide-ui": this.toggleUI(); break;
       }
     },
+    _stampN: 1,
 
     // 画面録画ボタンの見た目を更新（録画中=赤・停止アイコン）
     _syncRecordBtn() {

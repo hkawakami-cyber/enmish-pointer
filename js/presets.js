@@ -64,6 +64,13 @@
         save();
       });
 
+      // プロファイル（商談/社内）
+      document.querySelectorAll(".prof-btn").forEach((b) =>
+        b.addEventListener("click", () => {
+          if (b.dataset.pact === "save") this.saveProfile(b.dataset.prof);
+          else this.applyProfile(b.dataset.prof);
+        }));
+
       // 閉じる
       document.querySelectorAll('[data-action="close-settings"]').forEach((b) =>
         b.addEventListener("click", () => this.closeModal()));
@@ -214,6 +221,34 @@
       setActive("set-text-weight", "weight", EF.state.textBold ? "bold" : "normal");
       $("set-text-color").querySelectorAll(".swatch").forEach((s) =>
         s.classList.toggle("active", s.dataset.color === EF.state.textColor));
+    },
+
+    // ---- プロファイル（商談/社内）----
+    PROF_KEY: "enmishFocus.profiles.v1",
+    PROF_NAMES: { shodan: "商談", shanai: "社内" },
+    _profiles() { try { return JSON.parse(localStorage.getItem(this.PROF_KEY) || "{}"); } catch (e) { return {}; } },
+    saveProfile(key) {
+      const snap = {};
+      (EF.PERSIST || []).forEach((k) => { if (k !== "tool") snap[k] = EF.state[k]; });
+      snap.palette = EF.PALETTE.map((c) => c.value);
+      const all = this._profiles(); all[key] = snap;
+      try { localStorage.setItem(this.PROF_KEY, JSON.stringify(all)); } catch (e) { /* noop */ }
+      EF.toast(this.PROF_NAMES[key] + "プロファイルに現在の設定を保存しました", 2200);
+      this.syncUI();
+    },
+    applyProfile(key) {
+      const o = this._profiles()[key];
+      if (!o) { EF.toast(this.PROF_NAMES[key] + "は未保存です（先に保存）", 2200); return; }
+      if (Array.isArray(o.palette)) o.palette.forEach((v, i) => { if (EF.PALETTE[i]) EF.PALETTE[i].value = v; });
+      (EF.PERSIST || []).forEach((k) => {
+        if (k === "tool" || o[k] === undefined) return;
+        if (k === "ring") EF.state.ring = Object.assign({}, EF.state.ring, o.ring);
+        else EF.state[k] = o[k];
+      });
+      save();
+      EF.toolbar.buildColors(); EF.toolbar.buildTools(); EF.cursor.update();
+      EF.app.applyLayout(); if (EF.options) EF.options.render(); this.syncUI();
+      EF.toast(this.PROF_NAMES[key] + "プロファイルを適用しました", 2000);
     },
 
     openModal() { this.syncUI(); this.buildToolList(); $("settings").hidden = false; },

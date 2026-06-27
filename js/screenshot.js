@@ -51,5 +51,25 @@
         EF.toast("スクショ生成に失敗しました");
       }
     },
+
+    // 注釈付きスクショをクリップボードにコピー（チャット等にすぐ貼れる）
+    copy() {
+      if (typeof html2canvas !== "function") { EF.toast("html2canvas が読み込めませんでした"); return; }
+      if (!navigator.clipboard || !window.ClipboardItem) { EF.toast("この環境ではコピー未対応です"); return; }
+      const stage = document.getElementById("stage");
+      // ジェスチャ保持のため write は同期で呼び、Blob を Promise で渡す
+      const blobP = html2canvas(stage, {
+        backgroundColor: "#0f1626",
+        scale: Math.min(2, window.devicePixelRatio || 1),
+        logging: false,
+        ignoreElements: (el) => el.id === "toolbar" || el.id === "stamp-bar" ||
+          el.id === "scene-switch" || el.id === "status-badge" || el.id === "ef-dock" ||
+          el.id === "reopen" || el.id === "edge-hint" ||
+          el.id === "toast" || el.id === "cursor-ring" || el.id === "stamp-hint",
+      }).then((canvas) => new Promise((res) => canvas.toBlob(res, "image/png")));
+      navigator.clipboard.write([new ClipboardItem({ "image/png": blobP })])
+        .then(() => EF.toast("画像をクリップボードにコピーしました", 2200))
+        .catch(() => EF.toast("コピーに失敗しました（保存をお試しください）", 2400));
+    },
   };
 })();

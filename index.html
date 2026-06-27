@@ -53,6 +53,9 @@
       <button class="tool" data-action="screenshot" title="注釈付きスクショ保存">
         <span class="ico" data-ic="save"></span><span class="lbl">保存</span>
       </button>
+      <button class="tool" data-action="copy" title="注釈付きスクショをクリップボードにコピー">
+        <span class="ico" data-ic="copy"></span><span class="lbl">コピー</span>
+      </button>
       <button class="tool" data-action="record" title="画面録画 (webm保存)">
         <span class="ico" data-ic="record"></span><span class="lbl">録画</span>
       </button>
@@ -251,6 +254,20 @@
             <button data-pos="top-right">右上</button>
           </div>
         </label>
+      </section>
+
+      <section class="modal-section">
+        <h3>プロファイル（現在の設定を保存／適用）</h3>
+        <div class="prof-row">
+          <span class="prof-name">商談</span>
+          <button class="prof-btn" data-prof="shodan" data-pact="apply">適用</button>
+          <button class="prof-btn save" data-prof="shodan" data-pact="save">保存</button>
+        </div>
+        <div class="prof-row">
+          <span class="prof-name">社内</span>
+          <button class="prof-btn" data-prof="shanai" data-pact="apply">適用</button>
+          <button class="prof-btn save" data-prof="shanai" data-pact="save">保存</button>
+        </div>
       </section>
     </div>
   </div>

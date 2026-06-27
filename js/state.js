@@ -36,7 +36,7 @@
     zoom: false,
     zoomScale: 2.0,
     // ツールバーのカスタム（並べ替え・表示/非表示）
-    toolOrder: ["rect", "highlighter", "arrow", "hline", "text", "pen", "cursor", "ellipse", "spotlight", "zoom"],
+    toolOrder: ["rect", "highlighter", "arrow", "hline", "text", "pen", "cursor", "ellipse", "stamp", "spotlight", "zoom"],
     toolHidden: {},
     // バーの配置
     barSide: "right",    // ツールバーの左右: right | left
@@ -85,6 +85,7 @@
   const STORE_KEY = "enmishFocus.settings.v1";
   const PERSIST = ["color", "strokeWidth", "textSize", "textBold", "textColor", "ring", "cursorStyle", "arrowHead",
     "spotShape", "spotBand", "spotDim", "zoomScale", "showOptions", "toolOrder", "toolHidden", "barSide", "dockPos", "autoHide", "showLabels", "autoErase", "tool"];
+  EF.PERSIST = PERSIST; // プロファイル機能などから参照
 
   EF.saveSettings = function () {
     try {

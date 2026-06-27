@@ -162,6 +162,12 @@
     .to-group { display: flex; flex-direction: column; gap: 5px; }
     .to-title { font-size: 10.5px; color: #9fc6bb; }
     .opt-ver { font-size: 10px; color: rgba(255,255,255,.45); text-align: center; padding-top: 2px; }
+    .prof-row { display: flex; align-items: center; gap: 6px; }
+    .prof-name { flex: 1; font-size: 11px; color: #cdd6e2; }
+    .prof-btn { border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: #e8ecf4; border-radius: 7px; padding: 4px 9px; font-size: 11px; cursor: pointer; }
+    .prof-btn.save { border-color: rgba(108,187,165,.5); color: #8df1d5; }
+    .prof-btn:hover { background: rgba(255,255,255,.16); }
+    .prof-btn:disabled { opacity: .4; cursor: default; }
     .to-btns { display: flex; flex-wrap: wrap; gap: 5px; }
     .to-btn { display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); color: #e8ecf4; border-radius: 8px; padding: 5px 8px; font-size: 11px; cursor: pointer; line-height: 1; }
     .to-btn:hover { background: rgba(255,255,255,.12); }
@@ -196,6 +202,7 @@
     ["tool", "ellipse", "◯", "丸"],
     ["tool", "rect", "▢", "四角"],
     ["tool", "text", "T", "文字"],
+    ["tool", "stamp", "①", "番号"],
     ["toggle", "spotlight", "☀", "注目"],
     ["toggle", "zoom", "🔍", "ズーム"],
   ];
@@ -212,6 +219,7 @@
     ["action", "undo", "↶", "戻る"],
     ["action", "clear", "🗑", "全消去"],
     ["action", "screenshot", "📷", "保存"],
+    ["action", "copy", "⧉", "コピー"],
     ["action", "record", "⏺", "録画"],
     ["sep"],
     ["action", "collapse", "»", "最小化"],
@@ -297,8 +305,9 @@
 
   // ---------- カーソルリング & 描画入力 ----------
   let drawing = false;
+  let stampN = 1; // 番号スタンプの連番（全消去でリセット）
   function canvasInteractive() {
-    const on = state.appOn && !state.zoom && DRAW_TOOLS.indexOf(state.tool) !== -1;
+    const on = state.appOn && !state.zoom && (DRAW_TOOLS.indexOf(state.tool) !== -1 || state.tool === "stamp");
     annot.classList.toggle("live", !!on);
     annot.classList.toggle("tool-cursor", false);
   }
@@ -345,6 +354,7 @@
     if (!state.appOn || ev.button !== 0) return;
     if (state.zoom) return;
     if (state.tool === "text") { ev.preventDefault(); showTextInput(ev.clientX, ev.clientY, engine.hitText(ev.clientX, ev.clientY)); return; }
+    if (state.tool === "stamp") { ev.preventDefault(); engine.addStamp(ev.clientX, ev.clientY, String(stampN++), state.color); return; }
     if (DRAW_TOOLS.indexOf(state.tool) === -1) return;
     drawing = true; engine.start(ev.clientX, ev.clientY); ev.preventDefault();
   });
@@ -431,6 +441,16 @@
     return `<div class="to-group"><div class="to-title">ツールバー</div>${rows}</div>`;
   }
 
+  function profileGroup() {
+    const row = (key) => {
+      const saved = !!profiles[key];
+      return `<div class="prof-row"><span class="prof-name">${PROFILE_NAMES[key]}${saved ? "" : "（未保存）"}</span>` +
+        `<button class="prof-btn" data-prof="${key}" data-pact="apply"${saved ? "" : " disabled"}>適用</button>` +
+        `<button class="prof-btn save" data-prof="${key}" data-pact="save">保存</button></div>`;
+    };
+    return `<div class="to-group"><div class="to-title">プロファイル（現在の設定を保存／適用）</div>${row("shodan")}${row("shanai")}</div>`;
+  }
+
   // 設定の永続化（chrome.storage.local）
   const PERSIST = ["color", "strokeWidth", "ring", "cursorStyle", "arrowHead",
     "spotShape", "spotBand", "spotDim", "zoomScale", "textSize", "textBold", "textColor",
@@ -449,6 +469,34 @@
       const o = {}; PERSIST.forEach((k) => { o[k] = state[k]; });
       chrome.storage && chrome.storage.local.set({ efSettings: o });
     } catch (e) { /* noop */ }
+  }
+
+  // ---- 設定プロファイル（商談用 / 社内用 をワンタップ切替）----
+  const PROFILE_NAMES = { shodan: "商談", shanai: "社内" };
+  let profiles = {};
+  function loadProfiles(done) {
+    try {
+      chrome.storage.local.get("efProfiles", (r) => { profiles = (r && r.efProfiles) || {}; done && done(); });
+    } catch (e) { done && done(); }
+  }
+  function saveProfile(key) {
+    const snap = {}; PERSIST.forEach((k) => { snap[k] = state[k]; });
+    delete snap.tool; // ツールの選択状態はプロファイルに含めない
+    profiles[key] = snap;
+    try { chrome.storage.local.set({ efProfiles: profiles }); } catch (e) { /* noop */ }
+    toast(PROFILE_NAMES[key] + "プロファイルに現在の設定を保存しました", 2200);
+  }
+  function applyProfile(key) {
+    const o = profiles[key];
+    if (!o) { toast(PROFILE_NAMES[key] + "は未保存です（先に保存）", 2200); return; }
+    PERSIST.forEach((k) => {
+      if (k === "tool" || o[k] === undefined) return;
+      if (k === "ring") state.ring = Object.assign({}, state.ring, o.ring);
+      else state[k] = o[k];
+    });
+    normalizeToolOrder();
+    saveSettings(); updateRing(); rebuildTools(); renderOptions(); applyLayout(); syncUI();
+    toast(PROFILE_NAMES[key] + "プロファイルを適用しました", 2000);
   }
   function loadSettings(done) {
     try {
@@ -502,7 +550,8 @@
     }
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.2.6</div>');
+    groups.push(profileGroup());
+    groups.push('<div class="opt-ver">Enmish Pointer v0.2.7</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -628,8 +677,9 @@
     },
     action(name) {
       if (name === "undo") engine.undo();
-      else if (name === "clear") { engine.clear(); toast("注釈を全消去しました"); }
+      else if (name === "clear") { engine.clear(); stampN = 1; toast("全消去（『戻る』で復元できます）"); }
       else if (name === "screenshot") app.screenshot();
+      else if (name === "copy") app.copyShot();
       else if (name === "record") app.toggleRecord();
       else if (name === "collapse") app.toggleUI();
       else if (name === "options") {
@@ -709,6 +759,26 @@
           }
         });
       }));
+    },
+    // 表示中タブを撮影してクリップボードへコピー（チャット等にすぐ貼れる）
+    copyShot() {
+      if (!navigator.clipboard || !window.ClipboardItem) { toast("この環境ではコピー未対応です", 2400); return; }
+      const hide = [tb, badgeEl, ring, toastEl, optEl, dockEl, reopenEl, hintEl];
+      const prev = hide.map((e) => e.style.visibility);
+      // ジェスチャ保持のため、clipboard.write は同期で呼び、Blob を Promise で渡す
+      const capP = new Promise((resolve, reject) => {
+        hide.forEach((e) => (e.style.visibility = "hidden"));
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          chrome.runtime.sendMessage({ type: "ef-capture" }, (res) => {
+            hide.forEach((e, i) => (e.style.visibility = prev[i]));
+            if (chrome.runtime.lastError || !res || !res.ok || !res.dataUrl) { reject(new Error("capture")); return; }
+            fetch(res.dataUrl).then((r) => r.blob()).then(resolve, reject);
+          });
+        }));
+      });
+      navigator.clipboard.write([new ClipboardItem({ "image/png": capP })])
+        .then(() => toast("画像をクリップボードにコピーしました", 2200))
+        .catch(() => toast("コピーに失敗しました（保存をお試しください）", 2600));
     },
     // 録画ボタンの見た目を更新（録画中=赤・停止アイコン）
     _syncRecordBtn() {
@@ -801,6 +871,9 @@
   reopenEl.addEventListener("click", () => app.toggleUI());
 
   optEl.addEventListener("click", (e) => {
+    // プロファイル：適用／保存
+    const pb = e.target.closest(".prof-btn");
+    if (pb) { if (pb.dataset.pact === "save") saveProfile(pb.dataset.prof); else applyProfile(pb.dataset.prof); return; }
     // ツールバー：並べ替え（↑↓）
     const mv = e.target.closest(".to-mv");
     if (mv) {
@@ -893,5 +966,6 @@
   document.addEventListener("fullscreenchange", followFullscreen, true);
   document.addEventListener("webkitfullscreenchange", followFullscreen, true);
 
+  loadProfiles();
   loadSettings(() => { updateRing(); rebuildTools(); renderOptions(); applyLayout(); }); // 保存済み設定を反映（ツール群も再生成・配置も）
 })();
