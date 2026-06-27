@@ -64,8 +64,29 @@
 
   DrawingEngine.prototype.addText = function (x, y, text, color, width) {
     if (!text || !text.trim()) return;
-    this.strokes.push({ tool: "text", text: text.trim(), a: { x, y }, color: color, width: width, born: performance.now() });
+    const s = { tool: "text", text: text.trim(), a: { x, y }, color: color, width: width, born: performance.now() };
+    this.strokes.push(s);
     this.redo.length = 0;
+    return s;
+  };
+
+  // クリック位置にあるテキスト注釈を返す（再編集用）。なければ null。
+  DrawingEngine.prototype.hitText = function (x, y) {
+    const ctx = this.ctx;
+    for (let i = this.strokes.length - 1; i >= 0; i--) {
+      const s = this.strokes[i];
+      if (s.tool !== "text") continue;
+      const fs = Math.max(16, (s.width || 6) * 3);
+      ctx.font = `700 ${fs}px -apple-system, "Hiragino Sans", sans-serif`;
+      const tw = ctx.measureText(s.text).width, pad = 8;
+      if (x >= s.a.x - pad && x <= s.a.x + tw + pad && y >= s.a.y - pad && y <= s.a.y + fs + pad) return s;
+    }
+    return null;
+  };
+
+  DrawingEngine.prototype.removeStroke = function (s) {
+    const i = this.strokes.indexOf(s);
+    if (i >= 0) this.strokes.splice(i, 1);
   };
 
   DrawingEngine.prototype.addStamp = function (x, y, label, color) {
@@ -103,6 +124,7 @@
     }
 
     for (const s of this.strokes) {
+      if (s._editing) continue; // 再編集中のテキストは入力欄で表示するため描かない
       let alpha = 1;
       if (ae > 0) {
         const age = now - s.born;

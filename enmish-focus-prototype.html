@@ -467,7 +467,7 @@ kbd {
 
 /* ============ 常駐ドック ============ */
 .ef-dock {
-  position: fixed; right: 16px; bottom: 16px; z-index: 9300;
+  position: fixed; left: 16px; bottom: 16px; z-index: 9300;
   display: flex; gap: 6px; padding: 6px;
   background: var(--tb-bg); border: 1px solid rgba(255,255,255,.08);
   border-radius: 14px; box-shadow: var(--shadow); backdrop-filter: blur(14px);
@@ -526,8 +526,6 @@ kbd {
     <!-- ズームレンズ枠の縁取り -->
     <div id="zoom-frame" class="zoom-frame" hidden></div>
 
-    <!-- スタンプ（営業テンプレ注釈）配置を待つときのヒント -->
-    <div id="stamp-hint" class="stamp-hint" hidden>クリックした位置にラベルを配置します（Escで取消）</div>
   </div>
 
   <!-- ============ 常駐ミニツールバー ============ -->
@@ -579,9 +577,6 @@ kbd {
       <button class="tool" data-toggle="zoom" id="btn-zoom" title="ズーム (⌘⇧6)">
         <span class="ico">🔍</span><span class="lbl">ズーム</span>
       </button>
-      <button class="tool" data-action="hide-ui" title="UIの表示/非表示 (⌘⇧H)">
-        <span class="ico">⊟</span><span class="lbl">UI隠す</span>
-      </button>
 
       <div class="tb-sep"></div>
 
@@ -607,17 +602,6 @@ kbd {
 
   <!-- ============ ツール別オプション（カーソル形状/矢じり向き/注目の帯） ============ -->
   <div id="tool-options" class="tool-options" hidden></div>
-
-  <!-- ============ 営業テンプレ注釈バー ============ -->
-  <div id="stamp-bar" class="stamp-bar">
-    <button class="sb-hide" id="sb-hide" title="このバーを隠す">✕</button>
-    <div class="stamp-bar-title">営業テンプレ</div>
-    <div class="stamp-chips" id="stamp-chips"></div>
-    <div class="stamp-bar-title">KPIマーカー</div>
-    <div class="stamp-chips" id="kpi-chips"></div>
-  </div>
-  <!-- 折りたたみ時の再表示タブ -->
-  <button id="sb-reopen" class="sb-reopen" hidden title="営業テンプレを表示">営業テンプレ ▸</button>
 
   <!-- ============ シーン切替（デモ用） ============ -->
   <div id="scene-switch" class="scene-switch">
@@ -692,16 +676,6 @@ kbd {
         <label class="checkfield">
           <input type="checkbox" id="set-click-ripple" /> クリック時に波紋を表示
         </label>
-      </section>
-
-      <section class="modal-section">
-        <h3>注釈の自動消去</h3>
-        <div class="seg" id="autoerase-seg">
-          <button data-autoerase="0">残す</button>
-          <button data-autoerase="3">3秒</button>
-          <button data-autoerase="5">5秒</button>
-          <button data-autoerase="10">10秒</button>
-        </div>
       </section>
 
       <section class="modal-section">
@@ -809,49 +783,25 @@ kbd {
     { name: "gray", value: "#5b6478" },
   ];
 
-  // 営業テンプレ注釈（ブランド色: グリーン/ブラック/Gold/Rose/Gray のみ）
-  EF.SALES_TEMPLATES = [
-    { label: "要確認", color: "#917d44" },
-    { label: "宿題", color: "#c1677f" },
-    { label: "次回まで", color: "#6cbba5" },
-    { label: "論点", color: "#032841" },
-    { label: "懸念", color: "#c1677f" },
-    { label: "決裁者", color: "#31594e" },
-    { label: "金額", color: "#6cbba5" },
-    { label: "優先度高", color: "#c1677f" },
-    { label: "未対応", color: "#5b6478" },
-    { label: "ボトルネック", color: "#917d44" },
-  ];
 
-  EF.KPI_MARKERS = [
-    { label: "目標未達", color: "#c1677f" },
-    { label: "改善余地", color: "#917d44" },
-    { label: "要因確認", color: "#032841" },
-    { label: "施策候補", color: "#6cbba5" },
-    { label: "勝ち筋", color: "#31594e" },
-    { label: "歩留低下", color: "#c1677f" },
-    { label: "次アクション", color: "#6cbba5" },
-  ];
 
   // プリセット定義
   EF.PRESETS = {
     proposal: {
       name: "商談モード",
-      desc: "顧客向け提案。グリーン中心・リングカーソル中・自動消去5秒。",
+      desc: "顧客向け提案。グリーン中心・リングカーソル中。",
       color: "#6cbba5",
       strokeWidth: 6,
       ring: { width: 6, size: 60, opacity: 0.9, ripple: true },
       cursorStyle: "ring",
-      autoErase: 5,
     },
     review: {
       name: "社内レビュー",
-      desc: "KPI・資料レビュー。ブラックで薄め・ドット小・残す設定。",
+      desc: "KPI・資料レビュー。ブラックで薄め・ドット小。",
       color: "#032841",
       strokeWidth: 4,
       ring: { width: 4, size: 44, opacity: 0.55, ripple: false },
       cursorStyle: "dot",
-      autoErase: 0,
     },
     record: {
       name: "録画モード",
@@ -860,7 +810,6 @@ kbd {
       strokeWidth: 7,
       ring: { width: 8, size: 60, opacity: 1.0, ripple: true },
       cursorStyle: "arrow",
-      autoErase: 0,
     },
     demo: {
       name: "デモモード",
@@ -869,7 +818,6 @@ kbd {
       strokeWidth: 5,
       ring: { width: 6, size: 44, opacity: 0.85, ripple: true },
       cursorStyle: "halo",
-      autoErase: 3,
     },
   };
 
@@ -884,14 +832,12 @@ kbd {
     arrowHead: "end",    // end | start | both
     showOptions: false,  // ツールオプションのフライアウトを画面に表示するか
     uiHidden: false,
-    autoErase: 0,        // 秒（0で残す）
     spotlight: false,
     spotShape: "band",   // band（横帯） | circle
     spotBand: 0.5,       // 帯の高さ（ビューポート比）
     zoom: false,
     zoomScale: 2.2,
     preset: "proposal",
-    armedStamp: null,    // 配置待ちの営業テンプレ {label,color}
     mouse: { x: -999, y: -999, inStage: false },
   };
 
@@ -1096,8 +1042,29 @@ kbd {
 
   DrawingEngine.prototype.addText = function (x, y, text, color, width) {
     if (!text || !text.trim()) return;
-    this.strokes.push({ tool: "text", text: text.trim(), a: { x, y }, color: color, width: width, born: performance.now() });
+    const s = { tool: "text", text: text.trim(), a: { x, y }, color: color, width: width, born: performance.now() };
+    this.strokes.push(s);
     this.redo.length = 0;
+    return s;
+  };
+
+  // クリック位置にあるテキスト注釈を返す（再編集用）。なければ null。
+  DrawingEngine.prototype.hitText = function (x, y) {
+    const ctx = this.ctx;
+    for (let i = this.strokes.length - 1; i >= 0; i--) {
+      const s = this.strokes[i];
+      if (s.tool !== "text") continue;
+      const fs = Math.max(16, (s.width || 6) * 3);
+      ctx.font = `700 ${fs}px -apple-system, "Hiragino Sans", sans-serif`;
+      const tw = ctx.measureText(s.text).width, pad = 8;
+      if (x >= s.a.x - pad && x <= s.a.x + tw + pad && y >= s.a.y - pad && y <= s.a.y + fs + pad) return s;
+    }
+    return null;
+  };
+
+  DrawingEngine.prototype.removeStroke = function (s) {
+    const i = this.strokes.indexOf(s);
+    if (i >= 0) this.strokes.splice(i, 1);
   };
 
   DrawingEngine.prototype.addStamp = function (x, y, label, color) {
@@ -1135,6 +1102,7 @@ kbd {
     }
 
     for (const s of this.strokes) {
+      if (s._editing) continue; // 再編集中のテキストは入力欄で表示するため描かない
       let alpha = 1;
       if (ae > 0) {
         const age = now - s.born;
@@ -1481,75 +1449,6 @@ kbd {
 </script>
 <script>
 /* ============================================================
-   stamps.js — 営業テンプレ注釈 / KPIマーカー
-   チップをクリック→「配置待ち」→ステージクリックでラベル配置。
-   ============================================================ */
-(function () {
-  const EF = (window.EF = window.EF || {});
-
-  function buildChips(containerId, items) {
-    const box = document.getElementById(containerId);
-    box.innerHTML = "";
-    items.forEach((it) => {
-      const chip = document.createElement("button");
-      chip.className = "chip";
-      chip.textContent = it.label;
-      chip.style.background = it.color;
-      chip.addEventListener("click", () => EF.stamps.arm(it, chip));
-      box.appendChild(chip);
-    });
-  }
-
-  EF.stamps = {
-    init() {
-      buildChips("stamp-chips", EF.SALES_TEMPLATES);
-      buildChips("kpi-chips", EF.KPI_MARKERS);
-
-      // 左バーの表示/非表示
-      const bar = document.getElementById("stamp-bar");
-      const reopen = document.getElementById("sb-reopen");
-      document.getElementById("sb-hide").addEventListener("click", () => {
-        bar.classList.add("collapsed");
-        reopen.hidden = false;
-      });
-      reopen.addEventListener("click", () => {
-        bar.classList.remove("collapsed");
-        reopen.hidden = true;
-      });
-    },
-
-    arm(item, chipEl) {
-      if (!EF.state.appOn) { EF.toast("先に Enmish Focus を起動してください（⌘⇧E）"); return; }
-      document.querySelectorAll(".chip.armed").forEach((c) => c.classList.remove("armed"));
-      if (EF.state.armedStamp && EF.state.armedStamp.label === item.label) {
-        // 同じものを再クリックで解除
-        this.disarm();
-        return;
-      }
-      EF.state.armedStamp = item;
-      if (chipEl) chipEl.classList.add("armed");
-      document.getElementById("stamp-hint").hidden = false;
-    },
-
-    disarm() {
-      EF.state.armedStamp = null;
-      document.querySelectorAll(".chip.armed").forEach((c) => c.classList.remove("armed"));
-      document.getElementById("stamp-hint").hidden = true;
-    },
-
-    // ステージクリック時に呼ばれる。配置したら true を返す。
-    tryPlace(p) {
-      if (!EF.state.armedStamp) return false;
-      EF.annot.engine.addStamp(p.x, p.y, EF.state.armedStamp.label, EF.state.armedStamp.color);
-      this.disarm();
-      return true;
-    },
-  };
-})();
-
-</script>
-<script>
-/* ============================================================
    toolbar.js — 常駐ミニツールバーの構築とイベント配線
    ============================================================ */
 (function () {
@@ -1612,7 +1511,6 @@ kbd {
       document.querySelectorAll(".swatch").forEach((s) =>
         s.classList.toggle("active", s.dataset.color === EF.state.color));
 
-      document.getElementById("stamp-bar").classList.toggle("hidden-off", !EF.state.appOn);
     },
   };
 })();
@@ -1823,10 +1721,6 @@ kbd {
           if (EF.options) EF.options.render();
         }));
 
-      // 自動消去セグメント
-      $("autoerase-seg").querySelectorAll("button").forEach((b) =>
-        b.addEventListener("click", () => this.setAutoErase(+b.dataset.autoerase)));
-
       // 閉じる
       document.querySelectorAll('[data-action="close-settings"]').forEach((b) =>
         b.addEventListener("click", () => this.closeModal()));
@@ -1840,12 +1734,6 @@ kbd {
       inp.addEventListener("input", () => { onInput(inp.value); out.textContent = fmt(inp.value); });
     },
 
-    setAutoErase(sec) {
-      EF.state.autoErase = sec;
-      $("autoerase-seg").querySelectorAll("button").forEach((b) =>
-        b.classList.toggle("active", +b.dataset.autoerase === sec));
-    },
-
     apply(key, silent) {
       const p = EF.PRESETS[key];
       if (!p) return;
@@ -1854,7 +1742,6 @@ kbd {
       EF.state.strokeWidth = p.strokeWidth;
       EF.state.ring = Object.assign({}, p.ring);
       EF.state.cursorStyle = p.cursorStyle || "ring";
-      EF.state.autoErase = p.autoErase;
 
       // UI同期
       $("set-ring-width").value = p.ring.width; $("out-ring-width").textContent = p.ring.width + "px";
@@ -1862,7 +1749,6 @@ kbd {
       $("set-ring-opacity").value = Math.round(p.ring.opacity * 100); $("out-ring-opacity").textContent = Math.round(p.ring.opacity * 100) + "%";
       $("set-stroke-width").value = p.strokeWidth; $("out-stroke-width").textContent = p.strokeWidth + "px";
       $("set-click-ripple").checked = p.ring.ripple;
-      this.setAutoErase(p.autoErase);
 
       document.querySelectorAll(".preset").forEach((b) =>
         b.classList.toggle("active", b.dataset.preset === key));
@@ -1914,7 +1800,7 @@ kbd {
       const canvas = document.getElementById("annot-canvas");
       this.engine = new EF.DrawingEngine(canvas, {
         getStyle: () => ({ tool: EF.state.tool, color: EF.state.color, width: EF.state.strokeWidth, head: EF.state.arrowHead }),
-        getAutoErase: () => EF.state.autoErase,
+        getAutoErase: () => 0,
       });
       window.addEventListener("resize", () => this.engine.resize());
 
@@ -1922,12 +1808,15 @@ kbd {
       stage.addEventListener("mousedown", (ev) => {
         if (!EF.state.appOn || ev.button !== 0) return;
         const p = EF.stagePoint(ev);
-        // 営業テンプレ配置待ちなら配置
-        if (EF.stamps.tryPlace(p)) return;
         // ズーム中は座標がずれるため描画しない（表示専用）
         if (EF.state.zoom) return;
-        // テキストはインライン入力欄で
-        if (EF.state.tool === "text") { ev.preventDefault(); EF.app.showTextInput(p); return; }
+        // テキストはインライン入力欄で（既存テキストをクリックしたら再編集）
+        if (EF.state.tool === "text") {
+          ev.preventDefault();
+          const hit = this.engine.hitText(p.x, p.y);
+          EF.app.showTextInput(p, hit);
+          return;
+        }
         if (DRAW_TOOLS.indexOf(EF.state.tool) === -1) return;
         this.drawing = true;
         this.engine.start(p.x, p.y);
@@ -1948,7 +1837,6 @@ kbd {
     setTool(tool) {
       if (!EF.state.appOn) this.toggleApp(true);
       EF.state.tool = tool;
-      EF.stamps.disarm();
       const stage = document.getElementById("stage");
       stage.classList.toggle("tool-cursor", tool === "cursor");
       stage.classList.toggle("armed", tool !== "cursor");
@@ -1957,27 +1845,39 @@ kbd {
       EF.setStatus();
     },
 
-    // インラインのテキスト入力欄
-    showTextInput(p) {
+    // インラインのテキスト入力欄。hit を渡すと既存テキストの再編集。
+    showTextInput(p, hit) {
       const stage = document.getElementById("stage");
       const old = stage.querySelector(".ef-text-input");
       if (old) old.remove();
+      const x = hit ? hit.a.x : p.x, y = hit ? hit.a.y : p.y;
+      const color = hit ? hit.color : EF.state.color;
+      const width = hit ? hit.width : EF.state.strokeWidth;
+      if (hit) hit._editing = true; // 編集中は元の描画を隠す
       const inp = document.createElement("input");
       inp.className = "ef-text-input";
       inp.type = "text";
-      inp.style.left = p.x + "px";
-      inp.style.top = p.y + "px";
-      inp.style.color = EF.state.color;
-      inp.style.fontSize = Math.max(16, EF.state.strokeWidth * 3) + "px";
+      inp.value = hit ? hit.text : "";
+      inp.style.left = x + "px";
+      inp.style.top = y + "px";
+      inp.style.color = color;
+      inp.style.fontSize = Math.max(16, width * 3) + "px";
       stage.appendChild(inp);
-      requestAnimationFrame(() => inp.focus());
+      requestAnimationFrame(() => { inp.focus(); inp.select(); });
       let done = false;
       const close = (keep) => {
         if (done) return; done = true;
         inp.removeEventListener("blur", onBlur);
-        const v = inp.value;
+        const v = inp.value.trim();
         if (inp.isConnected) inp.remove();
-        if (keep && v && v.trim()) EF.annot.engine.addText(p.x, p.y, v, EF.state.color, EF.state.strokeWidth);
+        if (hit) {
+          hit._editing = false;
+          if (!keep) return;                       // Escはそのまま
+          if (v) hit.text = v;                      // 更新
+          else EF.annot.engine.removeStroke(hit);   // 空なら削除
+        } else if (keep && v) {
+          EF.annot.engine.addText(x, y, v, color, width);
+        }
       };
       const onBlur = () => close(true);
       inp.addEventListener("keydown", (e) => {
@@ -2049,7 +1949,6 @@ kbd {
         EF.state.spotlight = false;
         EF.state.zoom = false;
         EF.zoom.refresh();
-        EF.stamps.disarm();
         EF.state.uiHidden = false;
         document.body.classList.remove("ef-ui-hidden");
         document.getElementById("stage").classList.remove("armed", "tool-cursor");
@@ -2075,7 +1974,6 @@ kbd {
       if (!document.getElementById("settings").hidden) { EF.presets.closeModal(); return true; }
       if (!document.getElementById("quick-palette").hidden) { this.closePalette(); return true; }
       if (EF.state.uiHidden) { this.toggleUI(); return true; }
-      if (EF.state.armedStamp) { EF.stamps.disarm(); return true; }
       if (EF.state.zoom) { EF.state.zoom = false; EF.zoom.refresh(); EF.toolbar.sync(); EF.setStatus(); return true; }
       if (EF.state.spotlight) { EF.state.spotlight = false; EF.toolbar.sync(); EF.setStatus(); return true; }
       if (EF.state.appOn && EF.state.tool !== "cursor") { this.setTool("cursor"); return true; }
@@ -2177,7 +2075,6 @@ kbd {
     EF.annot.init();
     EF.spotlight.init();
     EF.zoom.init();
-    EF.stamps.init();
     EF.toolbar.init();
     EF.shortcuts.init();
     EF.presets.init();

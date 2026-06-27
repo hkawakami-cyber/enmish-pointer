@@ -61,7 +61,6 @@
       document.querySelectorAll(".swatch").forEach((s) =>
         s.classList.toggle("active", s.dataset.color === EF.state.color));
 
-      document.getElementById("stamp-bar").classList.toggle("hidden-off", !EF.state.appOn);
     },
   };
 })();

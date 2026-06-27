@@ -464,7 +464,7 @@ kbd {
 
 /* ============ 常駐ドック ============ */
 .ef-dock {
-  position: fixed; right: 16px; bottom: 16px; z-index: 9300;
+  position: fixed; left: 16px; bottom: 16px; z-index: 9300;
   display: flex; gap: 6px; padding: 6px;
   background: var(--tb-bg); border: 1px solid rgba(255,255,255,.08);
   border-radius: 14px; box-shadow: var(--shadow); backdrop-filter: blur(14px);

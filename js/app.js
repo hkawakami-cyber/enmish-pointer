@@ -16,7 +16,7 @@
       const canvas = document.getElementById("annot-canvas");
       this.engine = new EF.DrawingEngine(canvas, {
         getStyle: () => ({ tool: EF.state.tool, color: EF.state.color, width: EF.state.strokeWidth, head: EF.state.arrowHead }),
-        getAutoErase: () => EF.state.autoErase,
+        getAutoErase: () => 0,
       });
       window.addEventListener("resize", () => this.engine.resize());
 
@@ -24,12 +24,15 @@
       stage.addEventListener("mousedown", (ev) => {
         if (!EF.state.appOn || ev.button !== 0) return;
         const p = EF.stagePoint(ev);
-        // 営業テンプレ配置待ちなら配置
-        if (EF.stamps.tryPlace(p)) return;
         // ズーム中は座標がずれるため描画しない（表示専用）
         if (EF.state.zoom) return;
-        // テキストはインライン入力欄で
-        if (EF.state.tool === "text") { ev.preventDefault(); EF.app.showTextInput(p); return; }
+        // テキストはインライン入力欄で（既存テキストをクリックしたら再編集）
+        if (EF.state.tool === "text") {
+          ev.preventDefault();
+          const hit = this.engine.hitText(p.x, p.y);
+          EF.app.showTextInput(p, hit);
+          return;
+        }
         if (DRAW_TOOLS.indexOf(EF.state.tool) === -1) return;
         this.drawing = true;
         this.engine.start(p.x, p.y);
@@ -50,7 +53,6 @@
     setTool(tool) {
       if (!EF.state.appOn) this.toggleApp(true);
       EF.state.tool = tool;
-      EF.stamps.disarm();
       const stage = document.getElementById("stage");
       stage.classList.toggle("tool-cursor", tool === "cursor");
       stage.classList.toggle("armed", tool !== "cursor");
@@ -59,27 +61,39 @@
       EF.setStatus();
     },
 
-    // インラインのテキスト入力欄
-    showTextInput(p) {
+    // インラインのテキスト入力欄。hit を渡すと既存テキストの再編集。
+    showTextInput(p, hit) {
       const stage = document.getElementById("stage");
       const old = stage.querySelector(".ef-text-input");
       if (old) old.remove();
+      const x = hit ? hit.a.x : p.x, y = hit ? hit.a.y : p.y;
+      const color = hit ? hit.color : EF.state.color;
+      const width = hit ? hit.width : EF.state.strokeWidth;
+      if (hit) hit._editing = true; // 編集中は元の描画を隠す
       const inp = document.createElement("input");
       inp.className = "ef-text-input";
       inp.type = "text";
-      inp.style.left = p.x + "px";
-      inp.style.top = p.y + "px";
-      inp.style.color = EF.state.color;
-      inp.style.fontSize = Math.max(16, EF.state.strokeWidth * 3) + "px";
+      inp.value = hit ? hit.text : "";
+      inp.style.left = x + "px";
+      inp.style.top = y + "px";
+      inp.style.color = color;
+      inp.style.fontSize = Math.max(16, width * 3) + "px";
       stage.appendChild(inp);
-      requestAnimationFrame(() => inp.focus());
+      requestAnimationFrame(() => { inp.focus(); inp.select(); });
       let done = false;
       const close = (keep) => {
         if (done) return; done = true;
         inp.removeEventListener("blur", onBlur);
-        const v = inp.value;
+        const v = inp.value.trim();
         if (inp.isConnected) inp.remove();
-        if (keep && v && v.trim()) EF.annot.engine.addText(p.x, p.y, v, EF.state.color, EF.state.strokeWidth);
+        if (hit) {
+          hit._editing = false;
+          if (!keep) return;                       // Escはそのまま
+          if (v) hit.text = v;                      // 更新
+          else EF.annot.engine.removeStroke(hit);   // 空なら削除
+        } else if (keep && v) {
+          EF.annot.engine.addText(x, y, v, color, width);
+        }
       };
       const onBlur = () => close(true);
       inp.addEventListener("keydown", (e) => {
@@ -151,7 +165,6 @@
         EF.state.spotlight = false;
         EF.state.zoom = false;
         EF.zoom.refresh();
-        EF.stamps.disarm();
         EF.state.uiHidden = false;
         document.body.classList.remove("ef-ui-hidden");
         document.getElementById("stage").classList.remove("armed", "tool-cursor");
@@ -177,7 +190,6 @@
       if (!document.getElementById("settings").hidden) { EF.presets.closeModal(); return true; }
       if (!document.getElementById("quick-palette").hidden) { this.closePalette(); return true; }
       if (EF.state.uiHidden) { this.toggleUI(); return true; }
-      if (EF.state.armedStamp) { EF.stamps.disarm(); return true; }
       if (EF.state.zoom) { EF.state.zoom = false; EF.zoom.refresh(); EF.toolbar.sync(); EF.setStatus(); return true; }
       if (EF.state.spotlight) { EF.state.spotlight = false; EF.toolbar.sync(); EF.setStatus(); return true; }
       if (EF.state.appOn && EF.state.tool !== "cursor") { this.setTool("cursor"); return true; }
@@ -279,7 +291,6 @@
     EF.annot.init();
     EF.spotlight.init();
     EF.zoom.init();
-    EF.stamps.init();
     EF.toolbar.init();
     EF.shortcuts.init();
     EF.presets.init();

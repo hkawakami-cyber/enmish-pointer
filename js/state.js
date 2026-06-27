@@ -16,49 +16,25 @@
     { name: "gray", value: "#5b6478" },
   ];
 
-  // 営業テンプレ注釈（ブランド色: グリーン/ブラック/Gold/Rose/Gray のみ）
-  EF.SALES_TEMPLATES = [
-    { label: "要確認", color: "#917d44" },
-    { label: "宿題", color: "#c1677f" },
-    { label: "次回まで", color: "#6cbba5" },
-    { label: "論点", color: "#032841" },
-    { label: "懸念", color: "#c1677f" },
-    { label: "決裁者", color: "#31594e" },
-    { label: "金額", color: "#6cbba5" },
-    { label: "優先度高", color: "#c1677f" },
-    { label: "未対応", color: "#5b6478" },
-    { label: "ボトルネック", color: "#917d44" },
-  ];
 
-  EF.KPI_MARKERS = [
-    { label: "目標未達", color: "#c1677f" },
-    { label: "改善余地", color: "#917d44" },
-    { label: "要因確認", color: "#032841" },
-    { label: "施策候補", color: "#6cbba5" },
-    { label: "勝ち筋", color: "#31594e" },
-    { label: "歩留低下", color: "#c1677f" },
-    { label: "次アクション", color: "#6cbba5" },
-  ];
 
   // プリセット定義
   EF.PRESETS = {
     proposal: {
       name: "商談モード",
-      desc: "顧客向け提案。グリーン中心・リングカーソル中・自動消去5秒。",
+      desc: "顧客向け提案。グリーン中心・リングカーソル中。",
       color: "#6cbba5",
       strokeWidth: 6,
       ring: { width: 6, size: 60, opacity: 0.9, ripple: true },
       cursorStyle: "ring",
-      autoErase: 5,
     },
     review: {
       name: "社内レビュー",
-      desc: "KPI・資料レビュー。ブラックで薄め・ドット小・残す設定。",
+      desc: "KPI・資料レビュー。ブラックで薄め・ドット小。",
       color: "#032841",
       strokeWidth: 4,
       ring: { width: 4, size: 44, opacity: 0.55, ripple: false },
       cursorStyle: "dot",
-      autoErase: 0,
     },
     record: {
       name: "録画モード",
@@ -67,7 +43,6 @@
       strokeWidth: 7,
       ring: { width: 8, size: 60, opacity: 1.0, ripple: true },
       cursorStyle: "arrow",
-      autoErase: 0,
     },
     demo: {
       name: "デモモード",
@@ -76,7 +51,6 @@
       strokeWidth: 5,
       ring: { width: 6, size: 44, opacity: 0.85, ripple: true },
       cursorStyle: "halo",
-      autoErase: 3,
     },
   };
 
@@ -91,14 +65,12 @@
     arrowHead: "end",    // end | start | both
     showOptions: false,  // ツールオプションのフライアウトを画面に表示するか
     uiHidden: false,
-    autoErase: 0,        // 秒（0で残す）
     spotlight: false,
     spotShape: "band",   // band（横帯） | circle
     spotBand: 0.5,       // 帯の高さ（ビューポート比）
     zoom: false,
     zoomScale: 2.2,
     preset: "proposal",
-    armedStamp: null,    // 配置待ちの営業テンプレ {label,color}
     mouse: { x: -999, y: -999, inStage: false },
   };
 

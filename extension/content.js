@@ -16,17 +16,6 @@
     "#6cbba5", "#31594e", "#032841", "#917d44",
     "#c1677f", "#8df1d5", "#ffffff", "#5b6478",
   ];
-  const SALES_TEMPLATES = [
-    ["要確認", "#917d44"], ["宿題", "#c1677f"], ["次回まで", "#6cbba5"],
-    ["論点", "#032841"], ["懸念", "#c1677f"], ["決裁者", "#31594e"],
-    ["金額", "#6cbba5"], ["優先度高", "#c1677f"], ["未対応", "#5b6478"],
-    ["ボトルネック", "#917d44"],
-  ];
-  const KPI_MARKERS = [
-    ["目標未達", "#c1677f"], ["改善余地", "#917d44"], ["要因確認", "#032841"],
-    ["施策候補", "#6cbba5"], ["勝ち筋", "#31594e"], ["歩留低下", "#c1677f"],
-    ["次アクション", "#6cbba5"],
-  ];
   const PRESETS = {
     proposal: { name: "商談", color: "#6cbba5", strokeWidth: 6, ring: { width: 6, size: 60, opacity: 0.9, ripple: true }, cursorStyle: "ring", autoErase: 5 },
     review: { name: "社内", color: "#032841", strokeWidth: 4, ring: { width: 4, size: 44, opacity: 0.55, ripple: false }, cursorStyle: "dot", autoErase: 0 },
@@ -45,7 +34,7 @@
     cursorStyle: "ring", arrowHead: "end", uiHidden: false, optionsOpen: false,
     autoErase: 0, spotlight: false, spotShape: "band", spotBand: 0.5,
     zoom: false, zoomScale: 2.0,
-    preset: "proposal", armedStamp: null,
+    preset: "proposal",
     mouse: { x: -999, y: -999 },
   };
 
@@ -120,7 +109,7 @@
     .toast { bottom: 64px; left: 50%; transform: translateX(-50%) translateY(8px); background: #1b2130; color: #fff; padding: 10px 18px; border-radius: 11px; font-size: 13px; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .hint { bottom: 20px; left: 50%; transform: translateX(-50%); background: #6cbba5; color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 13px; pointer-events: none; }
-    .ef-dock { position: fixed; right: 16px; bottom: 16px; display: flex; gap: 6px; padding: 6px; background: rgba(3,40,65,.94); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.35); backdrop-filter: blur(14px); pointer-events: auto; }
+    .ef-dock { position: fixed; left: 16px; bottom: 16px; display: flex; gap: 6px; padding: 6px; background: rgba(3,40,65,.94); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.35); backdrop-filter: blur(14px); pointer-events: auto; }
     .dock-btn { display: flex; align-items: center; gap: 6px; border: none; cursor: pointer; background: rgba(255,255,255,.06); color: #e8ecf4; padding: 8px 12px; border-radius: 10px; font-size: 12px; line-height: 1; }
     .dock-btn:hover { background: rgba(255,255,255,.14); }
     #dock-power.on { background: #6cbba5; color: #06251c; font-weight: 700; }
@@ -170,28 +159,15 @@
     return html;
   }
 
-  function chipHtml(items) {
-    return items.map((it) => `<button class="chip" data-label="${it[0]}" data-color="${it[1]}" style="background:${it[1]}">${it[0]}</button>`).join("");
-  }
-
   root.innerHTML = `
     <style>${CSS}</style>
     <canvas id="annot" class="layer"></canvas>
     <canvas id="spot" class="layer"></canvas>
     <div id="ring" class="ring" hidden><i class="cdot"></i><svg class="carrow" viewBox="0 0 24 24"><path d="M3 2 L3 21 L8 16 L11.5 23.5 L14.5 22 L11 15 L18 15 Z" stroke="#fff" stroke-width="1.1" stroke-linejoin="round"></path></svg></div>
     <div id="tb" class="toolbar app-off">${buildToolbar()}</div>
-    <div id="sb" class="stamp-bar">
-      <button class="sb-hide" id="sb-hide" title="このバーを隠す">✕</button>
-      <div class="sb-title">営業テンプレ</div>
-      <div class="chips" id="chips-sales">${chipHtml(SALES_TEMPLATES)}</div>
-      <div class="sb-title">KPIマーカー</div>
-      <div class="chips" id="chips-kpi">${chipHtml(KPI_MARKERS)}</div>
-    </div>
-    <button id="reopen" class="reopen" hidden title="営業テンプレを表示">営業テンプレ ▸</button>
     <div id="tool-options" class="tool-options" hidden></div>
     <div id="badge" class="badge" hidden></div>
     <div id="toast" class="toast" hidden></div>
-    <div id="hint" class="hint" hidden>クリックした位置にラベルを配置（Escで取消）</div>
     <div id="ef-dock" class="ef-dock" hidden>
       <button class="dock-btn on" id="dock-power" title="ポインターモード ON/OFF (⌘⇧E)"><span>⏻</span><span class="lbl">ポインターON</span></button>
       <button class="dock-btn" id="dock-bars" title="バーの表示/非表示 (⌘⇧H)"><span>▤</span><span class="lbl">バー隠す</span></button>
@@ -200,8 +176,8 @@
 
   const $ = (sel) => root.querySelector(sel);
   const annot = $("#annot"), spot = $("#spot"), ring = $("#ring");
-  const tb = $("#tb"), sb = $("#sb"), reopen = $("#reopen");
-  const badgeEl = $("#badge"), toastEl = $("#toast"), hintEl = $("#hint"), optEl = $("#tool-options"), dockEl = $("#ef-dock");
+  const tb = $("#tb");
+  const badgeEl = $("#badge"), toastEl = $("#toast"), optEl = $("#tool-options"), dockEl = $("#ef-dock");
 
   // ---------- ユーティリティ ----------
   let toastT;
@@ -231,7 +207,7 @@
   // ---------- カーソルリング & 描画入力 ----------
   let drawing = false;
   function canvasInteractive() {
-    const on = state.appOn && !state.zoom && (DRAW_TOOLS.indexOf(state.tool) !== -1 || state.armedStamp);
+    const on = state.appOn && !state.zoom && DRAW_TOOLS.indexOf(state.tool) !== -1;
     annot.classList.toggle("live", !!on);
     annot.classList.toggle("tool-cursor", false);
   }
@@ -243,9 +219,8 @@
   }, true);
   annot.addEventListener("mousedown", (ev) => {
     if (!state.appOn || ev.button !== 0) return;
-    if (state.armedStamp) { engine.addStamp(ev.clientX, ev.clientY, state.armedStamp[0], state.armedStamp[1]); disarmStamp(); return; }
     if (state.zoom) return;
-    if (state.tool === "text") { showTextInput(ev.clientX, ev.clientY); ev.preventDefault(); return; }
+    if (state.tool === "text") { ev.preventDefault(); showTextInput(ev.clientX, ev.clientY, engine.hitText(ev.clientX, ev.clientY)); return; }
     if (DRAW_TOOLS.indexOf(state.tool) === -1) return;
     drawing = true; engine.start(ev.clientX, ev.clientY); ev.preventDefault();
   });
@@ -259,21 +234,30 @@
     root.appendChild(r); setTimeout(() => r.remove(), 600);
   }, true);
 
-  // インラインのテキスト入力
-  function showTextInput(x, y) {
+  // インラインのテキスト入力。hit を渡すと既存テキストの再編集。
+  function showTextInput(x, y, hit) {
     const old = root.querySelector(".ef-text"); if (old) old.remove();
+    const px = hit ? hit.a.x : x, py = hit ? hit.a.y : y;
+    const color = hit ? hit.color : state.color, width = hit ? hit.width : state.strokeWidth;
+    if (hit) hit._editing = true;
     const inp = document.createElement("input");
-    inp.className = "ef-text"; inp.type = "text";
-    inp.style.left = x + "px"; inp.style.top = y + "px";
-    inp.style.color = state.color; inp.style.fontSize = Math.max(16, state.strokeWidth * 3) + "px";
-    root.appendChild(inp); requestAnimationFrame(() => inp.focus());
+    inp.className = "ef-text"; inp.type = "text"; inp.value = hit ? hit.text : "";
+    inp.style.left = px + "px"; inp.style.top = py + "px";
+    inp.style.color = color; inp.style.fontSize = Math.max(16, width * 3) + "px";
+    root.appendChild(inp); requestAnimationFrame(() => { inp.focus(); inp.select(); });
     let done = false;
     const close = (keep) => {
       if (done) return; done = true;
       inp.removeEventListener("blur", onBlur);
-      const v = inp.value;
+      const v = inp.value.trim();
       if (inp.isConnected) inp.remove();
-      if (keep && v && v.trim()) engine.addText(x, y, v, state.color, state.strokeWidth);
+      if (hit) {
+        hit._editing = false;
+        if (!keep) return;
+        if (v) hit.text = v; else engine.removeStroke(hit);
+      } else if (keep && v) {
+        engine.addText(px, py, v, color, width);
+      }
     };
     const onBlur = () => close(true);
     inp.addEventListener("keydown", (e) => {
@@ -397,20 +381,6 @@
   }
 
   // ---------- スタンプ ----------
-  function armStamp(label, color, el) {
-    if (!state.appOn) { toast("先に Enmish Focus を起動（⌘⇧E）"); return; }
-    root.querySelectorAll(".chip.armed").forEach((c) => c.classList.remove("armed"));
-    if (state.armedStamp && state.armedStamp[0] === label) { disarmStamp(); return; }
-    state.armedStamp = [label, color];
-    if (el) el.classList.add("armed");
-    hintEl.hidden = false; canvasInteractive();
-  }
-  function disarmStamp() {
-    state.armedStamp = null;
-    root.querySelectorAll(".chip.armed").forEach((c) => c.classList.remove("armed"));
-    hintEl.hidden = true; canvasInteractive();
-  }
-
   // ---------- プリセット ----------
   function applyPreset(key) {
     const p = PRESETS[key]; if (!p) return;
@@ -427,7 +397,6 @@
     $("#btn-spot").classList.toggle("toggled", state.spotlight);
     $("#btn-zoom").classList.toggle("toggled", state.zoom);
     root.querySelectorAll(".swatch").forEach((s) => s.classList.toggle("active", s.dataset.color === state.color));
-    sb.style.opacity = state.appOn ? "1" : ".4";
     canvasInteractive();
   }
 
@@ -435,7 +404,7 @@
   const app = {
     setTool(t) {
       if (!state.appOn) app.toggle(true);
-      state.tool = t; disarmStamp(); syncUI(); renderOptions(); setBadge();
+      state.tool = t; syncUI(); renderOptions(); setBadge();
     },
     setColor(c) { state.color = c; syncUI(); updateRing(); setBadge(); },
     toggleMode(what) {
@@ -471,7 +440,7 @@
       const next = forceOn === true ? true : !state.appOn;
       state.appOn = next;
       if (!next) {
-        state.spotlight = false; state.zoom = false; applyZoom(); disarmStamp();
+        state.spotlight = false; state.zoom = false; applyZoom();
         state.uiHidden = false; host.classList.remove("ui-hidden");
         state.optionsOpen = false;
         const ob = root.getElementById("btn-options"); if (ob) ob.classList.remove("toggled");
@@ -485,7 +454,6 @@
     },
     handleEscape() {
       if (state.uiHidden) { app.toggleUI(); return true; }
-      if (state.armedStamp) { disarmStamp(); return true; }
       if (state.zoom) { state.zoom = false; applyZoom(); syncUI(); setBadge(); return true; }
       if (state.spotlight) { state.spotlight = false; syncUI(); setBadge(); return true; }
       if (state.appOn && state.tool !== "cursor") { app.setTool("cursor"); return true; }
@@ -500,7 +468,7 @@
         .slice(0, 30).replace(/_+$/, "") || "画面";
       const fn = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}_${title}_注釈.png`;
       // UI を一時的に隠してから撮る（注釈は残す）
-      const hide = [tb, sb, reopen, badgeEl, hintEl, ring, toastEl];
+      const hide = [tb, badgeEl, ring, toastEl, optEl, dockEl];
       const prev = hide.map((e) => e.style.visibility);
       hide.forEach((e) => (e.style.visibility = "hidden"));
       toast("スクリーンショットを保存中…", 1200);
@@ -533,13 +501,6 @@
     else if (b.dataset.toggle) app.toggleMode(b.dataset.toggle);
     else if (b.dataset.action) app.action(b.dataset.action);
   });
-
-  sb.addEventListener("click", (e) => {
-    const c = e.target.closest(".chip");
-    if (c) { armStamp(c.dataset.label, c.dataset.color, c); return; }
-    if (e.target.id === "sb-hide") { sb.classList.add("collapsed"); reopen.hidden = false; }
-  });
-  reopen.addEventListener("click", () => { sb.classList.remove("collapsed"); reopen.hidden = true; });
 
   root.getElementById("dock-power").addEventListener("click", () => app.toggle());
   root.getElementById("dock-bars").addEventListener("click", () => app.toggleUI());

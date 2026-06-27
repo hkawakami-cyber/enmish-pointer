@@ -28,8 +28,6 @@
     <!-- ズームレンズ枠の縁取り -->
     <div id="zoom-frame" class="zoom-frame" hidden></div>
 
-    <!-- スタンプ（営業テンプレ注釈）配置を待つときのヒント -->
-    <div id="stamp-hint" class="stamp-hint" hidden>クリックした位置にラベルを配置します（Escで取消）</div>
   </div>
 
   <!-- ============ 常駐ミニツールバー ============ -->
@@ -81,9 +79,6 @@
       <button class="tool" data-toggle="zoom" id="btn-zoom" title="ズーム (⌘⇧6)">
         <span class="ico">🔍</span><span class="lbl">ズーム</span>
       </button>
-      <button class="tool" data-action="hide-ui" title="UIの表示/非表示 (⌘⇧H)">
-        <span class="ico">⊟</span><span class="lbl">UI隠す</span>
-      </button>
 
       <div class="tb-sep"></div>
 
@@ -109,17 +104,6 @@
 
   <!-- ============ ツール別オプション（カーソル形状/矢じり向き/注目の帯） ============ -->
   <div id="tool-options" class="tool-options" hidden></div>
-
-  <!-- ============ 営業テンプレ注釈バー ============ -->
-  <div id="stamp-bar" class="stamp-bar">
-    <button class="sb-hide" id="sb-hide" title="このバーを隠す">✕</button>
-    <div class="stamp-bar-title">営業テンプレ</div>
-    <div class="stamp-chips" id="stamp-chips"></div>
-    <div class="stamp-bar-title">KPIマーカー</div>
-    <div class="stamp-chips" id="kpi-chips"></div>
-  </div>
-  <!-- 折りたたみ時の再表示タブ -->
-  <button id="sb-reopen" class="sb-reopen" hidden title="営業テンプレを表示">営業テンプレ ▸</button>
 
   <!-- ============ シーン切替（デモ用） ============ -->
   <div id="scene-switch" class="scene-switch">
@@ -197,16 +181,6 @@
       </section>
 
       <section class="modal-section">
-        <h3>注釈の自動消去</h3>
-        <div class="seg" id="autoerase-seg">
-          <button data-autoerase="0">残す</button>
-          <button data-autoerase="3">3秒</button>
-          <button data-autoerase="5">5秒</button>
-          <button data-autoerase="10">10秒</button>
-        </div>
-      </section>
-
-      <section class="modal-section">
         <h3>矢印の向き</h3>
         <div class="seg" id="set-arrow-head">
           <button data-head="end">→ 終点</button>
@@ -278,7 +252,6 @@
   <script src="js/cursor.js"></script>
   <script src="js/spotlight.js"></script>
   <script src="js/zoom.js"></script>
-  <script src="js/stamps.js"></script>
   <script src="js/toolbar.js"></script>
   <script src="js/shortcuts.js"></script>
   <script src="js/screenshot.js"></script>

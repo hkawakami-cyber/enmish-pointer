@@ -65,10 +65,6 @@
           if (EF.options) EF.options.render();
         }));
 
-      // 自動消去セグメント
-      $("autoerase-seg").querySelectorAll("button").forEach((b) =>
-        b.addEventListener("click", () => this.setAutoErase(+b.dataset.autoerase)));
-
       // 閉じる
       document.querySelectorAll('[data-action="close-settings"]').forEach((b) =>
         b.addEventListener("click", () => this.closeModal()));
@@ -82,12 +78,6 @@
       inp.addEventListener("input", () => { onInput(inp.value); out.textContent = fmt(inp.value); });
     },
 
-    setAutoErase(sec) {
-      EF.state.autoErase = sec;
-      $("autoerase-seg").querySelectorAll("button").forEach((b) =>
-        b.classList.toggle("active", +b.dataset.autoerase === sec));
-    },
-
     apply(key, silent) {
       const p = EF.PRESETS[key];
       if (!p) return;
@@ -96,7 +86,6 @@
       EF.state.strokeWidth = p.strokeWidth;
       EF.state.ring = Object.assign({}, p.ring);
       EF.state.cursorStyle = p.cursorStyle || "ring";
-      EF.state.autoErase = p.autoErase;
 
       // UI同期
       $("set-ring-width").value = p.ring.width; $("out-ring-width").textContent = p.ring.width + "px";
@@ -104,7 +93,6 @@
       $("set-ring-opacity").value = Math.round(p.ring.opacity * 100); $("out-ring-opacity").textContent = Math.round(p.ring.opacity * 100) + "%";
       $("set-stroke-width").value = p.strokeWidth; $("out-stroke-width").textContent = p.strokeWidth + "px";
       $("set-click-ripple").checked = p.ring.ripple;
-      this.setAutoErase(p.autoErase);
 
       document.querySelectorAll(".preset").forEach((b) =>
         b.classList.toggle("active", b.dataset.preset === key));
