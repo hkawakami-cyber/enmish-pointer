@@ -58,7 +58,9 @@
     .ring { border-radius: 50%; transform: translate(-50%,-50%); border-style: solid; border-color: #6cbba5; pointer-events: none; }
     .ring .cdot { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); border-radius: 50%; display: none; }
     .ring .carrow { position: absolute; left: 0; top: 0; display: none; overflow: visible; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
-    :host(.ui-hidden) .toolbar, :host(.ui-hidden) .stamp-bar, :host(.ui-hidden) .reopen, :host(.ui-hidden) .tool-options { display: none !important; }
+    :host(.ui-hidden) .toolbar, :host(.ui-hidden) .stamp-bar, :host(.ui-hidden) .tool-options { display: none !important; }
+    /* 機能OFF時はツールバー自体を隠す（操作は左下のマークから） */
+    .toolbar.app-off { display: none !important; }
     .ripple { position: fixed; border-radius: 50%; transform: translate(-50%,-50%); border: 3px solid #6cbba5; pointer-events: none; animation: rip .55s ease-out forwards; }
     @keyframes rip { from { width: 8px; height: 8px; opacity: .85; } to { width: 90px; height: 90px; opacity: 0; } }
 
@@ -115,7 +117,13 @@
     .chip:hover { filter: brightness(1.12); } .chip.armed { outline: 2px solid #fff; }
     .sb-hide { position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border: none; border-radius: 6px; background: rgba(255,255,255,.10); color: #e8ecf4; cursor: pointer; font-size: 11px; }
     .sb-hide:hover { background: rgba(255,255,255,.22); }
-    .reopen { position: fixed; left: 0; top: 50%; transform: translateY(-50%); writing-mode: vertical-rl; background: rgba(3,40,65,.94); color: #e8ecf4; border: 1px solid rgba(255,255,255,.08); border-left: none; border-radius: 0 11px 11px 0; padding: 15px 7px; cursor: pointer; font-size: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+    /* 最小化中の再表示タブ（バーと同じ端に小さく出す） */
+    .reopen { position: fixed; right: 0; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; width: 30px; height: 46px; background: rgba(3,40,65,.86); color: #fff; border: 1px solid rgba(176,184,196,.45); border-right: none; border-radius: 12px 0 0 12px; padding: 0; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,.3); backdrop-filter: blur(6px); }
+    .reopen .ico { display: inline-flex; transform: scaleX(-1); filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.85)); }
+    .reopen.side-left { right: auto; left: 0; border: 1px solid rgba(176,184,196,.45); border-left: none; border-radius: 0 12px 12px 0; }
+    .reopen.side-left .ico { transform: none; }
+    /* 最小化ボタンの矢印は、ドックされている端に向ける */
+    .toolbar.side-left .tool[data-action="collapse"] .ico { transform: scaleX(-1); }
 
     .badge { bottom: 18px; left: 50%; transform: translateX(-50%); background: rgba(3,40,65,.94); color: #fff; padding: 7px 15px; border-radius: 999px; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.35); pointer-events: none; }
     .badge .dotc { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 7px; vertical-align: middle; }
@@ -126,10 +134,11 @@
     .ef-dock.dock-top-left { top: 16px; left: 16px; bottom: auto; right: auto; }
     .ef-dock.dock-top-right { top: 16px; right: 16px; bottom: auto; left: auto; }
     .ef-dock { position: fixed; left: 16px; bottom: 16px; display: flex; gap: 6px; padding: 6px; background: rgba(3,40,65,.94); border: 1px solid rgba(255,255,255,.08); border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.35); backdrop-filter: blur(14px); pointer-events: auto; }
-    .dock-btn { display: flex; align-items: center; gap: 6px; border: none; cursor: pointer; background: rgba(255,255,255,.06); color: #e8ecf4; padding: 8px 12px; border-radius: 10px; font-size: 12px; line-height: 1; }
-    .dock-btn:hover { background: rgba(255,255,255,.14); }
+    /* OFF＝グレー、ON＝緑。マークの色で機能の状態が一目で分かる。 */
+    .dock-btn { display: flex; align-items: center; gap: 7px; border: none; cursor: pointer; background: rgba(255,255,255,.10); color: #c4ccda; padding: 8px 13px; border-radius: 10px; font-size: 12px; line-height: 1; font-weight: 600; transition: background .12s, color .12s; }
+    .dock-btn .ico { display: inline-flex; }
+    .dock-btn:hover { background: rgba(255,255,255,.18); }
     #dock-power.on { background: #6cbba5; color: #06251c; font-weight: 700; }
-    #dock-bars.on { background: #917d44; color: #fff; font-weight: 700; }
     .ef-text { position: fixed; transform: translateY(-4px); z-index: 10; pointer-events: auto; border: none; border-bottom: 2px solid currentColor; background: rgba(255,255,255,.92); font-weight: 700; padding: 2px 6px; border-radius: 4px; min-width: 120px; outline: none; }
     .tool-options { position: fixed; right: 92px; top: 50%; transform: translateY(-50%); background: rgba(3,40,65,.94); color: #e8ecf4; border-radius: 14px; padding: 13px; width: 168px; max-height: 88vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(14px); display: flex; flex-direction: column; gap: 11px; pointer-events: auto; }
     .to-group { display: flex; flex-direction: column; gap: 5px; }
@@ -184,6 +193,8 @@
     ["action", "clear", "🗑", "全消去"],
     ["action", "screenshot", "📷", "保存"],
     ["action", "record", "⏺", "録画"],
+    ["sep"],
+    ["action", "collapse", "»", "最小化"],
   ];
 
   function toolBtnHtml(kind, key, fallback, label) {
@@ -223,19 +234,19 @@
     <canvas id="spot" class="layer"></canvas>
     <div id="ring" class="ring" hidden><i class="cdot"></i><svg class="carrow" viewBox="0 0 24 24"><path d="M3 2 L3 21 L8 16 L11.5 23.5 L14.5 22 L11 15 L18 15 Z" stroke="#fff" stroke-width="1.1" stroke-linejoin="round"></path></svg></div>
     <div id="tb" class="toolbar app-off">${buildToolbar()}</div>
+    <button id="reopen" class="reopen" hidden title="ツールバーを表示"><span class="ico">${(EF.iconSvg && EF.iconSvg("collapse", 18)) || "«"}</span></button>
     <div id="tool-options" class="tool-options" hidden></div>
     <div id="badge" class="badge" hidden></div>
     <div id="toast" class="toast" hidden></div>
-    <div id="ef-dock" class="ef-dock" hidden>
-      <button class="dock-btn on" id="dock-power" title="ポインターモード ON/OFF (⌘⇧E)"><span class="ico">${(EF.iconSvg && EF.iconSvg("power", 16)) || "⏻"}</span><span class="lbl">ポインターON</span></button>
-      <button class="dock-btn" id="dock-bars" title="バーの表示/非表示 (⌘⇧H)"><span class="ico">${(EF.iconSvg && EF.iconSvg("bars", 16)) || "▤"}</span><span class="lbl">バー隠す</span></button>
+    <div id="ef-dock" class="ef-dock">
+      <button class="dock-btn" id="dock-power" title="ポインター ON/OFF (⌘⇧E)"><span class="ico">${(EF.iconSvg && EF.iconSvg("power", 16)) || "⏻"}</span><span class="lbl">ポインター OFF</span></button>
     </div>
   `;
 
   const $ = (sel) => root.querySelector(sel);
   const annot = $("#annot"), spot = $("#spot"), ring = $("#ring");
   const tb = $("#tb");
-  const badgeEl = $("#badge"), toastEl = $("#toast"), optEl = $("#tool-options"), dockEl = $("#ef-dock");
+  const badgeEl = $("#badge"), toastEl = $("#toast"), optEl = $("#tool-options"), dockEl = $("#ef-dock"), reopenEl = $("#reopen");
 
   // ---------- ユーティリティ ----------
   let toastT;
@@ -401,10 +412,14 @@
   }
 
   function updateDock() {
-    dockEl.hidden = !state.appOn;
-    const bars = root.getElementById("dock-bars");
-    bars.classList.toggle("on", state.uiHidden);
-    bars.querySelector(".lbl").textContent = state.uiHidden ? "バー表示" : "バー隠す";
+    // 左下マークは常に表示。色（緑＝ON／グレー＝OFF）で機能の状態を示す。
+    dockEl.hidden = false;
+    const power = root.getElementById("dock-power");
+    power.classList.toggle("on", state.appOn);
+    power.querySelector(".lbl").textContent = state.appOn ? "ポインター ON" : "ポインター OFF";
+    // 最小化中だけ、右端の再表示タブを出す
+    reopenEl.hidden = !(state.appOn && state.uiHidden);
+    reopenEl.classList.toggle("side-left", state.barSide === "left");
   }
 
   function renderOptions() {
@@ -553,6 +568,7 @@
       else if (name === "clear") { engine.clear(); toast("注釈を全消去しました"); }
       else if (name === "screenshot") app.screenshot();
       else if (name === "record") app.toggleRecord();
+      else if (name === "collapse") app.toggleUI();
       else if (name === "options") {
         if (!state.appOn) app.toggle(true);
         state.optionsOpen = !state.optionsOpen;
@@ -567,7 +583,7 @@
       host.classList.toggle("ui-hidden", state.uiHidden);
       reserveGutter(!state.uiHidden);
       updateDock();
-      toast(state.uiHidden ? "バーを非表示（右下のドックで再表示）" : "バーを表示");
+      toast(state.uiHidden ? "ツールバーを最小化（端のマークで再表示）" : "ツールバーを表示");
     },
     toggle(forceOn) {
       const next = forceOn === true ? true : !state.appOn;
@@ -583,7 +599,7 @@
         reserveGutter(true);
         if (!onboarded) {
           onboarded = true;
-          toast("ツールを選んでドラッグで注釈 ／ 左下ドックでON/OFF・バー表示 ／ ⚙設定で詳細", 4600);
+          toast("ツールを選んでドラッグで注釈 ／ 左下マークでON/OFF ／ バー下の » で最小化 ／ ⚙設定で詳細", 4600);
         } else {
           toast("Enmish Pointer 起動 — カーソル強調中");
         }
@@ -713,7 +729,7 @@
   });
 
   root.getElementById("dock-power").addEventListener("click", () => app.toggle());
-  root.getElementById("dock-bars").addEventListener("click", () => app.toggleUI());
+  reopenEl.addEventListener("click", () => app.toggleUI());
 
   optEl.addEventListener("click", (e) => {
     // ツールバー：並べ替え（↑↓）

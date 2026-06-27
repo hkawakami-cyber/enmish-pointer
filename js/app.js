@@ -238,7 +238,7 @@
       EF.state.uiHidden = !EF.state.uiHidden;
       document.body.classList.toggle("ef-ui-hidden", EF.state.uiHidden);
       EF.dock.update();
-      EF.toast(EF.state.uiHidden ? "バーを非表示にしました（右下のドックで再表示）" : "バーを表示しました");
+      EF.toast(EF.state.uiHidden ? "ツールバーを最小化（端のマークで再表示）" : "ツールバーを表示");
     },
 
     toggleApp(forceOn) {
@@ -260,7 +260,7 @@
           EF.state.tool === "cursor" ? "tool-cursor" : "armed");
         if (!EF._onboarded) {
           EF._onboarded = true;
-          EF.toast("ツールを選んでドラッグで注釈 ／ 右下ドックでON/OFF・バー表示 ／ ⚙設定で配置や詳細を変更", 4600);
+          EF.toast("ツールを選んでドラッグで注釈 ／ 左下マークでON/OFF ／ バー下の » で最小化 ／ ⚙設定で詳細", 4600);
         } else {
           EF.toast("Enmish Pointer 起動 — カーソル強調中");
         }
@@ -351,17 +351,21 @@
   EF.dock = {
     init() {
       document.getElementById("dock-power").addEventListener("click", () => EF.app.togglePointer());
-      document.getElementById("dock-bars").addEventListener("click", () => EF.app.toggleUI());
+      const reopen = document.getElementById("reopen");
+      if (reopen) reopen.addEventListener("click", () => EF.app.toggleUI());
       this.update();
     },
     update() {
+      // 左下マークは常に表示。色（緑＝ON／グレー＝OFF）で機能の状態を示す。
       const power = document.getElementById("dock-power");
-      const bars = document.getElementById("dock-bars");
       power.classList.toggle("on", EF.state.appOn);
-      power.querySelector(".lbl").textContent = EF.state.appOn ? "ポインターON" : "ポインター";
-      bars.classList.toggle("dim", !EF.state.appOn);
-      bars.classList.toggle("on", EF.state.appOn && EF.state.uiHidden);
-      bars.querySelector(".lbl").textContent = EF.state.uiHidden ? "バー表示" : "バー隠す";
+      power.querySelector(".lbl").textContent = EF.state.appOn ? "ポインター ON" : "ポインター OFF";
+      // 最小化中だけ、端の再表示タブを出す
+      const reopen = document.getElementById("reopen");
+      if (reopen) {
+        reopen.hidden = !(EF.state.appOn && EF.state.uiHidden);
+        reopen.classList.toggle("side-left", EF.state.barSide === "left");
+      }
     },
   };
 

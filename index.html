@@ -34,12 +34,6 @@
   <div id="toolbar" class="toolbar" data-collapsed="false">
     <button class="tb-handle" id="tb-handle" title="ツールバーを展開/収納">⋮</button>
     <div class="tb-body">
-      <button class="tool" data-action="toggle-app" id="btn-app" title="アプリ ON/OFF (⌘⇧E)">
-        <span class="ico" data-ic="power"></span><span class="lbl">起動</span>
-      </button>
-
-      <div class="tb-sep"></div>
-
       <!-- ツール群（並べ替え・表示/非表示は設定で。JSで動的生成） -->
       <div id="tb-tools" class="tb-tools"></div>
 
@@ -65,8 +59,17 @@
       <button class="tool" data-action="settings" title="設定 / プリセット">
         <span class="ico" data-ic="options"></span><span class="lbl">設定</span>
       </button>
+
+      <div class="tb-sep"></div>
+
+      <button class="tool" data-action="hide-ui" id="btn-collapse" title="ツールバーを最小化">
+        <span class="ico" data-ic="collapse"></span><span class="lbl">最小化</span>
+      </button>
     </div>
   </div>
+
+  <!-- 最小化中の再表示タブ -->
+  <button id="reopen" class="reopen" hidden title="ツールバーを表示"><span class="ico" data-ic="collapse"></span></button>
 
   <!-- ============ ツール別オプション（カーソル形状/矢じり向き/注目の帯） ============ -->
   <div id="tool-options" class="tool-options" hidden></div>
@@ -232,13 +235,10 @@
     </div>
   </div>
 
-  <!-- 常駐ドック：ポインターON/OFF・バー表示/非表示（バーを隠しても残る） -->
+  <!-- 常駐ドック：ポインター機能のON/OFF（色で状態が分かる・常に表示） -->
   <div id="ef-dock" class="ef-dock">
-    <button class="dock-btn" id="dock-power" title="ポインターモード ON/OFF (⌘⇧E)">
-      <span class="ico" data-ic="power"></span><span class="lbl">ポインター</span>
-    </button>
-    <button class="dock-btn" id="dock-bars" title="バーの表示/非表示 (⌘⇧H)">
-      <span class="ico" data-ic="bars"></span><span class="lbl">バー隠す</span>
+    <button class="dock-btn" id="dock-power" title="ポインター ON/OFF (⌘⇧E)">
+      <span class="ico" data-ic="power"></span><span class="lbl">ポインター OFF</span>
     </button>
   </div>
 

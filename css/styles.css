@@ -250,10 +250,8 @@ body.ef-on.bar-left .scene-root { padding-right: 0; padding-left: 116px; }
 .swatch.active { border-color: #fff; box-shadow: 0 0 0 1.5px rgba(0,0,0,.4); }
 
 /* アプリOFF時はツール群を無効化 */
-/* 未起動でもツールは押せる（押すと自動的に起動して選択される）。視覚的にだけ少し淡く。 */
-.toolbar.app-off .tool[data-tool],
-.toolbar.app-off .tool[data-toggle],
-.toolbar.app-off .tb-colors { opacity: .7; }
+/* 機能OFF時はツールバー自体を隠す（操作は左下のマークから） */
+.toolbar.app-off { display: none !important; }
 
 /* ツール群コンテナ（ツールバー内） */
 .tb-tools { display: flex; flex-direction: column; gap: 3px; }
@@ -550,16 +548,29 @@ kbd {
   background: var(--tb-bg); border: 1px solid rgba(255,255,255,.08);
   border-radius: 14px; box-shadow: var(--shadow); backdrop-filter: blur(14px);
 }
+/* OFF＝グレー、ON＝緑。マークの色で機能の状態が一目で分かる。 */
 .dock-btn {
-  display: flex; align-items: center; gap: 6px; border: none; cursor: pointer;
-  background: rgba(255,255,255,.06); color: var(--tb-fg);
-  padding: 8px 12px; border-radius: 10px; font-size: 12px; line-height: 1;
+  display: flex; align-items: center; gap: 7px; border: none; cursor: pointer;
+  background: rgba(255,255,255,.10); color: #c4ccda; font-weight: 600;
+  padding: 8px 13px; border-radius: 10px; font-size: 12px; line-height: 1;
+  transition: background .12s, color .12s;
 }
-.dock-btn:hover { background: rgba(255,255,255,.14); }
+.dock-btn:hover { background: rgba(255,255,255,.18); }
 .dock-btn .ico { font-size: 15px; }
 .dock-btn#dock-power.on { background: var(--ef-green); color: #06251c; font-weight: 700; }
-.dock-btn#dock-bars.on { background: var(--ef-gold); color: #fff; font-weight: 700; }
-.dock-btn.dim { opacity: .4; pointer-events: none; }
+
+/* 最小化中の再表示タブ（バーと同じ端に小さく出す） */
+.reopen {
+  position: fixed; right: 0; top: 50%; transform: translateY(-50%); z-index: 9300;
+  display: flex; align-items: center; justify-content: center; width: 30px; height: 46px;
+  background: rgba(3,40,65,.86); color: #fff; cursor: pointer; padding: 0;
+  border: 1px solid rgba(176,184,196,.45); border-right: none; border-radius: 12px 0 0 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.3); backdrop-filter: blur(6px);
+}
+.reopen .ico { display: inline-flex; transform: scaleX(-1); filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.85)); }
+.reopen.side-left { right: auto; left: 0; border: 1px solid rgba(176,184,196,.45); border-left: none; border-radius: 0 12px 12px 0; }
+.reopen.side-left .ico { transform: none; }
+.toolbar.side-left .tool[data-action="hide-ui"] .ico { transform: scaleX(-1); }
 
 /* ============ ステータスバッジ / トースト ============ */
 .status-badge {

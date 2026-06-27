@@ -121,8 +121,10 @@
       if (btnZoom) btnZoom.classList.toggle("toggled", EF.state.zoom);
 
       const btnApp = document.getElementById("btn-app");
-      btnApp.classList.toggle("active", EF.state.appOn);
-      btnApp.querySelector(".lbl").textContent = EF.state.appOn ? "稼働中" : "起動";
+      if (btnApp) {
+        btnApp.classList.toggle("active", EF.state.appOn);
+        btnApp.querySelector(".lbl").textContent = EF.state.appOn ? "稼働中" : "起動";
+      }
 
       document.querySelectorAll(".swatch").forEach((s) =>
         s.classList.toggle("active", s.dataset.color === EF.state.color));
