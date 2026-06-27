@@ -13,7 +13,7 @@
   // ---------- 定義 ----------
   // Enmishブランド規定色のみ
   // 波長順（長波長＝赤系 → 短波長＝青系、無彩色は末尾）
-  const PALETTE = ["#c1677f", "#917d44", "#6cbba5", "#032841"]; // 赤系 / 黄系 / グリーン(既定) / 濃紺
+  const PALETTE = ["#e23b3b", "#6cbba5", "#1a1a1a", "#ffffff"]; // 赤 / グリーン(既定) / 黒 / 白
   const DRAW_TOOLS = ["pen", "highlighter", "arrow", "hline", "ellipse", "rect", "text"];
   const TOOL_NAMES = {
     cursor: "カーソル強調", pen: "ペン", highlighter: "蛍光ペン", arrow: "矢印",
@@ -110,9 +110,9 @@
     .tool.recording { background: rgba(193,103,127,.30); outline: 1.5px solid #c1677f; }
     .tool.recording .ico, .tool.recording .lbl { color: #c1677f; }
     .colors { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; padding: 2px; }
-    /* 暗い色（濃紺等）も透明バー上で見えるよう、薄い輪郭を常時付ける */
-    .swatch { width: 14px; height: 14px; border-radius: 50%; border: 2px solid transparent; box-shadow: 0 0 0 1px rgba(255,255,255,.55); cursor: pointer; }
-    .swatch.active { border-color: #fff; box-shadow: 0 0 0 1.5px rgba(0,0,0,.45); }
+    /* 白・黒・どんな背景でも縁が分かるよう、内側ダーク＋外側ライトの二重縁 */
+    .swatch { width: 14px; height: 14px; border-radius: 50%; border: 2px solid transparent; box-shadow: 0 0 0 1px rgba(0,0,0,.35), 0 0 0 2px rgba(255,255,255,.6); cursor: pointer; }
+    .swatch.active { border-color: #fff; box-shadow: 0 0 0 1.5px rgba(0,0,0,.55); }
 
     .stamp-bar {
       position: fixed; left: 12px; top: 50%; transform: translateY(-50%); width: 148px;

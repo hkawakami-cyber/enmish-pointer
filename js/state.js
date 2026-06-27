@@ -7,10 +7,10 @@
   // カラーパレット（Enmishブランド規定色のみ）
   // 波長順（長波長＝赤系 → 短波長＝青系、無彩色は末尾）
   EF.PALETTE = [
-    { name: "rose", value: "#c1677f" },        // 赤系・強調
-    { name: "gold", value: "#917d44" },        // 黄系
+    { name: "red", value: "#e23b3b" },         // 赤・強調
     { name: "green", value: "#6cbba5" },       // エンミッシュグリーン（既定）
-    { name: "ink", value: "#032841" },         // 濃紺
+    { name: "black", value: "#1a1a1a" },       // 黒
+    { name: "white", value: "#ffffff" },       // 白
   ];
 
 
