@@ -556,7 +556,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.3.9</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.4.0</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -811,7 +811,15 @@
       }
       let stream;
       try {
-        stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 30 }, audio: true });
+        stream = await navigator.mediaDevices.getDisplayMedia({
+          video: { frameRate: { ideal: 30 } },
+          audio: true,
+          // 既定だと「いま開いているタブ」（＝オーバーレイを注入した Google スライド/
+          // ドキュメント等）がピッカーで選べない/除外されることがあるため明示的に含める
+          selfBrowserSurface: "include",
+          surfaceSwitching: "include",
+          systemAudio: "include",
+        });
       } catch (err) {
         toast("画面録画を開始できませんでした（権限が許可されていない可能性があります）", 2800);
         return;

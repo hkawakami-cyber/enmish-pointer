@@ -2420,7 +2420,14 @@ kbd {
       }
       let stream;
       try {
-        stream = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: 30 }, audio: true });
+        stream = await navigator.mediaDevices.getDisplayMedia({
+          video: { frameRate: { ideal: 30 } },
+          audio: true,
+          // いま開いているタブ（Google スライド/ドキュメント等）もピッカーで選べるように
+          selfBrowserSurface: "include",
+          surfaceSwitching: "include",
+          systemAudio: "include",
+        });
       } catch (err) {
         EF.toast("画面録画を開始できませんでした（権限が許可されていない可能性があります）", 2800);
         return;
