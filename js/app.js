@@ -26,9 +26,10 @@
     const local = [], central = []; let offset = 0;
     for (const f of files) {
       const name = enc.encode(f.name), crc = efCrc32(f.data), size = f.data.length;
-      const lh = [].concat(u32(0x04034b50), u16(20), u16(0), u16(0), u16(0), u16(0), u32(crc), u32(size), u32(size), u16(name.length), u16(0));
+      // gp flag に bit11(0x0800)=UTF-8 を立て、日本語ファイル名（メモ.txt）を正しく扱う
+      const lh = [].concat(u32(0x04034b50), u16(20), u16(0x0800), u16(0), u16(0), u16(0), u32(crc), u32(size), u32(size), u16(name.length), u16(0));
       local.push(new Uint8Array(lh), name, f.data);
-      const ch = [].concat(u32(0x02014b50), u16(20), u16(20), u16(0), u16(0), u16(0), u16(0), u32(crc), u32(size), u32(size), u16(name.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(offset));
+      const ch = [].concat(u32(0x02014b50), u16(20), u16(20), u16(0x0800), u16(0), u16(0), u16(0), u32(crc), u32(size), u32(size), u16(name.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(offset));
       central.push(new Uint8Array(ch), name);
       offset += lh.length + name.length + size;
     }
@@ -294,8 +295,22 @@
         EF._recorder = null; EF.state.recording = false; EF.app._syncRecordBtn();
         if (shots.length) {
           EF.toast(`記録パックを作成中…（スライド${shots.length}枚）`, 2200);
+          const dur = Math.round((Date.now() - startMs) / 1000);
+          const memo = "\uFEFF" + [
+            "Enmish Pointer 記録パック",
+            `録画日時: ${d.getFullYear()}/${p(d.getMonth() + 1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`,
+            `録画時間: ${Math.floor(dur / 60)}分${dur % 60}秒`,
+            `スライド: ${shots.length}枚（slides/ フォルダ）`,
+            `音声: ${micStream ? "画面＋マイク" : "画面のみ"}`,
+            `ページ: ${document.title || "-"}`,
+            "",
+            "※文字起こしは video.webm を Notta / tl;dv / Meet字幕 等に渡してください。",
+          ].join("\r\n");
           blob.arrayBuffer().then((ab) => {
-            const files = [{ name: "video.webm", data: new Uint8Array(ab) }].concat(shots);
+            const files = [
+              { name: "メモ.txt", data: new TextEncoder().encode(memo) },
+              { name: "video.webm", data: new Uint8Array(ab) },
+            ].concat(shots);
             efDownload(efZip(files), `記録_${stamp}.zip`);
             EF.toast(`記録パックを保存：動画＋スライド${shots.length}枚`, 3000);
           });

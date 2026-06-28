@@ -22,7 +22,8 @@ const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
 const bodyInner = html.split("<body>")[1].split("</body>")[0];
 const markup = bodyInner.replace(/\s*<script src="[^"]*"><\/script>/g, "").trim();
 
-let out = `<style>\n${css}\n</style>\n${markup}\n`;
+// 先頭で UTF-8 を明示（charset 無しで配信されても日本語が化けないよう、HTMLのエンコーディング先読みに拾わせる）
+let out = `<meta charset="utf-8">\n<style>\n${css}\n</style>\n${markup}\n`;
 for (const f of jsFiles) {
   out += `<script>\n${fs.readFileSync(path.join(ROOT, f), "utf8")}\n</script>\n`;
 }
