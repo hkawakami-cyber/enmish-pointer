@@ -731,10 +731,9 @@ kbd {
         <h3>カーソル強調</h3>
         <label class="field" style="display:block">カーソルの形
           <div class="seg seg-wrap" id="set-cursor-style">
-            <button data-cursor="ring">リング</button>
-            <button data-cursor="arrow">矢印</button>
             <button data-cursor="dot">ドット</button>
-            <button data-cursor="ringdot">両方</button>
+            <button data-cursor="arrow">矢印</button>
+            <button data-cursor="ring">リング</button>
             <button data-cursor="halo">ハロー</button>
           </div>
         </label>
@@ -1016,7 +1015,7 @@ kbd {
     textBold: false,     // テキスト注釈の太さ
     textColor: "#032841",// テキスト注釈の色
     ring: { width: 6, size: 52, opacity: 0.9, ripple: true },
-    cursorStyle: "ring", // ring | dot | halo | ringdot | arrow
+    cursorStyle: "dot",  // dot | arrow | ring | halo（既定はドット）
     arrowHead: "start",  // end | start | both（既定は始点）
     showOptions: false,  // ツールオプションのフライアウトを画面に表示するか
     uiHidden: false,
@@ -1550,7 +1549,7 @@ kbd {
       // リング（カーソル強調）は「カーソル」ツールのときだけ表示。他ツールでは消す。
       const on = EF.state.appOn && EF.state.mouse.inStage && EF.state.tool === "cursor";
       if (!on) { ring.hidden = true; return; }
-      const r = EF.state.ring, color = EF.state.color, style = EF.state.cursorStyle || "ring";
+      const r = EF.state.ring, color = EF.state.color, style = EF.state.cursorStyle || "dot";
       const dot = ring.querySelector(".cr-dot");
       const arrow = ring.querySelector(".cr-arrow");
       ring.hidden = false;

@@ -25,7 +25,7 @@
     textBold: false,     // テキスト注釈の太さ
     textColor: "#032841",// テキスト注釈の色
     ring: { width: 6, size: 52, opacity: 0.9, ripple: true },
-    cursorStyle: "ring", // ring | dot | halo | ringdot | arrow
+    cursorStyle: "dot",  // dot | arrow | ring | halo（既定はドット）
     arrowHead: "start",  // end | start | both（既定は始点）
     showOptions: false,  // ツールオプションのフライアウトを画面に表示するか
     uiHidden: false,
