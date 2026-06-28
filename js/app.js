@@ -288,6 +288,8 @@
       const tb = document.getElementById("toolbar");
       if (tb) tb.classList.toggle("side-left", EF.state.barSide === "left");
       if (tb) tb.classList.toggle("labels-off", !EF.state.showLabels);
+      const topt = document.getElementById("tool-options");
+      if (topt) topt.classList.toggle("side-left", EF.state.barSide === "left");
       document.body.classList.toggle("bar-left", EF.state.barSide === "left");
       const dock = document.getElementById("ef-dock");
       if (dock) {

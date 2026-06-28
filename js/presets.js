@@ -225,7 +225,7 @@
 
     // ---- プロファイル（商談/社内）----
     PROF_KEY: "enmishFocus.profiles.v1",
-    PROF_NAMES: { shodan: "商談", shanai: "社内" },
+    PROF_NAMES: { c1: "設定1", c2: "設定2", c3: "設定3" },
     _profiles() { try { return JSON.parse(localStorage.getItem(this.PROF_KEY) || "{}"); } catch (e) { return {}; } },
     saveProfile(key) {
       const snap = {};
@@ -233,12 +233,12 @@
       snap.palette = EF.PALETTE.map((c) => c.value);
       const all = this._profiles(); all[key] = snap;
       try { localStorage.setItem(this.PROF_KEY, JSON.stringify(all)); } catch (e) { /* noop */ }
-      EF.toast(this.PROF_NAMES[key] + "プロファイルに現在の設定を保存しました", 2200);
+      EF.toast(this.PROF_NAMES[key] + "に保存しました", 2000);
       this.syncUI();
     },
     applyProfile(key) {
       const o = this._profiles()[key];
-      if (!o) { EF.toast(this.PROF_NAMES[key] + "は未保存です（先に保存）", 2200); return; }
+      if (!o) { EF.toast(this.PROF_NAMES[key] + "は未保存です", 2000); return; }
       if (Array.isArray(o.palette)) o.palette.forEach((v, i) => { if (EF.PALETTE[i]) EF.PALETTE[i].value = v; });
       (EF.PERSIST || []).forEach((k) => {
         if (k === "tool" || o[k] === undefined) return;
@@ -248,7 +248,7 @@
       save();
       EF.toolbar.buildColors(); EF.toolbar.buildTools(); EF.cursor.update();
       EF.app.applyLayout(); if (EF.options) EF.options.render(); this.syncUI();
-      EF.toast(this.PROF_NAMES[key] + "プロファイルを適用しました", 2000);
+      EF.toast(this.PROF_NAMES[key] + "を適用しました", 1800);
     },
 
     openModal() { this.syncUI(); this.buildToolList(); $("settings").hidden = false; },

@@ -364,12 +364,14 @@ body.ef-on.ef-autohide .scene-root { padding-right: 0; padding-left: 0; }
 
 /* ============ ツール別オプション・フライアウト ============ */
 .tool-options {
-  position: fixed; right: 100px; top: 50%; transform: translateY(-50%);
+  position: fixed; right: 140px; top: 50%; transform: translateY(-50%);
   background: var(--tb-bg); color: var(--tb-fg); border-radius: 14px;
   padding: 12px; box-shadow: var(--shadow); z-index: 8900; width: 168px;
   border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(14px);
   display: flex; flex-direction: column; gap: 12px;
 }
+/* バーが左側のときは設定パネルも左側に出す（バーと被らない） */
+.tool-options.side-left { right: auto; left: 140px; }
 .to-group { display: flex; flex-direction: column; gap: 6px; }
 .to-title { font-size: 11px; color: var(--tb-muted); letter-spacing: .03em; }
 .to-btns { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -866,16 +868,21 @@ kbd {
       </section>
 
       <section class="modal-section">
-        <h3>プロファイル（現在の設定を保存／適用）</h3>
+        <h3>プロファイル</h3>
         <div class="prof-row">
-          <span class="prof-name">商談</span>
-          <button class="prof-btn" data-prof="shodan" data-pact="apply">適用</button>
-          <button class="prof-btn save" data-prof="shodan" data-pact="save">保存</button>
+          <span class="prof-name">設定1</span>
+          <button class="prof-btn" data-prof="c1" data-pact="apply">適用</button>
+          <button class="prof-btn save" data-prof="c1" data-pact="save">保存</button>
         </div>
         <div class="prof-row">
-          <span class="prof-name">社内</span>
-          <button class="prof-btn" data-prof="shanai" data-pact="apply">適用</button>
-          <button class="prof-btn save" data-prof="shanai" data-pact="save">保存</button>
+          <span class="prof-name">設定2</span>
+          <button class="prof-btn" data-prof="c2" data-pact="apply">適用</button>
+          <button class="prof-btn save" data-prof="c2" data-pact="save">保存</button>
+        </div>
+        <div class="prof-row">
+          <span class="prof-name">設定3</span>
+          <button class="prof-btn" data-prof="c3" data-pact="apply">適用</button>
+          <button class="prof-btn save" data-prof="c3" data-pact="save">保存</button>
         </div>
       </section>
     </div>
@@ -2201,7 +2208,7 @@ kbd {
 
     // ---- プロファイル（商談/社内）----
     PROF_KEY: "enmishFocus.profiles.v1",
-    PROF_NAMES: { shodan: "商談", shanai: "社内" },
+    PROF_NAMES: { c1: "設定1", c2: "設定2", c3: "設定3" },
     _profiles() { try { return JSON.parse(localStorage.getItem(this.PROF_KEY) || "{}"); } catch (e) { return {}; } },
     saveProfile(key) {
       const snap = {};
@@ -2209,12 +2216,12 @@ kbd {
       snap.palette = EF.PALETTE.map((c) => c.value);
       const all = this._profiles(); all[key] = snap;
       try { localStorage.setItem(this.PROF_KEY, JSON.stringify(all)); } catch (e) { /* noop */ }
-      EF.toast(this.PROF_NAMES[key] + "プロファイルに現在の設定を保存しました", 2200);
+      EF.toast(this.PROF_NAMES[key] + "に保存しました", 2000);
       this.syncUI();
     },
     applyProfile(key) {
       const o = this._profiles()[key];
-      if (!o) { EF.toast(this.PROF_NAMES[key] + "は未保存です（先に保存）", 2200); return; }
+      if (!o) { EF.toast(this.PROF_NAMES[key] + "は未保存です", 2000); return; }
       if (Array.isArray(o.palette)) o.palette.forEach((v, i) => { if (EF.PALETTE[i]) EF.PALETTE[i].value = v; });
       (EF.PERSIST || []).forEach((k) => {
         if (k === "tool" || o[k] === undefined) return;
@@ -2224,7 +2231,7 @@ kbd {
       save();
       EF.toolbar.buildColors(); EF.toolbar.buildTools(); EF.cursor.update();
       EF.app.applyLayout(); if (EF.options) EF.options.render(); this.syncUI();
-      EF.toast(this.PROF_NAMES[key] + "プロファイルを適用しました", 2000);
+      EF.toast(this.PROF_NAMES[key] + "を適用しました", 1800);
     },
 
     openModal() { this.syncUI(); this.buildToolList(); $("settings").hidden = false; },
@@ -2524,6 +2531,8 @@ kbd {
       const tb = document.getElementById("toolbar");
       if (tb) tb.classList.toggle("side-left", EF.state.barSide === "left");
       if (tb) tb.classList.toggle("labels-off", !EF.state.showLabels);
+      const topt = document.getElementById("tool-options");
+      if (topt) topt.classList.toggle("side-left", EF.state.barSide === "left");
       document.body.classList.toggle("bar-left", EF.state.barSide === "left");
       const dock = document.getElementById("ef-dock");
       if (dock) {

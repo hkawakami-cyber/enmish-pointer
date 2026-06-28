@@ -159,7 +159,9 @@
     .toolbar.labels-off { width: 86px; }
     .toolbar.labels-off .lbl { display: none; }
     .ef-text { position: fixed; transform: translateY(-4px); z-index: 10; pointer-events: auto; border: none; border-bottom: 2px solid currentColor; background: rgba(255,255,255,.92); font-weight: 700; padding: 2px 6px; border-radius: 4px; min-width: 120px; outline: none; }
-    .tool-options { position: fixed; right: 92px; top: 50%; transform: translateY(-50%); background: rgba(3,40,65,.94); color: #e8ecf4; border-radius: 14px; padding: 13px; width: 168px; max-height: 88vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(14px); display: flex; flex-direction: column; gap: 11px; pointer-events: auto; }
+    .tool-options { position: fixed; right: 140px; top: 50%; transform: translateY(-50%); background: rgba(3,40,65,.96); color: #e8ecf4; border-radius: 14px; padding: 13px; width: 168px; max-height: 88vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(14px); display: flex; flex-direction: column; gap: 11px; pointer-events: auto; }
+    /* バーが左側のときは設定パネルも左側に出す（バーと被らない） */
+    .tool-options.side-left { right: auto; left: 140px; }
     .to-group { display: flex; flex-direction: column; gap: 5px; }
     .to-title { font-size: 10.5px; color: #9fc6bb; }
     .opt-ver { font-size: 10px; color: rgba(255,255,255,.45); text-align: center; padding-top: 2px; }
@@ -442,11 +444,11 @@
   function profileGroup() {
     const row = (key) => {
       const saved = !!profiles[key];
-      return `<div class="prof-row"><span class="prof-name">${PROFILE_NAMES[key]}${saved ? "" : "（未保存）"}</span>` +
+      return `<div class="prof-row"><span class="prof-name">${PROFILE_NAMES[key]}</span>` +
         `<button class="prof-btn" data-prof="${key}" data-pact="apply"${saved ? "" : " disabled"}>適用</button>` +
         `<button class="prof-btn save" data-prof="${key}" data-pact="save">保存</button></div>`;
     };
-    return `<div class="to-group"><div class="to-title">プロファイル（現在の設定を保存／適用）</div>${row("shodan")}${row("shanai")}</div>`;
+    return `<div class="to-group"><div class="to-title">プロファイル</div>${row("c1")}${row("c2")}${row("c3")}</div>`;
   }
 
   // 設定の永続化（chrome.storage.local）
@@ -470,7 +472,7 @@
   }
 
   // ---- 設定プロファイル（商談用 / 社内用 をワンタップ切替）----
-  const PROFILE_NAMES = { shodan: "商談", shanai: "社内" };
+  const PROFILE_NAMES = { c1: "設定1", c2: "設定2", c3: "設定3" };
   let profiles = {};
   function loadProfiles(done) {
     try {
@@ -482,11 +484,11 @@
     delete snap.tool; // ツールの選択状態はプロファイルに含めない
     profiles[key] = snap;
     try { chrome.storage.local.set({ efProfiles: profiles }); } catch (e) { /* noop */ }
-    toast(PROFILE_NAMES[key] + "プロファイルに現在の設定を保存しました", 2200);
+    toast(PROFILE_NAMES[key] + "に保存しました", 2000);
   }
   function applyProfile(key) {
     const o = profiles[key];
-    if (!o) { toast(PROFILE_NAMES[key] + "は未保存です（先に保存）", 2200); return; }
+    if (!o) { toast(PROFILE_NAMES[key] + "は未保存です", 2000); return; }
     PERSIST.forEach((k) => {
       if (k === "tool" || o[k] === undefined) return;
       if (k === "ring") state.ring = Object.assign({}, state.ring, o.ring);
@@ -494,7 +496,7 @@
     });
     normalizeToolOrder();
     saveSettings(); updateRing(); rebuildTools(); renderOptions(); applyLayout(); syncUI();
-    toast(PROFILE_NAMES[key] + "プロファイルを適用しました", 2000);
+    toast(PROFILE_NAMES[key] + "を適用しました", 1800);
   }
   function loadSettings(done) {
     try {
@@ -549,7 +551,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.3.1</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.3.3</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -630,6 +632,7 @@
   function applyLayout() {
     tb.classList.toggle("side-left", state.barSide === "left");
     tb.classList.toggle("labels-off", !state.showLabels);
+    optEl.classList.toggle("side-left", state.barSide === "left");
     dockEl.classList.remove("dock-bottom-right", "dock-top-left", "dock-top-right");
     if (state.dockPos && state.dockPos !== "bottom-left") dockEl.classList.add("dock-" + state.dockPos);
     // 自動表示モードはバーが浮いて出るのでガターは取らない

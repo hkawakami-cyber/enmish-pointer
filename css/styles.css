@@ -363,12 +363,14 @@ body.ef-on.ef-autohide .scene-root { padding-right: 0; padding-left: 0; }
 
 /* ============ ツール別オプション・フライアウト ============ */
 .tool-options {
-  position: fixed; right: 100px; top: 50%; transform: translateY(-50%);
+  position: fixed; right: 140px; top: 50%; transform: translateY(-50%);
   background: var(--tb-bg); color: var(--tb-fg); border-radius: 14px;
   padding: 12px; box-shadow: var(--shadow); z-index: 8900; width: 168px;
   border: 1px solid rgba(255,255,255,.08); backdrop-filter: blur(14px);
   display: flex; flex-direction: column; gap: 12px;
 }
+/* バーが左側のときは設定パネルも左側に出す（バーと被らない） */
+.tool-options.side-left { right: auto; left: 140px; }
 .to-group { display: flex; flex-direction: column; gap: 6px; }
 .to-title { font-size: 11px; color: var(--tb-muted); letter-spacing: .03em; }
 .to-btns { display: flex; flex-wrap: wrap; gap: 5px; }
