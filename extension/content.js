@@ -21,7 +21,7 @@
   };
 
   const state = {
-    appOn: false, tool: "cursor", color: "#6cbba5", strokeWidth: 6,
+    appOn: false, tool: "rect", color: "#6cbba5", strokeWidth: 6,
     ring: { width: 6, size: 52, opacity: 0.9, ripple: true },
     cursorStyle: "ring", arrowHead: "start", uiHidden: false, optionsOpen: false,
     autoErase: 0, spotlight: false, spotShape: "band", spotBand: 0.5, spotDim: 0.72,
@@ -556,7 +556,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.3.8</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.3.9</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
