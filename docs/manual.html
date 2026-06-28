@@ -1,0 +1,352 @@
+<title>Enmish Pointer 取扱説明書</title>
+<meta name="description" content="画面共有を分かりやすくする注釈ツール Enmish Pointer の使い方。記録パック（録画＋自動スクショ）が目玉。">
+<style>
+  :root{
+    --ink:#0a2233; --ground:#f5f8f7; --paper:#ffffff;
+    --navy:#0c2c46; --navy2:#06202f;
+    --mint:#34d3a6; --green:#6cbba5;
+    --line:#dde6e3; --muted:#5b6b73;
+    --red:#e23b3b; --black:#1a1a1a;
+    --maxw:880px;
+    --jp:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic","YuGothic",Meiryo,system-ui,sans-serif;
+    --latin:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--jp);
+    line-height:1.75;-webkit-font-smoothing:antialiased;font-size:16px}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+
+  /* ---- header ---- */
+  header.bar{position:sticky;top:0;z-index:50;background:rgba(245,248,247,.86);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .bar .row{display:flex;align-items:center;gap:11px;max-width:var(--maxw);margin:0 auto;
+    padding:11px 22px}
+  .bar .mark{width:26px;height:26px;flex:0 0 auto}
+  .bar .nm{font-weight:800;letter-spacing:.01em;font-size:15px}
+  .bar .nm b{color:var(--green)}
+  .bar .ey{font-size:11px;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;
+    margin-left:2px}
+  .bar .ver{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted);
+    border:1px solid var(--line);border-radius:999px;padding:2px 10px}
+
+  /* ---- hero ---- */
+  .hero{background:radial-gradient(120% 140% at 78% -10%,#103a59 0%,var(--navy) 42%,var(--navy2) 100%);
+    color:#eaf3f0;overflow:hidden;position:relative}
+  .hero .wrap{padding:74px 22px 78px}
+  .hero .pulse{width:74px;height:74px;margin-bottom:22px}
+  .hero h1{font-family:var(--latin);font-weight:800;letter-spacing:-.02em;
+    font-size:clamp(34px,6vw,58px);line-height:1.02;margin:0;text-wrap:balance}
+  .hero h1 .jp{font-family:var(--jp);display:block;font-size:clamp(20px,3.4vw,30px);
+    font-weight:800;color:#bfe7da;margin-top:14px;letter-spacing:0}
+  .hero p{max-width:46ch;margin:20px 0 0;color:#9fc4bb;font-size:17px}
+  .hero .teaser{display:inline-flex;align-items:center;gap:9px;margin-top:30px;
+    background:rgba(52,211,166,.12);border:1px solid rgba(52,211,166,.4);
+    color:#bdeede;border-radius:999px;padding:8px 16px;font-size:14px;font-weight:600}
+  .hero .teaser b{color:#fff}
+
+  /* ---- sections ---- */
+  section{padding:54px 0;border-bottom:1px solid var(--line)}
+  .eyebrow{display:flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--green);font-weight:700;margin:0 0 14px}
+  .eyebrow::before{content:"";width:22px;height:2px;background:var(--green);border-radius:2px}
+  h2{font-size:clamp(23px,3.6vw,30px);font-weight:800;letter-spacing:-.01em;margin:0 0 10px;
+    text-wrap:balance}
+  .lede{color:var(--muted);margin:0 0 26px;max-width:60ch}
+  p{margin:0 0 14px}
+
+  /* ---- steps ---- */
+  ol.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;gap:14px}
+  ol.steps li{counter-increment:s;position:relative;background:var(--paper);
+    border:1px solid var(--line);border-radius:14px;padding:18px 20px 18px 62px}
+  ol.steps li::before{content:counter(s);position:absolute;left:16px;top:16px;
+    width:32px;height:32px;border-radius:9px;background:var(--navy);color:#fff;
+    font-family:var(--latin);font-weight:800;display:grid;place-items:center;font-size:15px}
+  ol.steps b{font-weight:700}
+  kbd{font-family:var(--mono);font-size:.86em;background:#eef3f1;border:1px solid var(--line);
+    border-bottom-width:2px;border-radius:6px;padding:1px 7px;white-space:nowrap;color:var(--ink)}
+
+  /* ---- toolbar mimic ---- */
+  .tbwrap{display:grid;grid-template-columns:124px 1fr;gap:26px;align-items:start}
+  @media(max-width:620px){.tbwrap{grid-template-columns:1fr}}
+  .toolbar{background:rgba(6,32,52,.95);border-radius:16px;padding:10px;
+    display:grid;grid-template-columns:1fr 1fr;gap:6px;box-shadow:0 14px 34px rgba(6,32,52,.28)}
+  .toolbar .t{display:flex;flex-direction:column;align-items:center;gap:3px;
+    padding:7px 2px;border-radius:9px;color:#eef4f7;font-size:10px}
+  .toolbar .t.on{background:var(--green);color:#06251c;font-weight:700}
+  .toolbar .t svg{width:18px;height:18px}
+  .toolnotes{display:grid;gap:9px;margin:0;padding:0;list-style:none}
+  .toolnotes li{display:flex;gap:11px;align-items:baseline;padding-bottom:9px;
+    border-bottom:1px dashed var(--line);font-size:15px}
+  .toolnotes li:last-child{border-bottom:0}
+  .toolnotes .k{flex:0 0 84px;font-weight:700}
+  .toolnotes .d{color:var(--muted)}
+
+  /* ---- colors ---- */
+  .colors{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+  .sw{display:flex;align-items:center;gap:9px;font-size:14px;color:var(--muted)}
+  .sw i{width:22px;height:22px;border-radius:50%;display:block;
+    box-shadow:0 0 0 2px #fff,0 0 0 3px var(--line)}
+
+  /* ---- power chips ---- */
+  .powers{display:flex;gap:16px;flex-wrap:wrap;margin-top:4px}
+  .pc{display:flex;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--line);
+    border-radius:14px;padding:14px 18px;flex:1 1 240px}
+  .pmark{width:40px;height:40px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;color:#fff}
+  .pmark.off{background:var(--navy)}
+  .pmark.on{background:var(--green);box-shadow:0 0 0 4px rgba(108,187,165,.3),0 0 18px rgba(108,187,165,.55)}
+  .pc .t{font-weight:700}.pc .s{font-size:13px;color:var(--muted)}
+
+  /* ---- feature band: record pack ---- */
+  .feature{background:linear-gradient(160deg,var(--navy) 0%,var(--navy2) 100%);
+    color:#eaf3f0;border-bottom:0}
+  .feature .eyebrow{color:var(--mint)}.feature .eyebrow::before{background:var(--mint)}
+  .feature h2{color:#fff}.feature .lede{color:#9fc4bb}
+  .flow{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:8px 0 30px}
+  @media(max-width:620px){.flow{grid-template-columns:1fr}}
+  .flow .step{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);
+    border-radius:13px;padding:16px}
+  .flow .n{font-family:var(--latin);font-weight:800;color:var(--mint);font-size:13px;letter-spacing:.1em}
+  .flow .h{font-weight:700;margin:7px 0 4px}
+  .flow .s{font-size:13.5px;color:#9fc4bb;margin:0}
+  .pack{display:grid;grid-template-columns:1.1fr 1fr;gap:22px;align-items:center}
+  @media(max-width:620px){.pack{grid-template-columns:1fr}}
+  .tree{background:#04161f;border:1px solid rgba(255,255,255,.1);border-radius:14px;
+    padding:20px 22px;font-family:var(--mono);font-size:13px;line-height:1.95;color:#cfe6df;
+    white-space:pre-wrap;overflow-x:auto}
+  .tree .dir{color:var(--mint);font-weight:700}
+  .tree .file{color:#eaf3f0}
+  .tree .c{color:#6f8b86}
+  .tree .b{color:#456}
+  .packnote{display:grid;gap:13px}
+  .packnote .pn{display:flex;gap:11px;align-items:flex-start}
+  .packnote .pn svg{width:20px;height:20px;flex:0 0 auto;margin-top:3px;color:var(--mint)}
+  .packnote .pn b{color:#fff;display:block;font-size:15px}
+  .packnote .pn span{font-size:13.5px;color:#9fc4bb}
+  .optline{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  .opt{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:999px;
+    padding:6px 14px;font-size:13px;color:#cfe6df}
+  .opt b{color:#fff}
+
+  /* ---- table ---- */
+  .tablewrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:15px}
+  th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line)}
+  th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  td:first-child{white-space:nowrap}
+
+  /* ---- troubleshoot ---- */
+  .faq{display:grid;gap:10px}
+  details{background:var(--paper);border:1px solid var(--line);border-radius:13px;padding:2px 18px}
+  summary{cursor:pointer;font-weight:700;padding:15px 0;list-style:none;display:flex;
+    justify-content:space-between;align-items:center;gap:14px}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"+";color:var(--green);font-family:var(--latin);font-weight:800;font-size:22px;
+    transition:transform .2s}
+  details[open] summary::after{transform:rotate(45deg)}
+  details .a{color:var(--muted);padding:0 0 16px;font-size:15px}
+  details .a kbd{color:var(--ink)}
+
+  /* ---- callout ---- */
+  .note{background:#eefaf5;border:1px solid #c7ebde;border-left:3px solid var(--green);
+    border-radius:11px;padding:14px 18px;font-size:14.5px;color:#2c5a4d}
+  .note b{color:#1f4438}
+
+  footer{padding:40px 0 56px;text-align:center;color:var(--muted);font-size:13px}
+  footer .fmark{width:30px;height:30px;margin:0 auto 12px}
+  footer a{color:var(--green)}
+
+  /* pulse animation */
+  @keyframes ring{0%{transform:scale(.85);opacity:.55}70%{transform:scale(1.35);opacity:0}100%{opacity:0}}
+  .pulse .r1,.pulse .r2{transform-origin:center;animation:ring 2.8s ease-out infinite}
+  .pulse .r2{animation-delay:1.4s}
+  @media(prefers-reduced-motion:reduce){.pulse .r1,.pulse .r2{animation:none}}
+</style>
+
+<!-- pulse mark reused via <use> -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="pulse" viewBox="0 0 64 64">
+    <circle cx="32" cy="32" r="26" fill="none" stroke="#34d3a6" stroke-width="4.5" opacity=".4"/>
+    <circle cx="32" cy="32" r="16" fill="none" stroke="#34d3a6" stroke-width="4.5" opacity=".78"/>
+    <circle cx="32" cy="32" r="7" fill="#34d3a6"/>
+  </symbol>
+</svg>
+
+<header class="bar">
+  <div class="row">
+    <svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#pulse"/></svg>
+    <span class="nm">Enmish <b>Pointer</b></span>
+    <span class="ey">取扱説明</span>
+    <span class="ver">v0.5.1</span>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <svg class="pulse" viewBox="0 0 64 64" aria-hidden="true">
+      <circle class="r1" cx="32" cy="32" r="16" fill="none" stroke="#34d3a6" stroke-width="3"/>
+      <circle class="r2" cx="32" cy="32" r="16" fill="none" stroke="#34d3a6" stroke-width="3"/>
+      <circle cx="32" cy="32" r="26" fill="none" stroke="#34d3a6" stroke-width="4.5" opacity=".4"/>
+      <circle cx="32" cy="32" r="16" fill="none" stroke="#34d3a6" stroke-width="4.5" opacity=".82"/>
+      <circle cx="32" cy="32" r="7" fill="#34d3a6"/>
+    </svg>
+    <h1>Point. Annotate. Record.<span class="jp">画面共有を、伝わる画面共有に。</span></h1>
+    <p>商談・社内MTGの共有画面に、カーソル強調や注釈を重ねて視線を誘導。Chromeに入れて、見ているタブの上でそのまま使えます。</p>
+    <span class="teaser">🎯&nbsp;目玉機能 &nbsp;<b>記録パック</b>&nbsp;— 録画とスライドを1フォルダで自動保存</span>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <section>
+    <p class="eyebrow">これは何</p>
+    <h2>共有画面の上に描ける、消えてくれる注釈ツール</h2>
+    <p class="lede">普段は端に隠れていて、必要なときだけ右端ホバーでスッと出る。終了すれば画面から完全に消えます。「邪魔にならない」が基本思想です。</p>
+    <div class="powers">
+      <div class="pc">
+        <div class="pmark off"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 4v8"/><path d="M7.5 7a7 7 0 1 0 9 0"/></svg></div>
+        <div><div class="t">電源 OFF（紺）</div><div class="s">左下のマーク。押すとON。</div></div>
+      </div>
+      <div class="pc">
+        <div class="pmark on"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 4v8"/><path d="M7.5 7a7 7 0 1 0 9 0"/></svg></div>
+        <div><div class="t">電源 ON（緑＋グロー）</div><div class="s">起動中。ツールバーが使えます。</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">セットアップ</p>
+    <h2>Chromeへの入れかた・差し替え</h2>
+    <p class="lede">配布された <code>zip</code> を展開して読み込むだけ。更新版が来たら同じ手順で入れ直します。</p>
+    <ol class="steps">
+      <li>受け取った <b>zip を展開</b>（フォルダができます）。</li>
+      <li>Chromeで <kbd>chrome://extensions</kbd> を開き、右上の <b>デベロッパーモード</b> を ON。</li>
+      <li><b>「パッケージ化されていない拡張機能を読み込む」</b> → 展開したフォルダを選択。</li>
+      <li>ツールバー右上のパズルアイコンから <b>Enmish Pointer をピン留め</b>すると使いやすい。</li>
+      <li>差し替え時は古い方を削除してから読み込み、設定パネル末尾の <b>バージョン番号</b>が新しいか確認。</li>
+    </ol>
+    <div class="note" style="margin-top:18px"><b>使いはじめ：</b>共有したいタブを開いて、左下の電源マーク（または <kbd>⌘⇧E</kbd>）でON。あとは描くだけ。</div>
+  </section>
+
+  <section>
+    <p class="eyebrow">基本操作</p>
+    <h2>ツールバーとツール</h2>
+    <p class="lede">画面の右端にカーソルを近づけると、紺色のツールバーが出ます（Macのドック風）。2列でスクロール不要。</p>
+    <div class="tbwrap">
+      <div class="toolbar" aria-label="ツールバーの例">
+        <div class="t on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="6" width="16" height="12" rx="1.5"/></svg>四角</div>
+        <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 19l5-1L20 8l-4-4L6 14z"/></svg>蛍光</div>
+        <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18L18 6"/><path d="M8 6h10v10"/></svg>矢印</div>
+        <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12h16"/></svg>横線</div>
+        <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 6h14"/><path d="M12 6v13"/></svg>文字</div>
+        <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 19L17 7"/><path d="M14 7h3v3"/></svg>ペン</div>
+        <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg>カーソル</div>
+        <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="7"/></svg>丸</div>
+        <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/></svg>注目</div>
+        <div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="M20 20l-3.5-3.5"/></svg>ズーム</div>
+      </div>
+      <ul class="toolnotes">
+        <li><span class="k">描く</span><span class="d">四角・丸・矢印・横線・ペン・蛍光・文字。ドラッグで描画。既定は<b>四角</b>。</span></li>
+        <li><span class="k">カーソル</span><span class="d">クリック位置にリングを表示して視線を誘導。</span></li>
+        <li><span class="k">注目</span><span class="d">周囲を暗くして一部だけ明るく（スポットライト）。</span></li>
+        <li><span class="k">ズーム</span><span class="d">マウス位置を拡大。<kbd>-</kbd> <kbd>=</kbd> で倍率。</span></li>
+        <li><span class="k">操作</span><span class="d">戻る・全消去・保存（スクショ）・コピー・録画・設定。</span></li>
+      </ul>
+    </div>
+    <p style="margin:24px 0 8px;font-weight:700">ペンの色（設定で変更可）</p>
+    <div class="colors">
+      <div class="sw"><i style="background:#e23b3b"></i>赤</div>
+      <div class="sw"><i style="background:#6cbba5"></i>グリーン（既定）</div>
+      <div class="sw"><i style="background:#1a1a1a"></i>黒</div>
+      <div class="sw"><i style="background:#ffffff"></i>白</div>
+    </div>
+  </section>
+
+  <section class="feature">
+    <div class="wrap" style="padding-left:0;padding-right:0;max-width:none">
+      <p class="eyebrow">目玉機能</p>
+      <h2>記録パック — 録画とスライドを1フォルダに</h2>
+      <p class="lede">ウェビナーや商談を録画すると、<b>動画・スライド画像・メモ</b>が1つの ZIP に自動でまとまります。あとで振り返る素材がそのまま手に入る。</p>
+
+      <div class="flow">
+        <div class="step"><div class="n">STEP 1</div><div class="h">録画ボタンを押す</div><p class="s">共有先を選ぶピッカーで、見ているタブ（スライド/ドキュメント）も選べます。</p></div>
+        <div class="step"><div class="n">STEP 2</div><div class="h">話す・進める</div><p class="s">設定した間隔で、スライドが自動的に静止画として保存され続けます。</p></div>
+        <div class="step"><div class="n">STEP 3</div><div class="h">もう一度押して停止</div><p class="s">動画＋スライド＋メモを ZIP にまとめて自動ダウンロード。</p></div>
+      </div>
+
+      <div class="pack">
+        <div class="tree" aria-label="保存される ZIP の中身"><span class="dir">記録_20260628_1530.zip</span>
+<span class="b">├─</span> <span class="file">メモ.txt</span>     <span class="c"># 日時・枚数・音声</span>
+<span class="b">├─</span> <span class="file">video.webm</span>  <span class="c"># 音声つき動画</span>
+<span class="b">└─</span> <span class="dir">slides/</span>
+<span class="b">   ├─</span> <span class="file">001_00m15s.png</span>
+<span class="b">   ├─</span> <span class="file">002_00m45s.png</span>
+<span class="b">   └─</span> <span class="file">…</span>          <span class="c"># 経過時間つき連番</span></div>
+        <div class="packnote">
+          <div class="pn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 13l4 4L19 7"/></svg><div><b>自動スクショ</b><span>間隔を OFF / 15秒 / 30秒 / 1分 から選択。1時間なら30秒で約120枚。</span></div></div>
+          <div class="pn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><div><b>マイクも録る</b><span>ONで自分の声も画面音声とミックス（登壇録画向け／既定OFF）。</span></div></div>
+          <div class="pn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h6l2 2h8v9a1 1 0 0 1-1 1H4z"/></svg><div><b>1フォルダで整理</b><span>動画とスライドが時刻で対応。あとで突き合わせやすい。</span></div></div>
+        </div>
+      </div>
+
+      <div class="optline">
+        <span class="opt">設定 → <b>録画でマイクも録る</b></span>
+        <span class="opt">設定 → <b>録画中の自動スクショ</b></span>
+      </div>
+
+      <div class="note" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.16);border-left-color:var(--mint);color:#cfe6df;margin-top:22px">
+        <b style="color:#fff">文字起こしについて：</b>いまは音声つき動画を同梱するところまで。<code>video.webm</code> を Notta / tl;dv / Google Meetの字幕 等に渡すと文字起こしできます。
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">プレゼンで使う</p>
+    <h2>スライドショー・全画面でも</h2>
+    <p class="lede">Google スライドの発表（全画面）中でもツールバーは右端ホバーで出せます。描画やボタン操作はスライドに伝わらないので、勝手にページ送りされません。</p>
+    <ul class="toolnotes" style="max-width:62ch">
+      <li><span class="k"><kbd>Esc</kbd>＋<kbd>Tab</kbd></span><span class="d">起動中だけ。注釈オーバーレイをまるごと隠す／戻す。</span></li>
+      <li><span class="k">録画ピッカー</span><span class="d">「いま開いているタブ」も選べます（Macで音も録るなら “Chromeタブ” を選択）。</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <p class="eyebrow">ショートカット</p>
+    <h2>覚えなくてもいい、でも便利</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>キー</th><th>動作</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>⌘⇧E</kbd></td><td>ポインターの ON / OFF</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>描画の取り消し・オプションを閉じる</td></tr>
+          <tr><td><kbd>Esc</kbd>＋<kbd>Tab</kbd></td><td>オーバーレイを隠す／戻す（起動中）</td></tr>
+          <tr><td><kbd>⌫</kbd> / <kbd>Delete</kbd></td><td>1つ戻す（<kbd>⌘⇧⌫</kbd> で全消去）</td></tr>
+          <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>注目（スポットライト）の広さ</td></tr>
+          <tr><td><kbd>-</kbd> <kbd>=</kbd></td><td>ズームの倍率</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-top:12px">※ Windows は <kbd>⌘</kbd> を <kbd>Ctrl</kbd> に読み替えてください。</p>
+  </section>
+
+  <section style="border-bottom:0">
+    <p class="eyebrow">困ったとき</p>
+    <h2>トラブルシュート</h2>
+    <div class="faq">
+      <details><summary>ツールバーが出てこない</summary><div class="a">画面の<b>右端</b>にカーソルを近づけてください（自動表示）。出ないときは左下の電源マークがON（緑）か確認。</div></details>
+      <details><summary>古いバージョンが読み込まれる</summary><div class="a"><kbd>chrome://extensions</kbd> で一度<b>削除</b>してから入れ直し、設定パネル末尾の <b>バージョン番号</b>を確認してください。</div></details>
+      <details><summary>録画ピッカーにスライドのタブが出ない</summary><div class="a">最新版（v0.5.0以降）に更新してください。「Chromeタブ」一覧に開いているタブが並びます。</div></details>
+      <details><summary>録画に自分の声が入らない</summary><div class="a">設定の <b>「録画でマイクも録る」</b> を ON に。OFFのままだと画面・タブの音だけになります。</div></details>
+      <details><summary>白い画面で白アイコンが見えない</summary><div class="a">ツールバーは紺色の下地つきなので明暗どちらでも見えます。注釈の色は設定で変更できます。</div></details>
+      <details><summary>拡張を消したのに画面に残る</summary><div class="a">最新版では自動で消えます。残った場合はそのタブを再読み込みしてください。</div></details>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <svg class="fmark" viewBox="0 0 64 64" aria-hidden="true"><use href="#pulse"/></svg>
+  <div>Enmish Pointer — 開発元 Enmish, Inc.</div>
+  <div style="margin-top:4px">最新版・ダウンロードは配布元のリンクから（差し替え時は <kbd style="font-size:11px">chrome://extensions</kbd> で番号を確認）。</div>
+</footer>
