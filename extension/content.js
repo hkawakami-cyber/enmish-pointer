@@ -307,6 +307,7 @@
 
   // ---------- カーソルリング & 描画入力 ----------
   let drawing = false;
+  let inFullscreen = false; // プレゼン（全画面）中フラグ
   function canvasInteractive() {
     const on = state.appOn && !state.zoom && DRAW_TOOLS.indexOf(state.tool) !== -1;
     annot.classList.toggle("live", !!on);
@@ -323,7 +324,7 @@
   // ---- 右端ホバーで自動表示（Macのドック風）----
   const HOT = 56; // 端から何pxで反応するか（広めにして出しやすく）
   let revealTimer = null, revealed = false;
-  function autoHideActive() { return state.appOn && state.autoHide && !state.uiHidden; }
+  function autoHideActive() { return state.appOn && state.autoHide && !state.uiHidden && !inFullscreen; }
   function setReveal(on) {
     revealed = on;
     tb.classList.toggle("revealed", on);
@@ -354,11 +355,15 @@
   annot.addEventListener("mousedown", (ev) => {
     if (!state.appOn || ev.button !== 0) return;
     if (state.zoom) return;
-    if (state.tool === "text") { ev.preventDefault(); showTextInput(ev.clientX, ev.clientY, engine.hitText(ev.clientX, ev.clientY)); return; }
+    if (state.tool === "text") { ev.preventDefault(); ev.stopPropagation(); showTextInput(ev.clientX, ev.clientY, engine.hitText(ev.clientX, ev.clientY)); return; }
     if (DRAW_TOOLS.indexOf(state.tool) === -1) return;
-    drawing = true; engine.start(ev.clientX, ev.clientY); ev.preventDefault();
+    // 描画中はスライドショー等にクリックを渡さない（次のスライドへ進めない）
+    drawing = true; engine.start(ev.clientX, ev.clientY); ev.preventDefault(); ev.stopPropagation();
   });
   window.addEventListener("mouseup", () => { if (drawing) { drawing = false; engine.end(); } }, true);
+  // 描画モード（liveキャンバス）中は click 等も下のページへ渡さない（スライドショーで進めない）
+  ["click", "dblclick", "pointerdown", "pointerup", "contextmenu"].forEach((t) =>
+    annot.addEventListener(t, (e) => { if (state.appOn && annot.classList.contains("live")) e.stopPropagation(); }));
   // クリック波紋
   window.addEventListener("mousedown", (ev) => {
     if (!state.appOn || !state.ring.ripple) return;
@@ -551,7 +556,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.3.6</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.3.7</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -700,6 +705,7 @@
       toast(state.uiHidden ? "ツールバーを最小化（端のマークで再表示）" : "ツールバーを表示");
     },
     toggle(forceOn) {
+      host.style.display = ""; // Esc+Tabで隠していた場合も復帰
       const next = forceOn === true ? true : !state.appOn;
       state.appOn = next;
       if (next) state.dismissed = false; // オンにしたら「終了」状態は解除（左下マーク復活）
@@ -872,6 +878,12 @@
   root.getElementById("dock-power").addEventListener("click", () => app.toggle());
   reopenEl.addEventListener("click", () => app.toggleUI());
 
+  // UI（バー/ドック/設定/再表示）上のクリック・マウス操作は下のページ（スライドショー等）へ渡さない
+  [tb, dockEl, optEl, reopenEl].forEach((el) => {
+    ["pointerdown", "mousedown", "click", "dblclick"].forEach((t) =>
+      el.addEventListener(t, (e) => e.stopPropagation()));
+  });
+
   optEl.addEventListener("click", (e) => {
     // プロファイル：適用／保存
     const pb = e.target.closest(".prof-btn");
@@ -913,12 +925,22 @@
   });
 
   // ---------- ショートカット ----------
+  // Esc を押している間だけ true（Esc+Tab の検出用）
+  let escDown = false;
+  window.addEventListener("keyup", (e) => { if (e.key === "Escape") escDown = false; }, true);
+  window.addEventListener("blur", () => { escDown = false; }, true);
+  // 起動中だけ：Esc+Tab でオーバーレイを丸ごと隠す/戻す（クリーンな画面にしたい時）
+  const isPeeked = () => host.style.display === "none";
+  function togglePeek() { host.style.display = isPeeked() ? "" : "none"; }
+
   window.addEventListener("keydown", (ev) => {
     const ae = document.activeElement;
     const typing = ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || (ae && ae.isContentEditable);
     const mod = ev.metaKey || ev.ctrlKey, code = ev.code;
 
-    if (ev.key === "Escape") { if (app.handleEscape()) ev.preventDefault(); return; }
+    // Esc+Tab：起動中のみオーバーレイを隠す/戻す
+    if (code === "Tab" && escDown && state.appOn && !typing) { ev.preventDefault(); togglePeek(); return; }
+    if (ev.key === "Escape") { escDown = true; if (isPeeked()) { togglePeek(); ev.preventDefault(); return; } if (app.handleEscape()) ev.preventDefault(); return; }
 
     if (mod && ev.shiftKey) {
       if (code === "KeyE") { ev.preventDefault(); app.toggle(); return; }
@@ -992,8 +1014,11 @@
   // documentElement 直下のオーバーレイは隠れてしまう。全画面要素の中へ host を移動して追従させる。
   function followFullscreen() {
     const fs = document.fullscreenElement || document.webkitFullscreenElement;
+    inFullscreen = !!fs;
     const parent = fs || document.documentElement || document.body;
     if (host.parentNode !== parent) parent.appendChild(host); // 末尾へ移動＝最前面を維持
+    // プレゼン（全画面）中は自動表示をやめ、ツールバーを常に出す（操作しやすく）
+    refreshAutoHide();
     fitToolbar();
   }
   document.addEventListener("fullscreenchange", followFullscreen, true);
