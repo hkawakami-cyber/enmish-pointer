@@ -551,7 +551,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.3.5</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.3.6</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -969,6 +969,24 @@
   updateDock();
   fitToolbar();
   window.addEventListener("resize", fitToolbar, true);
+
+  // 拡張を削除/無効化/更新すると、開いているタブの注入済みオーバーレイはChromeが自動では消さない。
+  // 拡張コンテキストの無効化（chrome.runtime.id が消える）を検知して、自分で完全に片付ける。
+  function teardown() {
+    try { if (engine) engine._stopped = true; } catch (e) { /* noop */ }
+    try { host.remove(); } catch (e) { /* noop */ }
+    try {
+      const el = document.documentElement;
+      el.style.removeProperty("margin-right"); el.style.removeProperty("margin-left");
+      const b = document.body;
+      if (b) { b.style.removeProperty("transform"); b.style.removeProperty("transform-origin"); }
+    } catch (e) { /* noop */ }
+  }
+  const _ctxWatch = setInterval(() => {
+    let alive = true;
+    try { alive = !!(chrome && chrome.runtime && chrome.runtime.id); } catch (e) { alive = false; }
+    if (!alive) { clearInterval(_ctxWatch); teardown(); }
+  }, 1200);
 
   // Google スライド等の「全画面プレゼン」では、特定要素だけが全画面表示になり
   // documentElement 直下のオーバーレイは隠れてしまう。全画面要素の中へ host を移動して追従させる。

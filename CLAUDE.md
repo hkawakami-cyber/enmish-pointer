@@ -15,6 +15,7 @@
 - 拡張UIは Shadow DOM（`#enmish-focus-host`）。スタイル分離のため CSS は `content.js` 内のテンプレ文字列。
 - 永続化：Web=localStorage `enmishFocus.settings.v1` / 拡張=`chrome.storage.local` `efSettings`。どちらも `PERSIST` 配列で管理。プロファイルは別キー（Web `enmishFocus.profiles.v1` / 拡張 `efProfiles`、スロット `c1/c2/c3`）。
 - **拡張は再インストール時に storage がクリアされる** → 既定値を変えれば新既定がそのまま反映される（移行コード不要）。
+- **アンインストール時のクリーンアップ**：拡張を削除/無効化しても、開いているタブの注入済みオーバーレイはChromeが自動で消さない。`content.js` は `chrome.runtime.id` の消失を `setInterval` で監視し、無効化を検知したら `teardown()`（host削除・margin/transform復元・描画ループ停止 `engine._stopped`）する。
 
 ## 3. 開発フロー（毎回この順で。これが速さの肝）
 1. **Web と拡張の両方**を同じ仕様に直す（片方だけにしない）。

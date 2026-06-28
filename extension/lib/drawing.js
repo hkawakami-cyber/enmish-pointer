@@ -136,6 +136,7 @@
 
   // --- 描画ループ ---
   DrawingEngine.prototype._loop = function () {
+    if (this._stopped) return; // 拡張アンインストール時などのクリーンアップ用
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this.w, this.h);
     const ae = this.getAutoErase();
