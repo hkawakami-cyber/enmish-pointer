@@ -24,7 +24,7 @@
     appOn: false, tool: "rect", color: "#6cbba5", strokeWidth: 6,
     ring: { width: 6, size: 52, opacity: 0.9, ripple: true },
     cursorStyle: "ring", arrowHead: "start", uiHidden: false, optionsOpen: false,
-    autoErase: 0, spotlight: false, spotShape: "band", spotBand: 0.5, spotDim: 0.72,
+    autoErase: 0, spotlight: false, spotShape: "band", spotBand: 0.33, spotDim: 0.72,
     zoom: false, zoomScale: 2.0,
     textSize: 20, textBold: false, textColor: "#032841",
     // ring.size の既定は 52（中）。64 から少し小さく。
@@ -555,12 +555,12 @@
     if (state.appOn && state.spotlight) {
       groups.push(optGroup("注目の形", "spotShape", state.spotShape, [["band", "▭", "帯"], ["circle", "◯", "丸"]]));
       if (state.spotShape === "band")
-        groups.push(optGroup("帯の高さ", "spotBand", state.spotBand, [[0.25, "", "25%"], [0.5, "", "50%"], [0.75, "", "75%"]]));
+        groups.push(optGroup("帯の高さ", "spotBand", state.spotBand, [[0.25, "", "25%"], [0.33, "", "33%"], [0.5, "", "50%"]]));
     }
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.5.1</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.5.2</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -612,7 +612,7 @@
       sctx.save();
       sctx.globalCompositeOperation = "destination-out";
       if (state.spotShape === "band") {
-        const bandH = Math.max(60, H * (state.spotBand || 0.5));
+        const bandH = Math.max(60, H * (state.spotBand || 0.33));
         const top = Math.min(Math.max(m.y - bandH / 2, 0), H - bandH);
         const soft = Math.min(0.18, 28 / bandH);
         const g = sctx.createLinearGradient(0, top, 0, top + bandH);
@@ -1082,7 +1082,7 @@
     if ((ev.key === "Backspace" || ev.key === "Delete") && !mod) { ev.preventDefault(); engine.undo(); toast("1つ戻しました"); return; }
     if (state.spotlight && (ev.key === "[" || ev.key === "]")) {
       if (state.spotShape === "band") {
-        const opts = [0.25, 0.5, 0.75]; const i = opts.indexOf(state.spotBand);
+        const opts = [0.25, 0.33, 0.5]; const i = opts.indexOf(state.spotBand);
         state.spotBand = opts[Math.min(2, Math.max(0, (i < 0 ? 1 : i) + (ev.key === "[" ? -1 : 1)))];
         renderOptions();
       } else { spotRadius = Math.max(60, Math.min(380, spotRadius + (ev.key === "[" ? -25 : 25))); }

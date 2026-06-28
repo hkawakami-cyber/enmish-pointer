@@ -31,7 +31,7 @@
     uiHidden: false,
     spotlight: false,
     spotShape: "band",   // band（横帯） | circle
-    spotBand: 0.5,       // 帯の高さ（ビューポート比）
+    spotBand: 0.33,      // 帯の高さ（ビューポート比）
     spotDim: 0.72,       // スポットライトの暗さ（0〜1）
     zoom: false,
     zoomScale: 2.0,

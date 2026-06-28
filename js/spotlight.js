@@ -29,7 +29,7 @@
       ctx.globalCompositeOperation = "destination-out";
       if (EF.state.spotShape === "band") {
         // カーソルのY位置を中心にした横帯（高さはビューポート比で選択）
-        const bandH = Math.max(60, h * (EF.state.spotBand || 0.5));
+        const bandH = Math.max(60, h * (EF.state.spotBand || 0.33));
         const top = Math.min(Math.max(m.y - bandH / 2, 0), h - bandH);
         const soft = Math.min(0.18, 28 / bandH);
         const grad = ctx.createLinearGradient(0, top, 0, top + bandH);
@@ -64,7 +64,7 @@
     setRadius(px) { radius = Math.max(60, Math.min(360, px)); },
     adjust(delta) {
       if (EF.state.spotShape === "band") {
-        const opts = [0.25, 0.5, 0.75];
+        const opts = [0.25, 0.33, 0.5];
         const i = opts.indexOf(EF.state.spotBand);
         EF.state.spotBand = opts[Math.min(opts.length - 1, Math.max(0, (i < 0 ? 1 : i) + (delta > 0 ? 1 : -1)))];
       } else { this.setRadius(radius + delta); }
