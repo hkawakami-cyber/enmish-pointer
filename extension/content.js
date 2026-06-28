@@ -373,11 +373,30 @@
     drawPending = { x: ev.clientX, y: ev.clientY };
     ev.preventDefault(); // テキスト選択等を防止（stopPropagation はしない）
   });
-  window.addEventListener("mouseup", () => {
-    drawPending = null; // ドラッグなし（純クリック）→ インテントをキャンセル
-    if (drawing) { drawing = false; drewThisPress = true; engine.end(); }
+  window.addEventListener("mouseup", (ev) => {
+    const wasPending = drawPending;
+    drawPending = null;
+    if (drawing) { drawing = false; drewThisPress = true; engine.end(); return; }
+    // 純クリック（ドラッグなし）→ mousedown で preventDefault したため click が発生しない。
+    // host は pointer-events:none なので elementFromPoint で下の要素（スライド等）を取得し
+    // 合成 click を届ける。
+    if (wasPending && state.appOn) {
+      // annot の pointer-events を一時的に none にしないと shadow host が
+      // elementFromPoint に拾われてしまう（shadow child が auto だと host が
+      // hit-target になる Chromium の挙動）。
+      annot.style.pointerEvents = "none";
+      const underEl = document.elementFromPoint(wasPending.x, wasPending.y);
+      annot.style.pointerEvents = "";
+      if (underEl && underEl !== host) {
+        underEl.dispatchEvent(new MouseEvent("click", {
+          bubbles: true, cancelable: true,
+          clientX: wasPending.x, clientY: wasPending.y,
+          button: 0, buttons: 0, view: window
+        }));
+      }
+    }
   }, true);
-  // 描画が発生した直後のみ click を止める。純粋なクリックはスライドへ届く。
+  // 描画が発生した直後のみ click を止める
   annot.addEventListener("click", (e) => {
     if (!state.appOn || !annot.classList.contains("live")) return;
     if (drewThisPress) { drewThisPress = false; e.stopPropagation(); }
@@ -582,7 +601,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.5.4</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.5.5</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
