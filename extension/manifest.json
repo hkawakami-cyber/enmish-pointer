@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Enmish Pointer",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "商談・社内MTGの画面共有で、Webページ上に注釈・カーソル強調・スポットライトを重ねて視線を誘導する画面共有支援ツール。",
   "permissions": [
     "activeTab",
@@ -21,7 +21,8 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Enmish Pointer ON/OFF (⌘⇧E)",
+    "default_title": "Enmish Pointer メニュー",
+    "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png",

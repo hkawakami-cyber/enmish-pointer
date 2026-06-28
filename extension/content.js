@@ -551,7 +551,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.2.7</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.2.8</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -944,9 +944,22 @@
     if (state.zoom && (ev.key === "-" || ev.key === "=" || ev.key === "+")) { state.zoomScale = Math.max(1.4, Math.min(4, state.zoomScale + (ev.key === "-" ? -0.2 : 0.2))); applyZoom(); setBadge(); ev.preventDefault(); return; }
   }, true);
 
-  // background からの ON/OFF
-  chrome.runtime.onMessage.addListener((msg) => {
-    if (msg && msg.type === "ef-toggle") app.toggle();
+  // background / ツールバーのメニュー からの操作
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (!msg) return;
+    if (msg.type === "ef-toggle") { app.toggle(); return; }
+    if (msg.type === "ef-state") { if (sendResponse) sendResponse({ appOn: state.appOn }); return true; }
+    if (msg.type === "ef-cmd") {
+      switch (msg.cmd) {
+        case "toggle": app.toggle(); break;
+        case "off": if (state.appOn) app.toggle(); break;
+        case "clear": if (state.appOn) { engine.clear(); stampN = 1; toast("全消去（『戻る』で復元できます）"); } break;
+        case "options": if (!state.appOn) app.toggle(true); if (!state.optionsOpen) app.action("options"); break;
+        case "minimize": app.toggleUI(); break;
+      }
+      if (sendResponse) sendResponse({ ok: true, appOn: state.appOn });
+      return true;
+    }
   });
 
   syncUI();
