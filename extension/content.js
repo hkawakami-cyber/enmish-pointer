@@ -143,11 +143,11 @@
     .toast { bottom: 64px; left: 50%; transform: translateX(-50%) translateY(8px); background: #1b2130; color: #fff; padding: 10px 18px; border-radius: 11px; font-size: 13px; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .hint { bottom: 20px; left: 50%; transform: translateX(-50%); background: #6cbba5; color: #fff; padding: 8px 16px; border-radius: 999px; font-size: 13px; pointer-events: none; }
-    .ef-dock.dock-bottom-right { left: auto; right: 16px; bottom: 16px; top: auto; }
+    .ef-dock.dock-bottom-right { left: auto; right: 8px; bottom: 6px; top: auto; }
     .ef-dock.dock-top-left { top: 16px; left: 16px; bottom: auto; right: auto; }
     .ef-dock.dock-top-right { top: 16px; right: 16px; bottom: auto; left: auto; }
     /* ドックは枠なし（位置だけ）。マーク1枚で見せる。 */
-    .ef-dock { position: fixed; left: 16px; bottom: 16px; display: flex; gap: 6px; padding: 0; background: none; border: none; box-shadow: none; pointer-events: auto; }
+    .ef-dock { position: fixed; left: 8px; bottom: 6px; display: flex; gap: 6px; padding: 0; background: none; border: none; box-shadow: none; pointer-events: auto; }
     .dock-btn { display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; background: rgba(255,255,255,.10); color: #c4ccda; line-height: 1; transition: background .15s, color .15s, box-shadow .2s; }
     .dock-btn .ico { display: inline-flex; }
     /* 左下マーク：OFF=紺の丸 / ON=緑＋緑グロー（色で状態が一目で分かる） */
@@ -324,7 +324,7 @@
   // ---- 右端ホバーで自動表示（Macのドック風）----
   const HOT = 56; // 端から何pxで反応するか（広めにして出しやすく）
   let revealTimer = null, revealed = false;
-  function autoHideActive() { return state.appOn && state.autoHide && !state.uiHidden && !inFullscreen; }
+  function autoHideActive() { return state.appOn && state.autoHide && !state.uiHidden; }
   function setReveal(on) {
     revealed = on;
     tb.classList.toggle("revealed", on);
@@ -556,7 +556,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.3.7</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.3.8</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -1017,7 +1017,7 @@
     inFullscreen = !!fs;
     const parent = fs || document.documentElement || document.body;
     if (host.parentNode !== parent) parent.appendChild(host); // 末尾へ移動＝最前面を維持
-    // プレゼン（全画面）中は自動表示をやめ、ツールバーを常に出す（操作しやすく）
+    // 全画面でも右端ホバーの自動表示はそのまま効かせる（スライドに被らない）
     refreshAutoHide();
     fitToolbar();
   }

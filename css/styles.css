@@ -552,12 +552,12 @@ kbd {
 }
 
 /* ============ 常駐ドック ============ */
-.ef-dock.dock-bottom-right { left: auto; right: 16px; bottom: 16px; top: auto; }
+.ef-dock.dock-bottom-right { left: auto; right: 8px; bottom: 6px; top: auto; }
 .ef-dock.dock-top-left { top: 16px; left: 16px; bottom: auto; right: auto; }
 .ef-dock.dock-top-right { top: 16px; right: 16px; bottom: auto; left: auto; }
 /* ドックは枠なし（位置だけ）。マーク1枚で見せる。 */
 .ef-dock {
-  position: fixed; left: 16px; bottom: 16px; z-index: 9300;
+  position: fixed; left: 8px; bottom: 6px; z-index: 9300;
   display: flex; gap: 6px; padding: 0; background: none; border: none; box-shadow: none;
 }
 .dock-btn {
