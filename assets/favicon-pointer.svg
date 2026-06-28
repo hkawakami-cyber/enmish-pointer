@@ -1,20 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Enmish Pointer アプリアイコン（favicon ファミリー準拠）
-     ダークネイビーの角丸タイル + 白のポインター + 緑のクリック波紋 -->
+<!-- Enmish Pointer アイコン：パルス（ミント #34d3a6）。箱なしのフラットな1マーク。 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Enmish Pointer">
-  <defs>
-    <linearGradient id="ep-bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#0a3d5c"/>
-      <stop offset="1" stop-color="#032841"/>
-    </linearGradient>
-  </defs>
-  <!-- タイル -->
-  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#ep-bg)"/>
-  <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="14.25" fill="none" stroke="#ffffff" stroke-opacity="0.10"/>
-  <!-- 緑のクリック波紋（ブランドのワンポイント） -->
-  <path d="M40 19 A11 11 0 0 1 45 28" fill="none" stroke="#6cbba5" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
-  <path d="M44 15 A16 16 0 0 1 50 27" fill="none" stroke="#6cbba5" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
-  <!-- 白のマウスポインター -->
-  <path d="M22 17 L22 50 L30.5 41.6 L36.8 55 L42.2 52.4 L36 39 L47.5 39 Z"
-        fill="#ffffff" stroke="#032841" stroke-width="1.6" stroke-linejoin="round"/>
+  <circle cx="32" cy="32" r="20" fill="none" stroke="#34d3a6" stroke-width="4" opacity="0.36"/>
+  <circle cx="32" cy="32" r="12.5" fill="none" stroke="#34d3a6" stroke-width="4" opacity="0.7"/>
+  <circle cx="32" cy="32" r="5.2" fill="#34d3a6"/>
 </svg>

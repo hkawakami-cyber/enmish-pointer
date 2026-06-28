@@ -1,21 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Enmish Pointer 横ロックアップ（アイコン + ワードマーク） -->
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 84" width="340" height="84" role="img" aria-label="Enmish Pointer">
-  <defs>
-    <linearGradient id="lp-bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#0a3d5c"/>
-      <stop offset="1" stop-color="#032841"/>
-    </linearGradient>
-  </defs>
-  <!-- アイコンタイル -->
-  <g transform="translate(8,10)">
-    <rect x="0" y="0" width="64" height="64" rx="15" fill="url(#lp-bg)"/>
-    <path d="M40 19 A11 11 0 0 1 45 28" fill="none" stroke="#6cbba5" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
-    <path d="M44 15 A16 16 0 0 1 50 27" fill="none" stroke="#6cbba5" stroke-width="3" stroke-linecap="round" opacity="0.55"/>
-    <path d="M22 17 L22 50 L30.5 41.6 L36.8 55 L42.2 52.4 L36 39 L47.5 39 Z"
-          fill="#ffffff" stroke="#032841" stroke-width="1.6" stroke-linejoin="round"/>
+<!-- Enmish Pointer 横ロックアップ（パルスのマーク + ワードマーク） -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 84" width="320" height="84" role="img" aria-label="Enmish Pointer">
+  <!-- パルス（ミント） -->
+  <g transform="translate(42,42)">
+    <circle r="26" fill="none" stroke="#34d3a6" stroke-width="5" opacity="0.34"/>
+    <circle r="16" fill="none" stroke="#34d3a6" stroke-width="5" opacity="0.68"/>
+    <circle r="6.6" fill="#34d3a6"/>
   </g>
   <!-- ワードマーク -->
   <text x="88" y="46" font-family="'Helvetica Neue',Helvetica,Arial,sans-serif" font-size="34" font-weight="700" letter-spacing="-0.5" fill="#032841">enmish</text>
-  <text x="89" y="68" font-family="'Helvetica Neue',Helvetica,Arial,sans-serif" font-size="15" font-weight="700" letter-spacing="4.5" fill="#6cbba5">POINTER</text>
+  <text x="89" y="68" font-family="'Helvetica Neue',Helvetica,Arial,sans-serif" font-size="15" font-weight="700" letter-spacing="4.5" fill="#34d3a6">POINTER</text>
 </svg>
