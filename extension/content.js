@@ -34,6 +34,7 @@
     barSide: "right", dockPos: "bottom-left",
     autoHide: true, // 右端ホバーで自動表示（Mac のドック風）
     showLabels: true, // ツールの文字ラベル表示（OFFで記号だけ）
+    dismissed: false, // 「終了」で画面から完全に消した状態（左下マークも非表示）
     recording: false,
     mouse: { x: -999, y: -999 },
   };
@@ -514,8 +515,8 @@
   }
 
   function updateDock() {
-    // 左下マークは常に表示。色（緑＝ON／グレー＝OFF）で機能の状態を示す。
-    dockEl.hidden = false;
+    // 左下マークは基本常時表示（色でON/OFF）。ただし「終了」されたら完全に隠す。
+    dockEl.hidden = state.dismissed && !state.appOn;
     const power = root.getElementById("dock-power");
     power.classList.toggle("on", state.appOn);
     power.title = state.appOn ? "ポインター ON（クリックでOFF）" : "ポインター OFF（クリックでON）";
@@ -551,7 +552,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.2.8</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.2.9</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -701,6 +702,7 @@
     toggle(forceOn) {
       const next = forceOn === true ? true : !state.appOn;
       state.appOn = next;
+      if (next) state.dismissed = false; // オンにしたら「終了」状態は解除（左下マーク復活）
       if (!next) {
         state.spotlight = false; state.zoom = false; applyZoom();
         state.uiHidden = false; host.classList.remove("ui-hidden");
@@ -952,7 +954,7 @@
     if (msg.type === "ef-cmd") {
       switch (msg.cmd) {
         case "toggle": app.toggle(); break;
-        case "off": if (state.appOn) app.toggle(); break;
+        case "off": state.dismissed = true; if (state.appOn) app.toggle(); else updateDock(); break;
         case "clear": if (state.appOn) { engine.clear(); stampN = 1; toast("全消去（『戻る』で復元できます）"); } break;
         case "options": if (!state.appOn) app.toggle(true); if (!state.optionsOpen) app.action("options"); break;
         case "minimize": app.toggleUI(); break;
