@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Enmish Pointer アイコン：パルス（ミント #34d3a6）。箱なしのフラットな1マーク。 -->
+<!-- Enmish Pointer アイコン：パルス（ミント #34d3a6）。キャンバスいっぱいに大きめ。 -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Enmish Pointer">
-  <circle cx="32" cy="32" r="20" fill="none" stroke="#34d3a6" stroke-width="4" opacity="0.36"/>
-  <circle cx="32" cy="32" r="12.5" fill="none" stroke="#34d3a6" stroke-width="4" opacity="0.7"/>
-  <circle cx="32" cy="32" r="5.2" fill="#34d3a6"/>
+  <circle cx="32" cy="32" r="26" fill="none" stroke="#34d3a6" stroke-width="4.5" opacity="0.4"/>
+  <circle cx="32" cy="32" r="16" fill="none" stroke="#34d3a6" stroke-width="4.5" opacity="0.78"/>
+  <circle cx="32" cy="32" r="7" fill="#34d3a6"/>
 </svg>
