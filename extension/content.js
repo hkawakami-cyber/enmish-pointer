@@ -309,7 +309,9 @@
 
   // ---------- カーソルリング & 描画入力 ----------
   let drawing = false;
-  let inFullscreen = false; // プレゼン（全画面）中フラグ
+  let drawPending = null;    // mousedown後、6px以上ドラッグで描画確定する座標
+  let drewThisPress = false; // 今回の押下でドラッグ描画が発生したか（click stopper用）
+  let inFullscreen = false;  // プレゼン（全画面）中フラグ
   function canvasInteractive() {
     const on = state.appOn && !state.zoom && DRAW_TOOLS.indexOf(state.tool) !== -1;
     annot.classList.toggle("live", !!on);
@@ -319,6 +321,12 @@
     state.mouse = { x: ev.clientX, y: ev.clientY };
     updateRing();
     if (state.zoom) applyZoom();
+    // 6px 以上移動したら描画を確定（それ未満はクリック扱いでスライド送り可）
+    if (drawPending) {
+      if (Math.hypot(ev.clientX - drawPending.x, ev.clientY - drawPending.y) >= 6) {
+        drawing = true; engine.start(drawPending.x, drawPending.y); drawPending = null;
+      }
+    }
     if (drawing) engine.move(ev.clientX, ev.clientY);
     updateReveal(ev.clientX, ev.clientY);
   }, true);
@@ -338,6 +346,7 @@
   }
   function updateReveal(x, y) {
     if (!autoHideActive()) return;
+    if (drawing) return; // 描画中はツールバー自動表示を更新しない
     const left = state.barSide === "left";
     const nearEdge = left ? x <= HOT : x >= window.innerWidth - HOT;
     let overBar = false;
@@ -359,13 +368,26 @@
     if (state.zoom) return;
     if (state.tool === "text") { ev.preventDefault(); ev.stopPropagation(); showTextInput(ev.clientX, ev.clientY, engine.hitText(ev.clientX, ev.clientY)); return; }
     if (DRAW_TOOLS.indexOf(state.tool) === -1) return;
-    // 描画中はスライドショー等にクリックを渡さない（次のスライドへ進めない）
-    drawing = true; engine.start(ev.clientX, ev.clientY); ev.preventDefault(); ev.stopPropagation();
+    // ドラッグ閾値まではクリックをスライドへ通す（スライドショーでのクリック送りが使える）
+    drewThisPress = false;
+    drawPending = { x: ev.clientX, y: ev.clientY };
+    ev.preventDefault(); // テキスト選択等を防止（stopPropagation はしない）
   });
-  window.addEventListener("mouseup", () => { if (drawing) { drawing = false; engine.end(); } }, true);
-  // 描画モード（liveキャンバス）中は click 等も下のページへ渡さない（スライドショーで進めない）
-  ["click", "dblclick", "pointerdown", "pointerup", "contextmenu"].forEach((t) =>
+  window.addEventListener("mouseup", () => {
+    drawPending = null; // ドラッグなし（純クリック）→ インテントをキャンセル
+    if (drawing) { drawing = false; drewThisPress = true; engine.end(); }
+  }, true);
+  // 描画が発生した直後のみ click を止める。純粋なクリックはスライドへ届く。
+  annot.addEventListener("click", (e) => {
+    if (!state.appOn || !annot.classList.contains("live")) return;
+    if (drewThisPress) { drewThisPress = false; e.stopPropagation(); }
+  });
+  // dblclick / contextmenu は描画モード中は常に止める
+  ["dblclick", "contextmenu"].forEach((t) =>
     annot.addEventListener(t, (e) => { if (state.appOn && annot.classList.contains("live")) e.stopPropagation(); }));
+  // pointer 系は描画中のみ止める
+  ["pointerdown", "pointerup"].forEach((t) =>
+    annot.addEventListener(t, (e) => { if (state.appOn && drawing) e.stopPropagation(); }));
   // クリック波紋
   window.addEventListener("mousedown", (ev) => {
     if (!state.appOn || !state.ring.ripple) return;
@@ -560,7 +582,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.5.3</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.5.4</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -999,9 +1021,11 @@
   root.getElementById("dock-power").addEventListener("click", () => app.toggle());
   reopenEl.addEventListener("click", () => app.toggleUI());
 
-  // UI（バー/ドック/設定/再表示）上のクリック・マウス操作は下のページ（スライドショー等）へ渡さない
+  // UI（バー/ドック/設定/再表示）のイベントをスライドへ渡さない。
+  // mousedown に preventDefault を加えてフォーカスの奪取を防ぐ（矢印キー等でスライド送りが維持される）。
   [tb, dockEl, optEl, reopenEl].forEach((el) => {
-    ["pointerdown", "mousedown", "click", "dblclick"].forEach((t) =>
+    el.addEventListener("mousedown", (e) => { e.preventDefault(); e.stopPropagation(); });
+    ["pointerdown", "pointerup", "click", "dblclick", "contextmenu"].forEach((t) =>
       el.addEventListener(t, (e) => e.stopPropagation()));
   });
 
@@ -1063,7 +1087,7 @@
 
     // Esc+Tab：起動中のみオーバーレイを隠す/戻す
     if (code === "Tab" && escDown && state.appOn && !typing) { ev.preventDefault(); togglePeek(); return; }
-    if (ev.key === "Escape") { escDown = true; if (isPeeked()) { togglePeek(); ev.preventDefault(); return; } if (app.handleEscape()) ev.preventDefault(); return; }
+    if (ev.key === "Escape") { escDown = true; if (isPeeked()) { togglePeek(); ev.preventDefault(); ev.stopPropagation(); return; } if (app.handleEscape()) { ev.preventDefault(); ev.stopPropagation(); return; } return; }
 
     if (mod && ev.shiftKey) {
       if (code === "KeyE") { ev.preventDefault(); app.toggle(); return; }
@@ -1118,6 +1142,7 @@
   // 拡張を削除/無効化/更新すると、開いているタブの注入済みオーバーレイはChromeが自動では消さない。
   // 拡張コンテキストの無効化（chrome.runtime.id が消える）を検知して、自分で完全に片付ける。
   function teardown() {
+    try { if (hostParentObserver) hostParentObserver.disconnect(); } catch (e) { /* noop */ }
     try { if (engine) engine._stopped = true; } catch (e) { /* noop */ }
     try { host.remove(); } catch (e) { /* noop */ }
     try {
@@ -1135,12 +1160,26 @@
 
   // Google スライド等の「全画面プレゼン」では、特定要素だけが全画面表示になり
   // documentElement 直下のオーバーレイは隠れてしまう。全画面要素の中へ host を移動して追従させる。
+  let hostParentObserver = null;
   function followFullscreen() {
     const fs = document.fullscreenElement || document.webkitFullscreenElement;
     inFullscreen = !!fs;
     const parent = fs || document.documentElement || document.body;
-    if (host.parentNode !== parent) parent.appendChild(host); // 末尾へ移動＝最前面を維持
-    // 全画面でも右端ホバーの自動表示はそのまま効かせる（スライドに被らない）
+    // 親が変わった、または末尾（最前面）でなくなった場合は末尾へ移動
+    if (host.parentNode !== parent || parent.lastElementChild !== host) {
+      parent.appendChild(host);
+      requestAnimationFrame(() => { engine.resize(); sizeSpot(); });
+    }
+    // 全画面コンテナに他の要素が追加されても最前面を維持するよう監視
+    if (hostParentObserver) hostParentObserver.disconnect();
+    if (host.parentNode) {
+      hostParentObserver = new MutationObserver(() => {
+        if (host.isConnected && host.parentNode && host.parentNode.lastElementChild !== host) {
+          host.parentNode.appendChild(host);
+        }
+      });
+      hostParentObserver.observe(host.parentNode, { childList: true });
+    }
     refreshAutoHide();
     fitToolbar();
   }
