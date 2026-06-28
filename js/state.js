@@ -45,6 +45,8 @@
     showLabels: true,    // ツールの文字ラベル表示（OFFで記号だけ）
     autoErase: 0,        // 自動で消える（レーザー）秒数。0でOFF
     recording: false,
+    recMic: false,       // 録画時に自分のマイク音声も混ぜる（登壇録画向け。既定OFF）
+    recShotSec: 0,       // 録画中の自動スクショ間隔（秒）。0=OFF / 15 / 30 / 60
     mouse: { x: -999, y: -999, inStage: false },
   };
 
@@ -84,7 +86,7 @@
   // --- 設定の永続化（localStorage） ---
   const STORE_KEY = "enmishFocus.settings.v1";
   const PERSIST = ["color", "strokeWidth", "textSize", "textBold", "textColor", "ring", "cursorStyle", "arrowHead",
-    "spotShape", "spotBand", "spotDim", "zoomScale", "showOptions", "toolOrder", "toolHidden", "barSide", "dockPos", "autoHide", "showLabels", "autoErase", "tool"];
+    "spotShape", "spotBand", "spotDim", "zoomScale", "showOptions", "toolOrder", "toolHidden", "barSide", "dockPos", "autoHide", "showLabels", "autoErase", "tool", "recMic", "recShotSec"];
   EF.PERSIST = PERSIST; // プロファイル機能などから参照
 
   EF.saveSettings = function () {

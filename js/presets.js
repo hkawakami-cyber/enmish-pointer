@@ -49,6 +49,8 @@
       seg("set-show-labels", "labels", (v) => { EF.state.showLabels = (v === "on"); EF.app.applyLayout(); });
       seg("set-laser", "laser", (v) => { EF.state.autoErase = (v === "on") ? 2 : 0; });
       seg("set-auto-hide", "auto", (v) => { EF.state.autoHide = (v === "on"); EF.app.applyLayout(); });
+      seg("set-rec-mic", "recmic", (v) => { EF.state.recMic = (v === "on"); });
+      seg("set-rec-shot", "recshot", (v) => { EF.state.recShotSec = parseInt(v, 10) || 0; });
       seg("set-bar-side", "side", (v) => { EF.state.barSide = v; EF.app.applyLayout(); });
       seg("set-dock-pos", "pos", (v) => { EF.state.dockPos = v; EF.app.applyLayout(); });
 
@@ -215,6 +217,8 @@
       setActive("set-show-labels", "labels", EF.state.showLabels ? "on" : "off");
       setActive("set-laser", "laser", EF.state.autoErase > 0 ? "on" : "off");
       setActive("set-auto-hide", "auto", EF.state.autoHide ? "on" : "off");
+      setActive("set-rec-mic", "recmic", EF.state.recMic ? "on" : "off");
+      setActive("set-rec-shot", "recshot", EF.state.recShotSec | 0);
       setActive("set-bar-side", "side", EF.state.barSide);
       setActive("set-dock-pos", "pos", EF.state.dockPos);
       setActive("set-text-size", "size", EF.state.textSize);

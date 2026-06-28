@@ -36,6 +36,8 @@
     showLabels: true, // ツールの文字ラベル表示（OFFで記号だけ）
     dismissed: false, // 「終了」で画面から完全に消した状態（左下マークも非表示）
     recording: false,
+    recMic: false, // 録画時に自分のマイク音声も混ぜる（登壇録画向け。既定OFF）
+    recShotSec: 0, // 録画中の自動スクショ間隔（秒）。0=OFF / 15 / 30 / 60
     mouse: { x: -999, y: -999 },
   };
 
@@ -459,7 +461,7 @@
   // 設定の永続化（chrome.storage.local）
   const PERSIST = ["color", "strokeWidth", "ring", "cursorStyle", "arrowHead",
     "spotShape", "spotBand", "spotDim", "zoomScale", "textSize", "textBold", "textColor",
-    "toolOrder", "toolHidden", "barSide", "dockPos", "autoHide", "showLabels", "autoErase", "tool"];
+    "toolOrder", "toolHidden", "barSide", "dockPos", "autoHide", "showLabels", "autoErase", "tool", "recMic", "recShotSec"];
   // 保存済み順序に新規ツールが欠けていたら補完、未知のキーは除去
   function normalizeToolOrder() {
     if (!Array.isArray(state.toolOrder)) state.toolOrder = TOOL_DEFS.map((d) => d[1]);
@@ -540,6 +542,8 @@
     groups.push(optGroup("注目の濃さ", "spotDim", state.spotDim, [[0.55, "", "薄"], [0.72, "", "標準"], [0.88, "", "濃"]]));
     groups.push(optGroup("ラベル表示（記号だけ＝OFF）", "showLabels", state.showLabels ? "on" : "off", [["on", "", "ON"], ["off", "", "OFF"]]));
     groups.push(optGroup("自動で消える（レーザー）", "laser", state.autoErase > 0 ? "on" : "off", [["on", "", "ON"], ["off", "", "OFF"]]));
+    groups.push(optGroup("録画でマイクも録る", "recMic", state.recMic ? "on" : "off", [["on", "", "ON"], ["off", "", "OFF"]]));
+    groups.push(optGroup("録画中の自動スクショ", "recShotSec", state.recShotSec, [[0, "", "OFF"], [15, "", "15秒"], [30, "", "30秒"], [60, "", "1分"]]));
     groups.push(optGroup("自動表示（右端ホバー）", "autoHide", state.autoHide ? "on" : "off", [["on", "", "ON"], ["off", "", "OFF"]]));
     groups.push(optGroup("ツールバー位置", "barSide", state.barSide, [["left", "", "左"], ["right", "", "右"]]));
     groups.push(optGroup("ドック位置", "dockPos", state.dockPos, [["bottom-left", "", "左下"], ["bottom-right", "", "右下"], ["top-left", "", "左上"], ["top-right", "", "右上"]]));
@@ -556,7 +560,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.4.0</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.5.0</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -663,6 +667,41 @@
     $("#btn-zoom").classList.toggle("toggled", state.zoom);
     root.querySelectorAll(".swatch").forEach((s) => s.classList.toggle("active", s.dataset.color === state.color));
     canvasInteractive();
+  }
+
+  // ---------- ZIP（無圧縮 store。PNG/webmは既に圧縮済みなので十分） ----------
+  function efCrc32(buf) {
+    let table = efCrc32._t;
+    if (!table) {
+      table = efCrc32._t = new Uint32Array(256);
+      for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); table[n] = c >>> 0; }
+    }
+    let c = 0xFFFFFFFF;
+    for (let i = 0; i < buf.length; i++) c = table[(c ^ buf[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function efZip(files) { // files: [{name, data:Uint8Array}]
+    const enc = new TextEncoder();
+    const u16 = (n) => [n & 255, (n >>> 8) & 255];
+    const u32 = (n) => [n & 255, (n >>> 8) & 255, (n >>> 16) & 255, (n >>> 24) & 255];
+    const local = [], central = []; let offset = 0;
+    for (const f of files) {
+      const name = enc.encode(f.name), crc = efCrc32(f.data), size = f.data.length;
+      const lh = [].concat(u32(0x04034b50), u16(20), u16(0), u16(0), u16(0), u16(0), u32(crc), u32(size), u32(size), u16(name.length), u16(0));
+      local.push(new Uint8Array(lh), name, f.data);
+      const ch = [].concat(u32(0x02014b50), u16(20), u16(20), u16(0), u16(0), u16(0), u16(0), u32(crc), u32(size), u32(size), u16(name.length), u16(0), u16(0), u16(0), u16(0), u32(0), u32(offset));
+      central.push(new Uint8Array(ch), name);
+      offset += lh.length + name.length + size;
+    }
+    let cenSize = 0; central.forEach((c) => (cenSize += c.length));
+    const eocd = [].concat(u32(0x06054b50), u16(0), u16(0), u16(files.length), u16(files.length), u32(cenSize), u32(offset), u16(0));
+    return new Blob([...local, ...central, new Uint8Array(eocd)], { type: "application/zip" });
+  }
+  function efDownload(blob, name) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
   }
 
   // ---------- コマンド ----------
@@ -824,32 +863,88 @@
         toast("画面録画を開始できませんでした（権限が許可されていない可能性があります）", 2800);
         return;
       }
+      // 録画用ストリーム。マイクONなら「画面/タブの音声」＋「自分のマイク」をミックスする
+      let recStream = stream, micStream = null, audioCtx = null;
+      if (state.recMic) {
+        try {
+          micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          const AC = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AC();
+          const dest = audioCtx.createMediaStreamDestination();
+          if (stream.getAudioTracks().length) {
+            audioCtx.createMediaStreamSource(new MediaStream(stream.getAudioTracks())).connect(dest);
+          }
+          audioCtx.createMediaStreamSource(micStream).connect(dest);
+          recStream = new MediaStream([...stream.getVideoTracks(), ...dest.stream.getAudioTracks()]);
+        } catch (err) {
+          if (micStream) micStream.getTracks().forEach((t) => t.stop());
+          if (audioCtx) { try { audioCtx.close(); } catch (e) { /* noop */ } }
+          micStream = null; audioCtx = null; recStream = stream;
+          toast("マイクが取得できなかったため、画面音声のみで録画します", 2800);
+        }
+      }
       let rec;
       try {
         const opt = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
           ? { mimeType: "video/webm;codecs=vp9" } : { mimeType: "video/webm" };
-        rec = new MediaRecorder(stream, opt);
+        rec = new MediaRecorder(recStream, opt);
       } catch (err) {
         stream.getTracks().forEach((t) => t.stop());
+        if (micStream) micStream.getTracks().forEach((t) => t.stop());
+        if (audioCtx) { try { audioCtx.close(); } catch (e) { /* noop */ } }
         toast("録画の初期化に失敗しました", 2600);
         return;
+      }
+      // 録画中の自動スクショ（間隔ごとに録画ストリームのフレームをPNGで貯める）
+      const shotSec = state.recShotSec | 0;
+      const shots = []; // {name, data:Uint8Array}
+      let shotTimer = null, shotVideo = null, shotIdx = 0;
+      const startMs = Date.now();
+      if (shotSec > 0) {
+        shotVideo = document.createElement("video");
+        shotVideo.muted = true; shotVideo.playsInline = true;
+        try { shotVideo.srcObject = recStream; shotVideo.play().catch(() => {}); } catch (e) { /* noop */ }
+        const grab = () => {
+          const vw = shotVideo.videoWidth, vh = shotVideo.videoHeight;
+          if (!vw || !vh) return;
+          const cv = document.createElement("canvas"); cv.width = vw; cv.height = vh;
+          try { cv.getContext("2d").drawImage(shotVideo, 0, 0, vw, vh); } catch (e) { return; }
+          const idx = ++shotIdx, sec = Math.round((Date.now() - startMs) / 1000);
+          const mm = String(Math.floor(sec / 60)).padStart(2, "0"), ss = String(sec % 60).padStart(2, "0");
+          cv.toBlob((b) => {
+            if (!b) return;
+            b.arrayBuffer().then((ab) => {
+              shots.push({ name: `slides/${String(idx).padStart(3, "0")}_${mm}m${ss}s.png`, data: new Uint8Array(ab) });
+            });
+          }, "image/png");
+        };
+        setTimeout(grab, 1200); // 開始直後に1枚
+        shotTimer = setInterval(grab, shotSec * 1000);
       }
       const chunks = [];
       rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
       rec.onstop = () => {
+        if (shotTimer) clearInterval(shotTimer);
+        if (shotVideo) { try { shotVideo.pause(); shotVideo.srcObject = null; } catch (e) { /* noop */ } }
         stream.getTracks().forEach((t) => t.stop());
+        if (micStream) micStream.getTracks().forEach((t) => t.stop());
+        if (audioCtx) { try { audioCtx.close(); } catch (e) { /* noop */ } }
         const blob = new Blob(chunks, { type: "video/webm" });
         const d = new Date(), p = (n) => String(n).padStart(2, "0");
-        const fn = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}_画面録画.webm`;
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url; a.download = fn;
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 4000);
-        recorder = null;
-        state.recording = false;
-        app._syncRecordBtn();
-        toast("録画を保存しました: " + fn, 2600);
+        const stamp = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`;
+        recorder = null; state.recording = false; app._syncRecordBtn();
+        if (shots.length) {
+          // 動画＋スライドを1つのZIP（フォルダ）にまとめて保存
+          toast(`記録パックを作成中…（スライド${shots.length}枚）`, 2200);
+          blob.arrayBuffer().then((ab) => {
+            const files = [{ name: "video.webm", data: new Uint8Array(ab) }].concat(shots);
+            efDownload(efZip(files), `記録_${stamp}.zip`);
+            toast(`記録パックを保存：動画＋スライド${shots.length}枚`, 3000);
+          });
+        } else {
+          efDownload(blob, `${stamp}_画面録画.webm`);
+          toast("録画を保存しました: " + stamp, 2600);
+        }
       };
       const vt = stream.getVideoTracks()[0];
       if (vt) vt.onended = () => { if (state.recording) app._stopRecord(); };
@@ -857,7 +952,10 @@
       state.recording = true;
       app._syncRecordBtn();
       rec.start();
-      toast("画面録画を開始しました（もう一度押すと停止）", 2600);
+      const parts = ["画面"];
+      if (micStream) parts.push("マイク");
+      if (shotSec > 0) parts.push(`スライド自動(${shotSec}秒)`);
+      toast(`録画開始：${parts.join("＋")}（もう一度押すと停止）`, 2800);
     },
     _stopRecord() {
       if (recorder && recorder.state !== "inactive") {
@@ -917,6 +1015,8 @@
     else if (opt === "ripple") state.ring.ripple = (v === "on");
     else if (opt === "showLabels") { state.showLabels = (v === "on"); applyLayout(); }
     else if (opt === "laser") { state.autoErase = (v === "on") ? 2 : 0; }
+    else if (opt === "recMic") { state.recMic = (v === "on"); }
+    else if (opt === "recShotSec") { state.recShotSec = parseInt(v, 10) || 0; }
     else if (opt === "autoHide") { state.autoHide = (v === "on"); applyLayout(); }
     else if (opt === "barSide" || opt === "dockPos") { state[opt] = v; applyLayout(); }
     else state[opt] = v;

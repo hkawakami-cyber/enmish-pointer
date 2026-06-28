@@ -40,6 +40,13 @@ zip 名がずっと `v0.1.0` 固定で「どれが最新か分からず古い展
 - zip ファイル名 `dist/enmish-pointer-extension-vX.Y.Z.zip`
 を**揃えて上げる**。差し替え時は「`chrome://extensions` でバージョン番号を確認」を必ず案内する。
 
+### 録画＝「記録パック」機能（v0.4〜0.5で実装）
+- `getDisplayMedia` の制約に `selfBrowserSurface:"include"` / `surfaceSwitching` / `systemAudio` を明示（**いま開いているタブ＝スライド/ドキュメントがピッカーで選べない事象を解消**）。
+- `recMic`（既定OFF）：ONで `getUserMedia` のマイクと画面音声を `AudioContext` でミックスして録音（登壇録画向け）。失敗時は画面音声のみにフォールバック。
+- `recShotSec`（0=OFF/15/30/60秒）：録画中、録画ストリームを `<video>`→canvas で間引きキャプチャし PNG を貯める。停止時、**動画＋スライドを1つの ZIP**（`video.webm` + `slides/NNN_MMmSSs.png`）にまとめて保存。ZIPは無圧縮storeを手書き実装（`efCrc32`/`efZip`/`efDownload`、content.js と app.js に同一実装）。`chrome.downloads` 権限は不要（`<a download>`で1ファイル）。
+- **文字起こしは未実装**（ブラウザ内で1時間級の音声認識は非現実的）。やるならクラウドSTT API か WASM Whisper の検討が要る＝要相談事項。
+- 設定UI：拡張=設定パネルの optGroup（`recMic`/`recShotSec`）、Web=index.html の `#set-rec-mic`/`#set-rec-shot` + presets.js の seg/setActive。両方 `PERSIST` 済み。
+
 ## 4. 河上さんの進め方・好み（これに合わせると速い）
 - **超高速イテレーション**。短いカジュアルな日本語で、思いついた改善を次々投げる。作業途中でも新しい依頼が割り込む（中断歓迎、柔軟に拾う）。
 - **画像で判断する人**。文章説明より、こちらが**3〜5案を画像で並べて見せる**と即決できる（ロゴ・色・ドックの形などは必ずビジュアル提示→番号で選択）。スクショで状況・不具合を共有してくる。
