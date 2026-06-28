@@ -1005,7 +1005,7 @@ kbd {
     zoom: false,
     zoomScale: 2.0,
     // ツールバーのカスタム（並べ替え・表示/非表示）
-    toolOrder: ["rect", "highlighter", "arrow", "hline", "text", "pen", "cursor", "ellipse", "stamp", "spotlight", "zoom"],
+    toolOrder: ["rect", "highlighter", "arrow", "hline", "text", "pen", "cursor", "ellipse", "spotlight", "zoom"],
     toolHidden: {},
     // バーの配置
     barSide: "right",    // ツールバーの左右: right | left
@@ -1705,7 +1705,6 @@ kbd {
     { key: "ellipse", label: "丸", ic: "ellipse", kind: "tool" },
     { key: "rect", label: "四角", ic: "rect", kind: "tool" },
     { key: "text", label: "文字", ic: "text", kind: "tool" },
-    { key: "stamp", label: "番号", ic: "stamp", kind: "tool" },
     { key: "spotlight", label: "注目", ic: "spotlight", kind: "toggle" },
     { key: "zoom", label: "ズーム", ic: "zoom", kind: "toggle" },
   ];
@@ -2270,11 +2269,6 @@ kbd {
           EF.app.showTextInput(p, hit);
           return;
         }
-        if (EF.state.tool === "stamp") {
-          ev.preventDefault();
-          this.engine.addStamp(p.x, p.y, String(EF.app._stampN++), EF.state.color);
-          return;
-        }
         if (DRAW_TOOLS.indexOf(EF.state.tool) === -1) return;
         this.drawing = true;
         this.engine.start(p.x, p.y);
@@ -2378,7 +2372,6 @@ kbd {
         case "undo": if (EF.state.appOn) EF.annot.engine.undo(); break;
         case "clear":
           EF.annot.engine.clear();
-          this._stampN = 1;
           EF.toast("全消去（『戻る』で復元できます）");
           break;
         case "screenshot": EF.screenshot.capture(); break;
@@ -2388,7 +2381,6 @@ kbd {
         case "hide-ui": this.toggleUI(); break;
       }
     },
-    _stampN: 1,
 
     // 画面録画ボタンの見た目を更新（録画中=赤・停止アイコン）
     _syncRecordBtn() {

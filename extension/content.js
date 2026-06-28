@@ -203,7 +203,6 @@
     ["tool", "ellipse", "◯", "丸"],
     ["tool", "rect", "▢", "四角"],
     ["tool", "text", "T", "文字"],
-    ["tool", "stamp", "①", "番号"],
     ["toggle", "spotlight", "☀", "注目"],
     ["toggle", "zoom", "🔍", "ズーム"],
   ];
@@ -306,9 +305,8 @@
 
   // ---------- カーソルリング & 描画入力 ----------
   let drawing = false;
-  let stampN = 1; // 番号スタンプの連番（全消去でリセット）
   function canvasInteractive() {
-    const on = state.appOn && !state.zoom && (DRAW_TOOLS.indexOf(state.tool) !== -1 || state.tool === "stamp");
+    const on = state.appOn && !state.zoom && DRAW_TOOLS.indexOf(state.tool) !== -1;
     annot.classList.toggle("live", !!on);
     annot.classList.toggle("tool-cursor", false);
   }
@@ -355,7 +353,6 @@
     if (!state.appOn || ev.button !== 0) return;
     if (state.zoom) return;
     if (state.tool === "text") { ev.preventDefault(); showTextInput(ev.clientX, ev.clientY, engine.hitText(ev.clientX, ev.clientY)); return; }
-    if (state.tool === "stamp") { ev.preventDefault(); engine.addStamp(ev.clientX, ev.clientY, String(stampN++), state.color); return; }
     if (DRAW_TOOLS.indexOf(state.tool) === -1) return;
     drawing = true; engine.start(ev.clientX, ev.clientY); ev.preventDefault();
   });
@@ -552,7 +549,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.2.9</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.3.0</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -678,7 +675,7 @@
     },
     action(name) {
       if (name === "undo") engine.undo();
-      else if (name === "clear") { engine.clear(); stampN = 1; toast("全消去（『戻る』で復元できます）"); }
+      else if (name === "clear") { engine.clear(); toast("全消去（『戻る』で復元できます）"); }
       else if (name === "screenshot") app.screenshot();
       else if (name === "copy") app.copyShot();
       else if (name === "record") app.toggleRecord();
@@ -955,7 +952,7 @@
       switch (msg.cmd) {
         case "toggle": app.toggle(); break;
         case "off": state.dismissed = true; if (state.appOn) app.toggle(); else updateDock(); break;
-        case "clear": if (state.appOn) { engine.clear(); stampN = 1; toast("全消去（『戻る』で復元できます）"); } break;
+        case "clear": if (state.appOn) { engine.clear(); toast("全消去（『戻る』で復元できます）"); } break;
         case "options": if (!state.appOn) app.toggle(true); if (!state.optionsOpen) app.action("options"); break;
         case "minimize": app.toggleUI(); break;
       }

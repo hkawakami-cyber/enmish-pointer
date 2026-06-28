@@ -14,7 +14,6 @@
     { key: "ellipse", label: "丸", ic: "ellipse", kind: "tool" },
     { key: "rect", label: "四角", ic: "rect", kind: "tool" },
     { key: "text", label: "文字", ic: "text", kind: "tool" },
-    { key: "stamp", label: "番号", ic: "stamp", kind: "tool" },
     { key: "spotlight", label: "注目", ic: "spotlight", kind: "toggle" },
     { key: "zoom", label: "ズーム", ic: "zoom", kind: "toggle" },
   ];
