@@ -20,9 +20,12 @@
     if (!window.__efEarly.appOn) return;
     if (ev.key !== "Delete" && ev.key !== "Backspace") return;
 
-    // 入力欄フォーカス中は横取りしない
+    // 入力欄フォーカス中は横取りしない（Shadow DOM内の ef-text も含む）
     var ae = document.activeElement;
+    var host = document.getElementById("enmish-focus-host");
+    var sae = host && host.shadowRoot && host.shadowRoot.activeElement;
     if (ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || ae.isContentEditable)) return;
+    if (sae && (/^(INPUT|TEXTAREA)$/.test(sae.tagName) || sae.isContentEditable)) return;
 
     // Ctrl+Shift+Delete / Cmd+Shift+Delete → 全消去
     if ((ev.metaKey || ev.ctrlKey) && ev.shiftKey) {

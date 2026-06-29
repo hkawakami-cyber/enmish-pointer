@@ -23,7 +23,7 @@
   const state = {
     appOn: false, tool: "rect", color: "#6cbba5", strokeWidth: 6,
     ring: { width: 6, size: 52, opacity: 0.9, ripple: true },
-    cursorStyle: "dot", arrowHead: "start", uiHidden: false, optionsOpen: false,
+    cursorStyle: "dot", arrowHead: "end", uiHidden: false, optionsOpen: false,
     autoErase: 0, spotlight: false, spotShape: "band", spotBand: 0.33, spotDim: 0.72,
     zoom: false, zoomScale: 2.0,
     textSize: 20, textBold: false, textColor: "#032841",
@@ -446,7 +446,7 @@
     const onBlur = () => close(true);
     inp.addEventListener("keydown", (e) => {
       e.stopPropagation();
-      if (e.key === "Enter") close(true);
+      if (e.key === "Enter" && !e.isComposing) close(true);
       else if (e.key === "Escape") close(false);
     });
     inp.addEventListener("blur", onBlur);
@@ -601,7 +601,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.5.13</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.5.14</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -844,7 +844,7 @@
         .replace(/[\s\\/:*?"<>|.~#%&{}$!'@+`=,;()\[\]]+/g, "_")
         .replace(/_+/g, "_").replace(/^_+|_+$/g, "")
         .slice(0, 30).replace(/_+$/, "") || "画面";
-      const fn = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}_${title}_注釈.png`;
+      const fn = `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}_${title}_annot.png`;
       // UI を一時的に隠してから撮る（注釈は残す）
       const hide = [tb, badgeEl, ring, toastEl, optEl, dockEl];
       const prev = hide.map((e) => e.style.visibility);
@@ -1007,14 +1007,14 @@
           ].join("\r\n");
           blob.arrayBuffer().then((ab) => {
             const files = [
-              { name: "メモ.txt", data: new TextEncoder().encode(memo) },
+              { name: "memo.txt", data: new TextEncoder().encode(memo) },
               { name: "video.webm", data: new Uint8Array(ab) },
             ].concat(shots);
-            efDownload(efZip(files), `記録_${stamp}.zip`);
+            efDownload(efZip(files), `rec_${stamp}.zip`);
             toast(`記録パックを保存：動画＋スライド${shots.length}枚`, 3000);
           });
         } else {
-          efDownload(blob, `${stamp}_画面録画.webm`);
+          efDownload(blob, `${stamp}_screen.webm`);
           toast("録画を保存しました: " + stamp, 2600);
         }
       };
@@ -1115,9 +1115,17 @@
   const isPeeked = () => host.style.display === "none";
   function togglePeek() { host.style.display = isPeeked() ? "" : "none"; }
 
+  // タブが非表示になったらズームを解除（他タブ移動後の残留防止）
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && state.zoom) { state.zoom = false; applyZoom(); setBadge(); }
+  });
+
   window.addEventListener("keydown", (ev) => {
     const ae = document.activeElement;
-    const typing = ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || (ae && ae.isContentEditable);
+    // Shadow DOM 内の入力欄（テキスト注釈 ef-text）もチェック
+    const sae = host && host.shadowRoot && host.shadowRoot.activeElement;
+    const typing = (ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || ae.isContentEditable)) ||
+                   (sae && (/^(INPUT|TEXTAREA)$/.test(sae.tagName) || sae.isContentEditable));
     const mod = ev.metaKey || ev.ctrlKey, code = ev.code;
 
     // Esc+Tab：起動中のみオーバーレイを隠す/戻す

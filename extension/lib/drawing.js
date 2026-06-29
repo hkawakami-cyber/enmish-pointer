@@ -58,8 +58,8 @@
   DrawingEngine.prototype.move = function (x, y) {
     if (!this.current) return;
     const c = this.current;
-    // 横線・蛍光ペンはY固定（高さが変わらない＝水平に引く）
-    if (c.tool === "hline" || c.tool === "highlighter") y = c.a.y;
+    // 横線のみY固定（蛍光ペンは自由曲線で描けるようにした）
+    if (c.tool === "hline") y = c.a.y;
     c.b = { x, y };
     if (c.tool === "pen" || c.tool === "highlighter") c.points.push({ x, y });
   };
