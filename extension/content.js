@@ -601,7 +601,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.5.7</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.5.8</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -694,10 +694,18 @@
   // ---------- ズーム（ページ本体を拡大・表示専用） ----------
   function applyZoom() {
     const b = document.body; if (!b) return;
-    if (!state.zoom) { b.style.transform = ""; b.style.transformOrigin = ""; return; }
-    const ox = window.scrollX + state.mouse.x, oy = window.scrollY + state.mouse.y;
-    b.style.transformOrigin = ox + "px " + oy + "px";
-    b.style.transform = "scale(" + state.zoomScale + ")";
+    // CSS zoom（transform でなく zoom プロパティ）を使う理由：
+    // 1. zoom は再描画でレンダリングされるため文字・ベクターが鮮明（transform は bitmap 拡大でぼやける）
+    // 2. zoom は fixed 要素の containing block を変えない → フルスクリーン中のオーバーレイ位置が崩れない
+    if (!state.zoom) {
+      b.style.zoom = "";
+      b.style.transform = "";      // 旧版の transform が残っていれば消す
+      b.style.transformOrigin = "";
+      return;
+    }
+    b.style.transform = "";
+    b.style.transformOrigin = "";
+    b.style.zoom = state.zoomScale;
   }
 
   // ---------- UI 同期 ----------
@@ -1169,7 +1177,7 @@
       const el = document.documentElement;
       el.style.removeProperty("margin-right"); el.style.removeProperty("margin-left");
       const b = document.body;
-      if (b) { b.style.removeProperty("transform"); b.style.removeProperty("transform-origin"); }
+      if (b) { b.style.removeProperty("transform"); b.style.removeProperty("transform-origin"); b.style.removeProperty("zoom"); }
     } catch (e) { /* noop */ }
   }
   const _ctxWatch = setInterval(() => {
