@@ -12,7 +12,6 @@
     window.addEventListener("message", function(ev) {
       if (ev.data && ev.data.__efType === "efState") {
         window.__efEarly.appOn = !!ev.data.appOn;
-        if ("hasStrokes" in ev.data) window.__efEarly.hasStrokes = !!ev.data.hasStrokes;
       }
     });
   }
@@ -40,9 +39,10 @@
       return;
     }
 
-    // 修飾キーなし → 1つ戻す（アノテーションがない場合はページに委譲）
+    // 修飾キーなし → 1つ戻す。
+    // ツールON中は Delete を常に拡張が受け取り、ページ（Slides等）には絶対渡さない。
+    // 注釈が無ければ undo は空振り＝安全。スライド削除はツールOFFにしてから。
     if (!ev.metaKey && !ev.ctrlKey && !ev.shiftKey) {
-      if (!window.__efEarly.hasStrokes) return; // 描画なし → Slides/Sheets に渡す
       ev.preventDefault();
       ev.stopImmediatePropagation();
       if (window.__efEarly.cb) {

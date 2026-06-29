@@ -307,13 +307,6 @@
   });
   window.addEventListener("resize", () => { engine.resize(); sizeSpot(); });
 
-  // keyboard_early.js が Delete/Backspace を横取りするか判断するためのフラグ
-  // 描画がない状態では Slides/Sheets のキー操作を妨げない
-  Object.defineProperty(window.__efEarly, 'hasStrokes', {
-    get: () => !engine.isEmpty(),
-    configurable: true,
-  });
-
   // ---------- カーソルリング & 描画入力 ----------
   let drawing = false;
   let drawPending = null;    // mousedown後、6px以上ドラッグで描画確定する座標
@@ -383,7 +376,7 @@
   window.addEventListener("mouseup", (ev) => {
     const wasPending = drawPending;
     drawPending = null;
-    if (drawing) { drawing = false; drewThisPress = true; engine.end(); broadcastToIframes(state.appOn); return; }
+    if (drawing) { drawing = false; drewThisPress = true; engine.end(); return; }
     // 純クリック（ドラッグなし）→ mousedown で preventDefault したため click が発生しない。
     // host は pointer-events:none なので elementFromPoint で下の要素（スライド等）を取得し
     // 合成 click を届ける。
@@ -608,7 +601,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.5.15</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.5.16</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -1154,8 +1147,8 @@
 
     // Ctrl+Z → undo / Ctrl+Y → redo（typing中は横取りしない）
     if (mod && !ev.shiftKey && state.appOn && !typing) {
-      if (code === "KeyZ") { ev.preventDefault(); engine.undo(); toast("1つ戻しました"); broadcastToIframes(state.appOn); return; }
-      if (code === "KeyY") { ev.preventDefault(); engine.redoLast(); toast("1つ進めました"); broadcastToIframes(state.appOn); return; }
+      if (code === "KeyZ") { ev.preventDefault(); engine.undo(); toast("1つ戻しました"); return; }
+      if (code === "KeyY") { ev.preventDefault(); engine.redoLast(); toast("1つ進めました"); return; }
     }
 
     if (!state.appOn || typing) return;
@@ -1189,30 +1182,29 @@
   });
 
   if (window.__efEarly) {
-    window.__efEarly.cb = function() { engine.undo(); toast("1つ戻しました"); broadcastToIframes(state.appOn); };
+    window.__efEarly.cb = function() { engine.undo(); toast("1つ戻しました"); };
     window.__efEarly.clearCb = function() { app.action("clear"); };
   }
 
-  // iframe 内の keyboard_early.js からの Delete/Backspace イベントを受け取る
+  // iframe 内の keyboard_early.js へ appOn 状態を配信する
   function broadcastToIframes(on) {
-    const has = !engine.isEmpty();
     try {
       document.querySelectorAll("iframe").forEach(function(f) {
-        try { f.contentWindow.postMessage({ __efType: "efState", appOn: on, hasStrokes: has }, "*"); } catch (e) {}
+        try { f.contentWindow.postMessage({ __efType: "efState", appOn: on }, "*"); } catch (e) {}
       });
     } catch (e) {}
   }
   window.addEventListener("message", function(ev) {
     if (!ev.data) return;
-    // iframe からの状態リクエスト（初期化時に hasStrokes も渡す）
+    // iframe からの状態リクエスト
     if (ev.data.__efType === "efReq") {
-      try { ev.source.postMessage({ __efType: "efState", appOn: state.appOn, hasStrokes: !engine.isEmpty() }, "*"); } catch (e) {}
+      try { ev.source.postMessage({ __efType: "efState", appOn: state.appOn }, "*"); } catch (e) {}
       return;
     }
     // iframe からのキー操作
     if (ev.data.__efType === "efKey" && state.appOn) {
-      if (ev.data.action === "undo") { engine.undo(); toast("1つ戻しました"); broadcastToIframes(state.appOn); }
-      if (ev.data.action === "clear") { app.action("clear"); broadcastToIframes(state.appOn); }
+      if (ev.data.action === "undo") { engine.undo(); toast("1つ戻しました"); }
+      if (ev.data.action === "clear") { app.action("clear"); }
     }
   });
 
