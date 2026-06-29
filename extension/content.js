@@ -443,11 +443,7 @@
         engine.addText(px, py, v, { color: color, size: size, weight: weight });
       }
     };
-    const onBlur = (e) => {
-      // shadow root 内の他の要素（設定パネルボタン等）にフォーカスが移った場合は誤確定しない
-      if (e.relatedTarget && root.contains(e.relatedTarget)) return;
-      close(true);
-    };
+    const onBlur = () => close(true);
     inp.addEventListener("keydown", (e) => {
       e.stopPropagation();
       if (e.key === "Enter" && !e.isComposing) close(true);
