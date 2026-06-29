@@ -23,7 +23,7 @@
   const state = {
     appOn: false, tool: "rect", color: "#6cbba5", strokeWidth: 6,
     ring: { width: 6, size: 52, opacity: 0.9, ripple: true },
-    cursorStyle: "dot", arrowHead: "end", uiHidden: false, optionsOpen: false,
+    cursorStyle: "dot", arrowHead: "start", uiHidden: false, optionsOpen: false,
     autoErase: 0, spotlight: false, spotShape: "band", spotBand: 0.33, spotDim: 0.72,
     zoom: false, zoomScale: 2.0,
     textSize: 20, textBold: false, textColor: "#032841",
