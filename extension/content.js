@@ -601,7 +601,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.5.8</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.5.9</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -1159,7 +1159,10 @@
     }
   });
 
-  if (window.__efEarly) window.__efEarly.cb = function() { engine.undo(); toast("1つ戻しました"); };
+  if (window.__efEarly) {
+    window.__efEarly.cb = function() { engine.undo(); toast("1つ戻しました"); };
+    window.__efEarly.clearCb = function() { app.action("clear"); };
+  }
 
   syncUI();
   renderOptions();
