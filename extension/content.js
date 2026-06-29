@@ -443,7 +443,11 @@
         engine.addText(px, py, v, { color: color, size: size, weight: weight });
       }
     };
-    const onBlur = () => close(true);
+    const onBlur = (e) => {
+      // shadow root 内の他の要素（設定パネルボタン等）にフォーカスが移った場合は誤確定しない
+      if (e.relatedTarget && root.contains(e.relatedTarget)) return;
+      close(true);
+    };
     inp.addEventListener("keydown", (e) => {
       e.stopPropagation();
       if (e.key === "Enter" && !e.isComposing) close(true);
@@ -601,7 +605,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.5.14</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.5.15</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -1141,7 +1145,14 @@
       if (code === "Digit6") { ev.preventDefault(); app.toggleMode("zoom"); return; }
       if (code === "KeyH") { ev.preventDefault(); app.toggleUI(); return; }
       if (ev.key === "Backspace" || ev.key === "Delete") { ev.preventDefault(); app.action("clear"); return; }
+      if (code === "KeyZ" && !typing) { ev.preventDefault(); engine.redoLast(); toast("1つ進めました"); return; }
       return;
+    }
+
+    // Ctrl+Z → undo / Ctrl+Y → redo（typing中は横取りしない）
+    if (mod && !ev.shiftKey && state.appOn && !typing) {
+      if (code === "KeyZ") { ev.preventDefault(); engine.undo(); toast("1つ戻しました"); return; }
+      if (code === "KeyY") { ev.preventDefault(); engine.redoLast(); toast("1つ進めました"); return; }
     }
 
     if (!state.appOn || typing) return;
