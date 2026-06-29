@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Enmish Pointer — 使い方ガイド</title>
+<meta name="description" content="画面共有を分かりやすくする注釈ツール Enmish Pointer の使い方ガイド。インストール手順・各ツールの説明・ショートカット一覧。">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;background:#f5f8fa;color:#1c2b3a;font-size:16px}
+body{font-family:-apple-system,"Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif;line-height:1.8;-webkit-font-smoothing:antialiased}
+
+/* ── VARIABLES ── */
+:root{
+  --mint:#2eab8a;--mint-lt:#eef8f4;--mint-bd:#b2ddd0;--mint-hi:#34d3a6;
+  --navy:#0e1f35;--navy2:#06202f;
+  --text:#1c2b3a;--sub:#4d6070;--muted:#8096a8;
+  --line:#dde6ed;--bg:#f5f8fa;--white:#fff;
+  --red:#e23b3b;--amber:#d97706;
+  --r:10px;--maxw:900px;
+}
+
+/* ── HEADER ── */
+.site-header{position:sticky;top:0;z-index:100;background:rgba(245,248,250,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.hrow{max-width:var(--maxw);margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:10px}
+.logo-mark{width:28px;height:28px;flex-shrink:0}
+.logo-name{font-weight:800;font-size:15px;color:var(--navy)}
+.logo-name span{color:var(--mint)}
+.ver-badge{margin-left:auto;font-size:11px;font-family:ui-monospace,monospace;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--muted)}
+nav{display:flex;gap:2px;margin-left:20px}
+nav a{font-size:13px;color:var(--sub);text-decoration:none;padding:4px 10px;border-radius:6px;white-space:nowrap}
+nav a:hover{background:var(--mint-lt);color:var(--mint)}
+@media(max-width:640px){nav{display:none}}
+
+/* ── HERO ── */
+.hero{background:linear-gradient(150deg,var(--navy) 0%,var(--navy2) 100%);color:#e8f0ea;padding:72px 24px 80px}
+.hero-inner{max-width:var(--maxw);margin:0 auto}
+.hero-pulse{width:64px;height:64px;margin-bottom:22px}
+.hero h1{font-size:clamp(28px,5vw,48px);font-weight:900;line-height:1.1;letter-spacing:-.02em;color:#fff;text-wrap:balance}
+.hero h1 .sub{display:block;font-size:clamp(16px,2.5vw,22px);font-weight:600;color:#8dc4b4;margin-top:10px;letter-spacing:0}
+.hero p{max-width:50ch;margin-top:18px;color:#9abfb6;font-size:16px;line-height:1.7}
+.hero-badges{display:flex;flex-wrap:wrap;gap:9px;margin-top:24px}
+.hero-badge{font-size:12px;font-weight:600;padding:5px 13px;border-radius:999px;border:1px solid rgba(52,211,166,.35);color:#bdeede;background:rgba(52,211,166,.08)}
+
+/* ── LAYOUT ── */
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+section{padding:56px 0;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:none}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--mint);font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.eyebrow::before{content:"";width:18px;height:2px;background:var(--mint);border-radius:2px}
+h2{font-size:clamp(22px,3.5vw,30px);font-weight:800;color:var(--navy);margin-bottom:10px;text-wrap:balance}
+.lede{color:var(--sub);font-size:15px;line-height:1.75;max-width:58ch;margin-bottom:28px}
+h3{font-size:17px;font-weight:800;color:var(--navy);margin-bottom:8px}
+p{color:var(--text);font-size:15px;line-height:1.8;margin-bottom:12px}
+p:last-child{margin-bottom:0}
+
+/* ── STEP LIST ── */
+.step-list{display:flex;flex-direction:column;gap:6px}
+.step-item{display:grid;grid-template-columns:52px 1fr;gap:0 16px;background:var(--white);border:1px solid var(--line);border-radius:var(--r);padding:20px 20px 20px 0;overflow:hidden}
+.step-num{display:flex;align-items:flex-start;justify-content:center;padding-top:2px}
+.step-num span{width:32px;height:32px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0;font-variant-numeric:tabular-nums}
+.step-body h3{font-size:15.5px}
+.step-note{margin-top:8px;font-size:13.5px;color:var(--sub);background:var(--bg);border-radius:6px;padding:10px 13px;line-height:1.6}
+
+/* ── CALLOUT ── */
+.box{border-radius:0 var(--r) var(--r) 0;padding:13px 16px;margin:16px 0;font-size:14px;line-height:1.65}
+.box-mint{background:var(--mint-lt);border-left:4px solid var(--mint);color:#1a4035}
+.box-mint strong{color:var(--mint)}
+.box-amber{background:#fffbeb;border-left:4px solid var(--amber);color:#5a3a00}
+.box-amber strong{color:var(--amber)}
+
+/* ── TOOL GRID ── */
+.tool-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin-top:8px}
+.tool-card{background:var(--white);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;display:flex;gap:14px;align-items:flex-start}
+.tool-icon{width:40px;height:40px;border-radius:9px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tool-icon svg{width:20px;height:20px}
+.tool-icon.active{background:var(--mint)}
+.tool-name{font-size:14.5px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.tool-desc{font-size:13px;color:var(--sub);line-height:1.55}
+
+/* ── COLOR SWATCHES ── */
+.swatch-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}
+.swatch{display:flex;align-items:center;gap:10px;background:var(--white);border:1px solid var(--line);border-radius:var(--r);padding:10px 14px;font-size:14px;font-weight:600}
+.swatch-dot{width:22px;height:22px;border-radius:50%;box-shadow:0 0 0 2px #fff,0 0 0 3.5px var(--line)}
+
+/* ── TOOLBAR VISUAL ── */
+.toolbar-demo{background:rgba(6,32,52,.94);border-radius:16px;padding:10px;display:grid;grid-template-columns:1fr 1fr;gap:5px;width:130px;box-shadow:0 14px 32px rgba(6,32,52,.35)}
+.tb-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:8px;color:#e0ecf0;font-size:10px}
+.tb-btn.sel{background:var(--mint);color:#06251c;font-weight:700}
+.tb-btn svg{width:17px;height:17px}
+.tb-demo-wrap{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;margin-top:8px}
+.tb-demo-note{font-size:14px;color:var(--sub);line-height:1.7;max-width:38ch}
+.tb-demo-note strong{color:var(--navy)}
+
+/* ── SHORTCUTS TABLE ── */
+.sc-table{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:8px}
+.sc-table th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;text-align:left;padding:9px 12px;border-bottom:2px solid var(--line)}
+.sc-table td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--text)}
+.sc-table tr:last-child td{border-bottom:none}
+kbd{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.84em;background:#eef3f1;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:1px 7px;white-space:nowrap;color:var(--navy)}
+
+/* ── FAQ ── */
+.faq{display:flex;flex-direction:column;gap:8px}
+details{background:var(--white);border:1px solid var(--line);border-radius:var(--r)}
+summary{cursor:pointer;font-weight:700;font-size:15px;padding:16px 18px;list-style:none;display:flex;justify-content:space-between;align-items:center;gap:14px;color:var(--navy)}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";color:var(--mint);font-weight:800;font-size:20px;line-height:1;flex-shrink:0;transition:transform .2s}
+details[open] summary::after{transform:rotate(45deg)}
+.faq-body{padding:0 18px 16px;font-size:14.5px;color:var(--sub);line-height:1.7;border-top:1px solid var(--line)}
+.faq-body p{font-size:14.5px;color:var(--sub);margin-top:12px}
+
+/* ── POPUP MENU VISUAL ── */
+.popup-demo{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;width:220px;box-shadow:0 8px 24px rgba(10,30,50,.12)}
+.popup-hd{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--line)}
+.popup-mk{width:20px;height:20px;border-radius:50%;background:var(--mint);display:flex;align-items:center;justify-content:center}
+.popup-mk svg{width:11px;height:11px;color:#06251c}
+.popup-nm{font-weight:800;font-size:13px}
+.popup-ver{margin-left:auto;font-size:10px;color:var(--muted)}
+.popup-row{display:flex;align-items:center;gap:10px;padding:9px 12px;font-size:13px;cursor:default}
+.popup-row:hover{background:var(--mint-lt)}
+.popup-row svg{width:15px;height:15px;color:var(--sub);flex-shrink:0}
+.popup-row.red{color:var(--red)}
+.popup-row.red svg{color:var(--red)}
+.popup-sep{height:1px;background:var(--line);margin:4px 8px}
+.popup-demo-wrap{display:flex;gap:28px;align-items:flex-start;flex-wrap:wrap;margin-top:8px}
+.popup-demo-note{font-size:14px;color:var(--sub);line-height:1.75;max-width:38ch}
+.popup-demo-note strong{color:var(--navy);display:block;margin-bottom:2px}
+
+/* ── FOOTER ── */
+footer{padding:40px 24px;text-align:center;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
+footer .f-mark{width:28px;height:28px;margin:0 auto 10px;display:block}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header class="site-header">
+  <div class="hrow">
+    <svg class="logo-mark" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+      <circle cx="32" cy="32" r="26" stroke="#34d3a6" stroke-width="4" opacity=".35"/>
+      <circle cx="32" cy="32" r="16" stroke="#34d3a6" stroke-width="4" opacity=".75"/>
+      <circle cx="32" cy="32" r="7" fill="#34d3a6"/>
+    </svg>
+    <span class="logo-name">Enmish <span>Pointer</span></span>
+    <nav>
+      <a href="#install">インストール</a>
+      <a href="#tools">ツール一覧</a>
+      <a href="#shortcuts">ショートカット</a>
+      <a href="#faq">よくある質問</a>
+    </nav>
+    <span class="ver-badge">v0.5.5</span>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="hero-inner">
+    <svg class="hero-pulse" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+      <circle cx="32" cy="32" r="26" stroke="#34d3a6" stroke-width="4" opacity=".3"/>
+      <circle cx="32" cy="32" r="16" stroke="#34d3a6" stroke-width="4" opacity=".7"/>
+      <circle cx="32" cy="32" r="7" fill="#34d3a6"/>
+    </svg>
+    <h1>Enmish Pointer<span class="sub">画面共有に注釈を重ねる Chrome 拡張</span></h1>
+    <p>商談・社内MTG・研修の画面共有中に、見ているタブの上へ直接ペン・図形・スポットライトなどを重ねられます。相手にもそのまま見えます。</p>
+    <div class="hero-badges">
+      <span class="hero-badge">Google Meet 対応</span>
+      <span class="hero-badge">Google スライド対応</span>
+      <span class="hero-badge">Salesforce 対応</span>
+      <span class="hero-badge">あらゆる Web ページで使用可</span>
+    </div>
+  </div>
+</div>
+
+<main>
+
+<!-- ═══════════════════ INSTALL ═══════════════════ -->
+<section id="install">
+  <div class="wrap">
+    <p class="eyebrow">Step 1</p>
+    <h2>インストール方法</h2>
+    <p class="lede">Chrome に拡張機能を追加します。所要時間は約2分です。</p>
+
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-num"><span>1</span></div>
+        <div class="step-body">
+          <h3>ZIP ファイルを受け取る</h3>
+          <p>担当者から <code>enmish-pointer-extension-v0.5.5.zip</code> を受け取ります。</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num"><span>2</span></div>
+        <div class="step-body">
+          <h3>ZIP を解凍する</h3>
+          <p>ダウンロードした ZIP ファイルをダブルクリックして解凍します。<br>フォルダ（例：<code>extension</code>）が作成されます。</p>
+          <div class="step-note">💡 解凍後のフォルダは削除しないでください。拡張機能を読み込むときに必要です。</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num"><span>3</span></div>
+        <div class="step-body">
+          <h3>Chrome の拡張機能ページを開く</h3>
+          <p>Chrome のアドレスバーに <kbd>chrome://extensions</kbd> と入力して Enter を押します。</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num"><span>4</span></div>
+        <div class="step-body">
+          <h3>「デベロッパーモード」を ON にする</h3>
+          <p>ページ右上の「デベロッパーモード」のスイッチをオンにします。</p>
+          <div class="step-note">💡 このモードを有効にしないと、次のステップが表示されません。</div>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num"><span>5</span></div>
+        <div class="step-body">
+          <h3>「パッケージ化されていない拡張機能を読み込む」をクリック</h3>
+          <p>ページ左上に表示されるボタンをクリックし、Step 2 で解凍したフォルダを選択します。</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-num"><span>6</span></div>
+        <div class="step-body">
+          <h3>インストール完了</h3>
+          <p>「Enmish Pointer」が一覧に表示されれば完了です。Chrome の右上にパズルマーク（🧩）からアイコンをピン留めしておくと便利です。</p>
+          <div class="step-note">✅ バージョン番号が <strong>v0.5.5</strong> になっていることを確認してください。古いバージョンが残っている場合は先に削除してから再インストールしてください。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ BASIC USAGE ═══════════════════ -->
+<section id="basic">
+  <div class="wrap">
+    <p class="eyebrow">Step 2</p>
+    <h2>基本的な使い方</h2>
+    <p class="lede">拡張機能のメニューからオン/オフを切り替え、画面右端のツールバーで注釈ツールを選びます。</p>
+
+    <!-- POWER ON -->
+    <h3>① ポインターをオンにする</h3>
+    <p>Chrome の右上にある Enmish Pointer のアイコンをクリックするとメニューが開きます。「ポインター」ボタンを押すと起動します。</p>
+
+    <div class="popup-demo-wrap">
+      <div class="popup-demo" aria-label="ポップアップメニューのイメージ">
+        <div class="popup-hd">
+          <div class="popup-mk">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 4v8"/><path d="M7.5 7a7 7 0 1 0 9 0"/></svg>
+          </div>
+          <span class="popup-nm">Enmish Pointer</span>
+          <span class="popup-ver">v0.5.5</span>
+        </div>
+        <div class="popup-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4v8"/><path d="M7.5 7a7 7 0 1 0 9 0"/></svg>
+          ポインター
+        </div>
+        <div class="popup-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h18"/></svg>
+          ツールバー表示 / 最小化
+        </div>
+        <div class="popup-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          注釈を全消去
+        </div>
+        <div class="popup-row">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          設定を開く
+        </div>
+        <div class="popup-sep"></div>
+        <div class="popup-row red">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 4v8"/><path d="M7.5 7a7 7 0 1 0 9 0"/></svg>
+          終了（オフにする）
+        </div>
+      </div>
+      <div class="popup-demo-note">
+        <strong>メニューの項目</strong>
+        <br>
+        <b>ポインター</b>：オン/オフの切り替え<br>
+        <b>ツールバー表示 / 最小化</b>：右端のツールバーを隠す・戻す<br>
+        <b>注釈を全消去</b>：描いた注釈をすべて消す<br>
+        <b>設定を開く</b>：色・サイズなどを変更<br>
+        <b>終了</b>：ツールを完全にオフにする
+      </div>
+    </div>
+
+    <div class="box box-mint" style="margin-top:24px">
+      <strong>キーボードからも起動できます：</strong>　<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd>（Mac は <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd>）を押すとメニューを開かずに ON/OFF できます。
+    </div>
+
+    <!-- TOOLBAR -->
+    <h3 style="margin-top:32px">② ツールバーからツールを選ぶ</h3>
+    <p>オンにすると画面の右端にカーソルを近づけるとツールバーが現れます。使いたいツールを選んでクリックするだけです。</p>
+
+    <div class="tb-demo-wrap">
+      <div class="toolbar-demo" aria-label="ツールバーのイメージ">
+        <!-- Row 1 -->
+        <div class="tb-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5l4 4L7 21H3v-4L16.5 3.5z"/></svg>
+          ペン
+        </div>
+        <div class="tb-btn sel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5l4 4L7 21H3v-4L16.5 3.5z"/></svg>
+          蛍光
+        </div>
+        <div class="tb-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          矢印
+        </div>
+        <div class="tb-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+          楕円
+        </div>
+        <div class="tb-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          四角
+        </div>
+        <div class="tb-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+          カーソル
+        </div>
+      </div>
+      <div class="tb-demo-note">
+        ツールバーは<strong>画面右端にカーソルを近づけると表示</strong>されます。<br>
+        使いたいツールを選んで、スライドや資料の上でドラッグして描きます。<br><br>
+        <strong>スライドのクリック送り</strong>はツールがオンの状態でも使えます。<br>
+        ドラッグせずにクリックするだけなら、スライドが次に進みます。
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ TOOLS ═══════════════════ -->
+<section id="tools">
+  <div class="wrap">
+    <p class="eyebrow">ツール一覧</p>
+    <h2>各ツールの使い方</h2>
+    <p class="lede">ツールバーから選べるツールをまとめました。</p>
+
+    <div class="tool-grid">
+      <div class="tool-card">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5l4 4L7 21H3v-4L16.5 3.5z"/></svg>
+        </div>
+        <div>
+          <div class="tool-name">ペン</div>
+          <div class="tool-desc">自由に線を引けます。ドラッグして描きます。細い線で書き込みや囲みに使います。</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5l4 4L7 21H3v-4L16.5 3.5z"/></svg>
+        </div>
+        <div>
+          <div class="tool-name">蛍光ペン</div>
+          <div class="tool-desc">半透明の太い線で強調できます。テキストや図の重要箇所に重ねて使います。</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </div>
+        <div>
+          <div class="tool-name">矢印</div>
+          <div class="tool-desc">矢印を描けます。ドラッグした方向に矢印が向きます。「ここを見て」と指し示すときに便利。</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/></svg>
+        </div>
+        <div>
+          <div class="tool-name">横線</div>
+          <div class="tool-desc">水平な線を引けます。数字の区切りや項目を横切るラインに使います。</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+        </div>
+        <div>
+          <div class="tool-name">楕円・円</div>
+          <div class="tool-desc">楕円を描けます。特定の数字や箇所を丸で囲んで注目させます。</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+        </div>
+        <div>
+          <div class="tool-name">四角</div>
+          <div class="tool-desc">四角形を描けます。エリアや項目を囲んで強調するときに使います。</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+        </div>
+        <div>
+          <div class="tool-name">テキスト</div>
+          <div class="tool-desc">文字を入力できます。クリックした場所に入力ボックスが開きます。</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="10" opacity=".4"/></svg>
+        </div>
+        <div>
+          <div class="tool-name">カーソル強調</div>
+          <div class="tool-desc">マウスカーソルの周囲に緑のリングが表示されます。「今どこを見ているか」が伝わりやすくなります。</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+        </div>
+        <div>
+          <div class="tool-name">スポットライト</div>
+          <div class="tool-desc">カーソル周辺だけを明るく表示し、周囲を暗くします。特定の箇所に集中させたいときに使います。</div>
+        </div>
+      </div>
+      <div class="tool-card">
+        <div class="tool-icon active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        </div>
+        <div>
+          <div class="tool-name">ズーム</div>
+          <div class="tool-desc">画面の一部を拡大して表示します。細かい数字やテキストを見せたいときに便利です。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLORS -->
+    <h3 style="margin-top:36px">ペンの色</h3>
+    <p>ツールバー内のカラーボタンで色を切り替えられます。設定から変更することもできます。</p>
+    <div class="swatch-row">
+      <div class="swatch"><span class="swatch-dot" style="background:#6cbba5"></span>グリーン（初期設定）</div>
+      <div class="swatch"><span class="swatch-dot" style="background:#e23b3b"></span>レッド</div>
+      <div class="swatch"><span class="swatch-dot" style="background:#1a1a1a;box-shadow:0 0 0 2px #fff,0 0 0 3.5px #ccc"></span>ブラック</div>
+      <div class="swatch"><span class="swatch-dot" style="background:#ffffff;box-shadow:0 0 0 2px #fff,0 0 0 3.5px #ccc"></span>ホワイト</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ SHORTCUTS ═══════════════════ -->
+<section id="shortcuts">
+  <div class="wrap">
+    <p class="eyebrow">ショートカット</p>
+    <h2>キーボードショートカット一覧</h2>
+    <p class="lede">よく使う操作はキーボードからも実行できます。</p>
+
+    <div style="overflow-x:auto">
+      <table class="sc-table">
+        <thead>
+          <tr>
+            <th>操作</th>
+            <th>Windows / Linux</th>
+            <th>Mac</th>
+            <th>説明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>ON / OFF 切り替え</td>
+            <td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd></td>
+            <td><kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd></td>
+            <td>メニューを開かずにすばやく起動・停止できます</td>
+          </tr>
+          <tr>
+            <td>全消去</td>
+            <td colspan="2">ツールバー内の「全消去」ボタン、またはポップアップメニューから</td>
+            <td>描いた注釈をすべて消します</td>
+          </tr>
+          <tr>
+            <td>オーバーレイ一時非表示</td>
+            <td><kbd>Esc</kbd> 長押し + <kbd>Tab</kbd></td>
+            <td><kbd>Esc</kbd> 長押し + <kbd>Tab</kbd></td>
+            <td>注釈を一時的に隠します。もう一度押すと戻ります</td>
+          </tr>
+          <tr>
+            <td>ズーム終了 / スポットライト終了</td>
+            <td><kbd>Esc</kbd></td>
+            <td><kbd>Esc</kbd></td>
+            <td>ズームまたはスポットライト中に押すと元に戻ります</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="box box-amber" style="margin-top:16px">
+      <strong>スライドショー中のキー操作：</strong>　描画ツールがオンの状態でも <kbd>→</kbd> キーや <kbd>Space</kbd> でスライドを進められます。矢印キーはスライドに届きます。
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FAQ ═══════════════════ -->
+<section id="faq">
+  <div class="wrap">
+    <p class="eyebrow">よくある質問</p>
+    <h2>困ったときは</h2>
+    <p class="lede">よくある質問と対処方法をまとめました。</p>
+
+    <div class="faq">
+
+      <details>
+        <summary>拡張機能が表示されない / アイコンが見当たらない</summary>
+        <div class="faq-body">
+          <p>Chrome 右上のパズルマーク（🧩）をクリックして、「Enmish Pointer」の横にあるピンアイコンを押してください。アイコンがツールバーに固定されます。</p>
+          <p>それでも表示されない場合は <kbd>chrome://extensions</kbd> を開いて、「Enmish Pointer」が有効になっているか確認してください。</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>ツールバーが表示されない</summary>
+        <div class="faq-body">
+          <p>ツールバーは<strong>画面の右端にカーソルを近づける</strong>と表示されます。画面端に細いミントカラーのバーが見えたら、そこへカーソルを移動させてください。</p>
+          <p>ポップアップメニューの「ツールバー表示 / 最小化」を押すと手動で表示させることもできます。</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>注釈が描けない（クリックしても何も起きない）</summary>
+        <div class="faq-body">
+          <p>以下を確認してください：</p>
+          <p>① ポップアップメニューで「ポインター：ON」になっているか<br>
+          ② ツールバーでペン・矢印など描画ツールが選択されているか（カーソルツールは描画しません）<br>
+          ③ ドラッグ（押したまま動かす）しているか（クリックだけでは描けません）</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>スライドが進まなくなった</summary>
+        <div class="faq-body">
+          <p>描画ツールがオンの状態でも、<strong>ドラッグせずにクリックだけすればスライドが進みます</strong>。<kbd>→</kbd> キーや <kbd>Space</kbd> キーでもスライドを進められます。</p>
+          <p>注釈を描きながらスライドを操作する場合は、キーボードを使うのがおすすめです。</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>全画面スライドショー中にツールが使えない</summary>
+        <div class="faq-body">
+          <p>全画面（プレゼンテーションモード）でも動作します。ツールバーは全画面中も右端に表示されます。<br>
+          もし表示されない場合は、一度 <kbd>Esc</kbd> で全画面を終了し、ポインターをオンにしてから再度全画面にしてください。</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>「このページでは使えません」と表示される</summary>
+        <div class="faq-body">
+          <p><kbd>chrome://</kbd> や <kbd>chrome-extension://</kbd> など、Chrome 内部のページでは動作しません。<br>
+          通常の Web サイト（Google スライド・Salesforce・社内システムなど）のタブで使ってください。</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>バージョンの確認方法は？</summary>
+        <div class="faq-body">
+          <p>ポップアップメニューの右上に <strong>v0.5.5</strong> と表示されます。<br>
+          または <kbd>chrome://extensions</kbd> を開いて「Enmish Pointer」の欄でも確認できます。</p>
+        </div>
+      </details>
+
+      <details>
+        <summary>アップデートの方法は？</summary>
+        <div class="faq-body">
+          <p>① 新しい ZIP を受け取って解凍する<br>
+          ② <kbd>chrome://extensions</kbd> で古い Enmish Pointer を削除する<br>
+          ③ 「パッケージ化されていない拡張機能を読み込む」で新しいフォルダを選ぶ<br><br>
+          ポップアップメニューのバージョン番号が新しい番号に変わっていれば完了です。</p>
+        </div>
+      </details>
+
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <svg class="f-mark" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+    <circle cx="32" cy="32" r="26" stroke="#34d3a6" stroke-width="4" opacity=".35"/>
+    <circle cx="32" cy="32" r="16" stroke="#34d3a6" stroke-width="4" opacity=".75"/>
+    <circle cx="32" cy="32" r="7" fill="#34d3a6"/>
+  </svg>
+  Enmish Pointer v0.5.5 — Enmish Inc.
+</footer>
+
+</body>
+</html>
