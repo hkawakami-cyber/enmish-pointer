@@ -23,10 +23,12 @@
   .quit .ic { color: #c0392b; }
   .quit:hover { background: #fdecea; }
   .note { padding: 12px 14px; font-size: 12px; line-height: 1.5; color: #8a93a3; }
+  .reload-btn { display: block; width: 100%; margin-top: 10px; padding: 8px 0; border: none; border-radius: 8px; background: #eef4f2; color: #2f7d68; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .reload-btn:hover { background: #d6ede7; }
 </style>
 </head>
 <body>
-  <div class="hd"><span class="mk" id="mk"></span><span class="nm">Enmish Pointer</span><span class="ver">v0.5.9</span></div>
+  <div class="hd"><span class="mk" id="mk"></span><span class="nm">Enmish Pointer</span><span class="ver">v0.5.10</span></div>
   <div class="menu" id="menu">
     <button class="item" data-cmd="toggle"><span class="ic" data-ic="power"></span><span>ポインター</span><span class="st" id="st">—</span></button>
     <button class="item" data-cmd="minimize"><span class="ic" data-ic="collapse"></span><span>ツールバー表示 / 最小化</span></button>
@@ -35,7 +37,8 @@
     <div class="sep"></div>
     <button class="item quit" data-cmd="off"><span class="ic" data-ic="power"></span><span>終了（オフにする）</span></button>
   </div>
-  <div class="note" id="note" hidden>このタブでは応答がありません。<br>拡張を更新した場合はタブをリロード（⌘R）してください。chrome:// などの内部ページには対応していません。</div>
+  <div class="note" id="note-reload" hidden>拡張の更新後はタブのリロードが必要です。<button class="reload-btn" id="reload-btn">このタブをリロード</button></div>
+  <div class="note" id="note-internal" hidden>このページでは使えません。<br>Meet / Google スライド / 通常のサイトのタブで開いてください。</div>
   <script src="lib/icons.js"></script>
   <script src="popup.js"></script>
 </body>

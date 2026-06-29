@@ -12,7 +12,7 @@
   function withTab(cb) {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const t = tabs[0];
-      if (t && t.id != null) cb(t.id);
+      if (t && t.id != null) cb(t);
     });
   }
 
@@ -23,15 +23,29 @@
     mk.classList.toggle("on", !!on);
   }
 
-  function unavailable() {
+  function isInternalUrl(url) {
+    if (!url) return true;
+    return /^(chrome|chrome-extension|edge|about|data|blob):/.test(url);
+  }
+
+  function showReload(tabId) {
     $("#menu").hidden = true;
-    $("#note").hidden = false;
+    $("#note-reload").hidden = false;
+    $("#reload-btn").onclick = () => {
+      chrome.tabs.reload(tabId, {}, () => window.close());
+    };
+  }
+
+  function showInternal() {
+    $("#menu").hidden = true;
+    $("#note-internal").hidden = false;
   }
 
   function refresh() {
-    withTab((id) => {
-      chrome.tabs.sendMessage(id, { type: "ef-state" }, (res) => {
-        if (chrome.runtime.lastError || !res) { unavailable(); return; }
+    withTab((tab) => {
+      if (isInternalUrl(tab.url)) { showInternal(); return; }
+      chrome.tabs.sendMessage(tab.id, { type: "ef-state" }, (res) => {
+        if (chrome.runtime.lastError || !res) { showReload(tab.id); return; }
         setState(res.appOn);
       });
     });
@@ -40,9 +54,9 @@
   document.querySelectorAll(".item").forEach((b) => {
     b.addEventListener("click", () => {
       const cmd = b.dataset.cmd;
-      withTab((id) => {
-        chrome.tabs.sendMessage(id, { type: "ef-cmd", cmd }, (res) => {
-          if (chrome.runtime.lastError) { unavailable(); return; }
+      withTab((tab) => {
+        chrome.tabs.sendMessage(tab.id, { type: "ef-cmd", cmd }, (res) => {
+          if (chrome.runtime.lastError) { showReload(tab.id); return; }
           if (res && typeof res.appOn === "boolean") setState(res.appOn);
           // 終了・設定・最小化はメニューを閉じる
           if (cmd === "off" || cmd === "options" || cmd === "minimize") window.close();
