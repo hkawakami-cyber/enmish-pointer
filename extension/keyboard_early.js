@@ -39,8 +39,9 @@
       return;
     }
 
-    // 修飾キーなし → 1つ戻す
+    // 修飾キーなし → 1つ戻す（アノテーションがない場合はページに委譲）
     if (!ev.metaKey && !ev.ctrlKey && !ev.shiftKey) {
+      if (!window.__efEarly.hasStrokes) return; // 描画なし → Slides/Sheets に渡す
       ev.preventDefault();
       ev.stopImmediatePropagation();
       if (window.__efEarly.cb) {

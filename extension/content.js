@@ -307,6 +307,13 @@
   });
   window.addEventListener("resize", () => { engine.resize(); sizeSpot(); });
 
+  // keyboard_early.js が Delete/Backspace を横取りするか判断するためのフラグ
+  // 描画がない状態では Slides/Sheets のキー操作を妨げない
+  Object.defineProperty(window.__efEarly, 'hasStrokes', {
+    get: () => !engine.isEmpty(),
+    configurable: true,
+  });
+
   // ---------- カーソルリング & 描画入力 ----------
   let drawing = false;
   let drawPending = null;    // mousedown後、6px以上ドラッグで描画確定する座標
