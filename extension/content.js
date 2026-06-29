@@ -383,7 +383,7 @@
   window.addEventListener("mouseup", (ev) => {
     const wasPending = drawPending;
     drawPending = null;
-    if (drawing) { drawing = false; drewThisPress = true; engine.end(); return; }
+    if (drawing) { drawing = false; drewThisPress = true; engine.end(); broadcastToIframes(state.appOn); return; }
     // 純クリック（ドラッグなし）→ mousedown で preventDefault したため click が発生しない。
     // host は pointer-events:none なので elementFromPoint で下の要素（スライド等）を取得し
     // 合成 click を届ける。
@@ -1154,8 +1154,8 @@
 
     // Ctrl+Z → undo / Ctrl+Y → redo（typing中は横取りしない）
     if (mod && !ev.shiftKey && state.appOn && !typing) {
-      if (code === "KeyZ") { ev.preventDefault(); engine.undo(); toast("1つ戻しました"); return; }
-      if (code === "KeyY") { ev.preventDefault(); engine.redoLast(); toast("1つ進めました"); return; }
+      if (code === "KeyZ") { ev.preventDefault(); engine.undo(); toast("1つ戻しました"); broadcastToIframes(state.appOn); return; }
+      if (code === "KeyY") { ev.preventDefault(); engine.redoLast(); toast("1つ進めました"); broadcastToIframes(state.appOn); return; }
     }
 
     if (!state.appOn || typing) return;
@@ -1189,29 +1189,30 @@
   });
 
   if (window.__efEarly) {
-    window.__efEarly.cb = function() { engine.undo(); toast("1つ戻しました"); };
+    window.__efEarly.cb = function() { engine.undo(); toast("1つ戻しました"); broadcastToIframes(state.appOn); };
     window.__efEarly.clearCb = function() { app.action("clear"); };
   }
 
   // iframe 内の keyboard_early.js からの Delete/Backspace イベントを受け取る
   function broadcastToIframes(on) {
+    const has = !engine.isEmpty();
     try {
       document.querySelectorAll("iframe").forEach(function(f) {
-        try { f.contentWindow.postMessage({ __efType: "efState", appOn: on }, "*"); } catch (e) {}
+        try { f.contentWindow.postMessage({ __efType: "efState", appOn: on, hasStrokes: has }, "*"); } catch (e) {}
       });
     } catch (e) {}
   }
   window.addEventListener("message", function(ev) {
     if (!ev.data) return;
-    // iframe からの状態リクエスト
+    // iframe からの状態リクエスト（初期化時に hasStrokes も渡す）
     if (ev.data.__efType === "efReq") {
-      try { ev.source.postMessage({ __efType: "efState", appOn: state.appOn }, "*"); } catch (e) {}
+      try { ev.source.postMessage({ __efType: "efState", appOn: state.appOn, hasStrokes: !engine.isEmpty() }, "*"); } catch (e) {}
       return;
     }
     // iframe からのキー操作
     if (ev.data.__efType === "efKey" && state.appOn) {
-      if (ev.data.action === "undo") { engine.undo(); toast("1つ戻しました"); }
-      if (ev.data.action === "clear") { app.action("clear"); }
+      if (ev.data.action === "undo") { engine.undo(); toast("1つ戻しました"); broadcastToIframes(state.appOn); }
+      if (ev.data.action === "clear") { app.action("clear"); broadcastToIframes(state.appOn); }
     }
   });
 

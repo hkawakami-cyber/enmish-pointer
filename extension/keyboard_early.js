@@ -12,6 +12,7 @@
     window.addEventListener("message", function(ev) {
       if (ev.data && ev.data.__efType === "efState") {
         window.__efEarly.appOn = !!ev.data.appOn;
+        if ("hasStrokes" in ev.data) window.__efEarly.hasStrokes = !!ev.data.hasStrokes;
       }
     });
   }
