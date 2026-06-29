@@ -601,7 +601,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.5.10</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.5.11</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -798,6 +798,7 @@
       const next = forceOn === true ? true : !state.appOn;
       state.appOn = next;
       if (window.__efEarly) window.__efEarly.appOn = next;
+      broadcastToIframes(next);
       if (next) state.dismissed = false; // オンにしたら「終了」状態は解除（左下マーク復活）
       if (!next) {
         state.spotlight = false; state.zoom = false; applyZoom();
@@ -1163,6 +1164,28 @@
     window.__efEarly.cb = function() { engine.undo(); toast("1つ戻しました"); };
     window.__efEarly.clearCb = function() { app.action("clear"); };
   }
+
+  // iframe 内の keyboard_early.js からの Delete/Backspace イベントを受け取る
+  function broadcastToIframes(on) {
+    try {
+      document.querySelectorAll("iframe").forEach(function(f) {
+        try { f.contentWindow.postMessage({ __efType: "efState", appOn: on }, "*"); } catch (e) {}
+      });
+    } catch (e) {}
+  }
+  window.addEventListener("message", function(ev) {
+    if (!ev.data) return;
+    // iframe からの状態リクエスト
+    if (ev.data.__efType === "efReq") {
+      try { ev.source.postMessage({ __efType: "efState", appOn: state.appOn }, "*"); } catch (e) {}
+      return;
+    }
+    // iframe からのキー操作
+    if (ev.data.__efType === "efKey" && state.appOn) {
+      if (ev.data.action === "undo") { engine.undo(); toast("1つ戻しました"); }
+      if (ev.data.action === "clear") { app.action("clear"); }
+    }
+  });
 
   syncUI();
   renderOptions();
