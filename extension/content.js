@@ -601,7 +601,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.5.5</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.5.6</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -1120,9 +1120,15 @@
       return;
     }
 
-    if (!state.appOn || typing) return;
+    if (!state.appOn) return;
 
-    if ((ev.key === "Backspace" || ev.key === "Delete") && !mod) { ev.preventDefault(); engine.undo(); toast("1つ戻しました"); return; }
+    // Google Docs 等の contenteditable ページでも Delete/Backspace で注釈を戻せるよう、
+    // typing ガードの前に処理する（ただし自分の shadow UI 入力欄にフォーカスがある場合は除外）
+    if ((ev.key === "Backspace" || ev.key === "Delete") && !mod && ae !== host) {
+      ev.preventDefault(); engine.undo(); toast("1つ戻しました"); return;
+    }
+
+    if (typing) return;
     if (state.spotlight && (ev.key === "[" || ev.key === "]")) {
       if (state.spotShape === "band") {
         const opts = [0.25, 0.33, 0.5]; const i = opts.indexOf(state.spotBand);
