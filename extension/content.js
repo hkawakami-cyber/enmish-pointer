@@ -601,7 +601,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.5.11</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.5.12</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -691,21 +691,27 @@
     fitToolbar();
   }
 
-  // ---------- ズーム（ページ本体を拡大・表示専用） ----------
+  // ---------- ズーム（カーソル周辺を拡大・表示専用） ----------
   function applyZoom() {
     const b = document.body; if (!b) return;
-    // CSS zoom（transform でなく zoom プロパティ）を使う理由：
-    // 1. zoom は再描画でレンダリングされるため文字・ベクターが鮮明（transform は bitmap 拡大でぼやける）
-    // 2. zoom は fixed 要素の containing block を変えない → フルスクリーン中のオーバーレイ位置が崩れない
     if (!state.zoom) {
-      b.style.zoom = "";
-      b.style.transform = "";      // 旧版の transform が残っていれば消す
-      b.style.transformOrigin = "";
+      b.style.removeProperty("transform");
+      b.style.removeProperty("transform-origin");
+      b.style.removeProperty("zoom");
       return;
     }
-    b.style.transform = "";
-    b.style.transformOrigin = "";
-    b.style.zoom = state.zoomScale;
+    // body に CSS transform: scale() を適用してカーソル中心で拡大する。
+    // host は body の外（html の直下）にあるため transform の影響を受けず
+    // オーバーレイの位置・サイズは常に正しい。
+    // setProperty の第3引数 "important" で Google Slides 等の CSS 上書きを防ぐ。
+    const m = state.mouse;
+    const mx = m ? m.x : window.innerWidth / 2;
+    const my = m ? m.y : window.innerHeight / 2;
+    const ox = (mx / window.innerWidth) * 100;
+    const oy = (my / window.innerHeight) * 100;
+    b.style.setProperty("transform-origin", ox + "% " + oy + "%", "important");
+    b.style.setProperty("transform", "scale(" + state.zoomScale + ")", "important");
+    b.style.removeProperty("zoom");
   }
 
   // ---------- UI 同期 ----------
