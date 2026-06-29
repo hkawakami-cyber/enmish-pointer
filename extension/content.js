@@ -37,7 +37,7 @@
     dismissed: false, // 「終了」で画面から完全に消した状態（左下マークも非表示）
     recording: false,
     recMic: false, // 録画時に自分のマイク音声も混ぜる（登壇録画向け。既定OFF）
-    recShotSec: 0, // 録画中の自動スクショ間隔（秒）。0=OFF / 15 / 30 / 60
+    recShotSec: 30, // 録画中の自動スクショ間隔（秒）。0=OFF / 15 / 30 / 60
     mouse: { x: -999, y: -999 },
   };
 
