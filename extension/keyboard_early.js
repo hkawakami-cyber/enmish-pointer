@@ -20,6 +20,10 @@
     if (!window.__efEarly.appOn) return;
     if (ev.key !== "Delete" && ev.key !== "Backspace") return;
 
+    // 入力欄フォーカス中は横取りしない
+    var ae = document.activeElement;
+    if (ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || ae.isContentEditable)) return;
+
     // Ctrl+Shift+Delete / Cmd+Shift+Delete → 全消去
     if ((ev.metaKey || ev.ctrlKey) && ev.shiftKey) {
       ev.preventDefault();
