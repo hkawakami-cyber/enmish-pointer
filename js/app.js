@@ -452,11 +452,11 @@
 
     // Esc処理。何か閉じたら true。
     handleEscape() {
+      // 大きいモードの解除のみ（ツール切替・全消去は素のEsc側で扱う）
       if (!document.getElementById("settings").hidden) { EF.presets.closeModal(); return true; }
       if (EF.state.uiHidden) { this.toggleUI(); return true; }
       if (EF.state.zoom) { EF.state.zoom = false; EF.zoom.refresh(); EF.toolbar.sync(); EF.setStatus(); return true; }
       if (EF.state.spotlight) { EF.state.spotlight = false; EF.toolbar.sync(); EF.setStatus(); return true; }
-      if (EF.state.appOn && EF.state.tool !== "cursor") { this.setTool("cursor"); return true; }
       return false;
     },
   };

@@ -7,13 +7,24 @@
   const EF = (window.EF = window.EF || {});
 
   EF.shortcuts = {
+    _lastEsc: 0, // 直近のEsc時刻（ダブルEsc全消去の判定用）
     init() {
       window.addEventListener("keydown", (ev) => {
         const mod = ev.metaKey || ev.ctrlKey;
 
-        // Esc: 注釈ツール解除→カーソルへ / モーダル閉じる
+        // Esc: ①大きいモード解除/モーダル閉じる → ②素のEsc（1回=カーソルへ / 450ms以内に2連打=全消去）
         if (ev.key === "Escape") {
-          if (EF.app.handleEscape()) ev.preventDefault();
+          if (EF.app.handleEscape()) { EF.shortcuts._lastEsc = 0; ev.preventDefault(); return; }
+          if (EF.state.appOn) {
+            const now = Date.now();
+            if (EF.shortcuts._lastEsc && (now - EF.shortcuts._lastEsc) < 450) {
+              EF.shortcuts._lastEsc = 0;
+              if (!EF.annot.engine.isEmpty()) { ev.preventDefault(); EF.app.action("clear"); }
+            } else {
+              EF.shortcuts._lastEsc = now;
+              if (EF.state.tool !== "cursor") { ev.preventDefault(); EF.app.setTool("cursor"); }
+            }
+          }
           return;
         }
 

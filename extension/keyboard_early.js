@@ -18,6 +18,13 @@
 
   window.addEventListener("keydown", function(ev) {
     if (!window.__efEarly.appOn) return;
+
+    // Esc：iframe（Docs等）からは最上位フレームへ転送し、ダブルEsc全消去に合流させる。
+    // 文字編集中でも転送する（Escは文字を消さないので安全）。preventDefault はしない。
+    if (ev.key === "Escape") {
+      if (inIframe) { try { window.top.postMessage({ __efType: "efKey", action: "esc" }, "*"); } catch (e) {} }
+      return;
+    }
     if (ev.key !== "Delete" && ev.key !== "Backspace") return;
 
     // 入力欄フォーカス中は横取りしない（Shadow DOM内の ef-text も含む）

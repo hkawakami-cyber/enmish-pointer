@@ -1271,7 +1271,6 @@ kbd {
   DrawingEngine.prototype.move = function (x, y) {
     if (!this.current) return;
     const c = this.current;
-    // 横線・蛍光ペンはY固定（高さが変わらない＝水平に引く）
     if (c.tool === "hline" || c.tool === "highlighter") y = c.a.y;
     c.b = { x, y };
     if (c.tool === "pen" || c.tool === "highlighter") c.points.push({ x, y });
@@ -1863,13 +1862,24 @@ kbd {
   const EF = (window.EF = window.EF || {});
 
   EF.shortcuts = {
+    _lastEsc: 0, // 直近のEsc時刻（ダブルEsc全消去の判定用）
     init() {
       window.addEventListener("keydown", (ev) => {
         const mod = ev.metaKey || ev.ctrlKey;
 
-        // Esc: 注釈ツール解除→カーソルへ / モーダル閉じる
+        // Esc: ①大きいモード解除/モーダル閉じる → ②素のEsc（1回=カーソルへ / 450ms以内に2連打=全消去）
         if (ev.key === "Escape") {
-          if (EF.app.handleEscape()) ev.preventDefault();
+          if (EF.app.handleEscape()) { EF.shortcuts._lastEsc = 0; ev.preventDefault(); return; }
+          if (EF.state.appOn) {
+            const now = Date.now();
+            if (EF.shortcuts._lastEsc && (now - EF.shortcuts._lastEsc) < 450) {
+              EF.shortcuts._lastEsc = 0;
+              if (!EF.annot.engine.isEmpty()) { ev.preventDefault(); EF.app.action("clear"); }
+            } else {
+              EF.shortcuts._lastEsc = now;
+              if (EF.state.tool !== "cursor") { ev.preventDefault(); EF.app.setTool("cursor"); }
+            }
+          }
           return;
         }
 
@@ -2716,11 +2726,11 @@ kbd {
 
     // Esc処理。何か閉じたら true。
     handleEscape() {
+      // 大きいモードの解除のみ（ツール切替・全消去は素のEsc側で扱う）
       if (!document.getElementById("settings").hidden) { EF.presets.closeModal(); return true; }
       if (EF.state.uiHidden) { this.toggleUI(); return true; }
       if (EF.state.zoom) { EF.state.zoom = false; EF.zoom.refresh(); EF.toolbar.sync(); EF.setStatus(); return true; }
       if (EF.state.spotlight) { EF.state.spotlight = false; EF.toolbar.sync(); EF.setStatus(); return true; }
-      if (EF.state.appOn && EF.state.tool !== "cursor") { this.setTool("cursor"); return true; }
       return false;
     },
   };

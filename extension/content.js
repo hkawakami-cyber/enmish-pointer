@@ -601,7 +601,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.5.16</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.5.17</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -831,10 +831,10 @@
       }
     },
     handleEscape() {
+      // 大きいモードの解除のみ（ツール切替・全消去は素のEsc側で扱う）
       if (state.uiHidden) { app.toggleUI(); return true; }
       if (state.zoom) { state.zoom = false; applyZoom(); syncUI(); setBadge(); return true; }
       if (state.spotlight) { state.spotlight = false; syncUI(); setBadge(); return true; }
-      if (state.appOn && state.tool !== "cursor") { app.setTool("cursor"); return true; }
       return false;
     },
     screenshot() {
@@ -1115,6 +1115,30 @@
   const isPeeked = () => host.style.display === "none";
   function togglePeek() { host.style.display = isPeeked() ? "" : "none"; }
 
+  // 素のEsc（peek復帰・大きいモード解除のどれにも当たらない時）の挙動：
+  //   1回目 → ツールをカーソルに戻す（描画モード解除）
+  //   450ms以内に2回連打 → 全消去（文字編集と衝突しない安全なキー操作）
+  // 注釈が無ければ何も起きない。Docs等のiframeからは esc 転送で同じ処理に合流する。
+  let lastEscTime = 0;
+  function onBareEsc() {
+    if (!state.appOn) return false;
+    const now = Date.now();
+    if (lastEscTime && (now - lastEscTime) < 450) {
+      lastEscTime = 0;
+      if (!engine.isEmpty()) { app.action("clear"); return true; }
+      return false;
+    }
+    lastEscTime = now;
+    if (state.tool !== "cursor") { app.setTool("cursor"); return true; }
+    return false;
+  }
+  // Esc の統一処理。消費したら true（呼び出し側で preventDefault する）。
+  function processEsc() {
+    if (isPeeked()) { togglePeek(); lastEscTime = 0; return true; }
+    if (app.handleEscape()) { lastEscTime = 0; return true; }
+    return onBareEsc();
+  }
+
   // タブが非表示になったらズームを解除（他タブ移動後の残留防止）
   document.addEventListener("visibilitychange", () => {
     if (document.hidden && state.zoom) { state.zoom = false; applyZoom(); setBadge(); }
@@ -1130,7 +1154,7 @@
 
     // Esc+Tab：起動中のみオーバーレイを隠す/戻す
     if (code === "Tab" && escDown && state.appOn && !typing) { ev.preventDefault(); togglePeek(); return; }
-    if (ev.key === "Escape") { escDown = true; if (isPeeked()) { togglePeek(); ev.preventDefault(); ev.stopPropagation(); return; } if (app.handleEscape()) { ev.preventDefault(); ev.stopPropagation(); return; } return; }
+    if (ev.key === "Escape") { escDown = true; if (processEsc()) { ev.preventDefault(); ev.stopPropagation(); } return; }
 
     if (mod && ev.shiftKey) {
       if (code === "KeyE") { ev.preventDefault(); app.toggle(); return; }
@@ -1205,6 +1229,7 @@
     if (ev.data.__efType === "efKey" && state.appOn) {
       if (ev.data.action === "undo") { engine.undo(); toast("1つ戻しました"); }
       if (ev.data.action === "clear") { app.action("clear"); }
+      if (ev.data.action === "esc") { processEsc(); } // Docs等のiframe内Esc → ダブルEsc全消去
     }
   });
 
