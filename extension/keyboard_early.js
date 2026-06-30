@@ -31,7 +31,7 @@
     var ae = document.activeElement;
     var host = document.getElementById("enmish-focus-host");
     var sae = host && host.shadowRoot && host.shadowRoot.activeElement;
-    if (ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || ae.isContentEditable)) return;
+    if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
     if (sae && (/^(INPUT|TEXTAREA)$/.test(sae.tagName) || sae.isContentEditable)) return;
 
     // Ctrl+Shift+Delete / Cmd+Shift+Delete → 全消去
