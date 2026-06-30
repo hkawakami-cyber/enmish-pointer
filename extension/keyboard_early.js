@@ -6,15 +6,22 @@
   window.__efEarly = window.__efEarly || { appOn: false, cb: null, clearCb: null };
 
   if (inIframe) {
-    // 親フレームに現在の appOn 状態を問い合わせる
-    try { window.parent.postMessage({ __efType: "efReq" }, "*"); } catch (e) {}
-    // 親フレームから appOn の更新を受け取る
-    window.addEventListener("message", function(ev) {
-      if (ev.data && ev.data.__efType === "efState") {
-        window.__efEarly.appOn = !!ev.data.appOn;
-      }
-    });
+    // 最上位フレーム（content.js がいる場所）に appOn 状態を問い合わせる。
+    // window.parent ではなく window.top を使い、深くネストしたiframe（Slidesのキャンバス等）でも届くようにする。
+    try { window.top.postMessage({ __efType: "efReq" }, "*"); } catch (e) {}
   }
+
+  // efState を受け取ったら appOn を更新し、さらに子iframeへ転送してネストを伝播させる。
+  window.addEventListener("message", function(ev) {
+    if (ev.data && ev.data.__efType === "efState") {
+      window.__efEarly.appOn = !!ev.data.appOn;
+      // 子iframeにも転送（Slidesのような多段iframe構造に対応）
+      var frames = document.querySelectorAll("iframe");
+      for (var i = 0; i < frames.length; i++) {
+        try { frames[i].contentWindow.postMessage(ev.data, "*"); } catch (e) {}
+      }
+    }
+  });
 
   window.addEventListener("keydown", function(ev) {
     if (!window.__efEarly.appOn) return;
@@ -41,7 +48,7 @@
       if (window.__efEarly.clearCb) {
         window.__efEarly.clearCb();
       } else if (inIframe) {
-        try { window.parent.postMessage({ __efType: "efKey", action: "clear" }, "*"); } catch (e) {}
+        try { window.top.postMessage({ __efType: "efKey", action: "clear" }, "*"); } catch (e) {}
       }
       return;
     }
@@ -55,7 +62,7 @@
       if (window.__efEarly.cb) {
         window.__efEarly.cb();
       } else if (inIframe) {
-        try { window.parent.postMessage({ __efType: "efKey", action: "undo" }, "*"); } catch (e) {}
+        try { window.top.postMessage({ __efType: "efKey", action: "undo" }, "*"); } catch (e) {}
       }
     }
   }, true);
