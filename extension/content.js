@@ -262,7 +262,7 @@
 
   root.innerHTML = `
     <style>${CSS}</style>
-    <canvas id="annot" class="layer"></canvas>
+    <canvas id="annot" class="layer" tabindex="-1"></canvas>
     <canvas id="spot" class="layer"></canvas>
     <div id="ring" class="ring" hidden><i class="cdot"></i><svg class="carrow" viewBox="0 0 24 24"><path d="M3 2 L3 21 L8 16 L11.5 23.5 L14.5 22 L11 15 L18 15 Z" stroke="#fff" stroke-width="1.1" stroke-linejoin="round"></path></svg></div>
     <div id="tb" class="toolbar app-off">${buildToolbar()}</div>
@@ -368,6 +368,8 @@
     if (state.zoom) return;
     if (state.tool === "text") { ev.preventDefault(); ev.stopPropagation(); showTextInput(ev.clientX, ev.clientY, engine.hitText(ev.clientX, ev.clientY)); return; }
     if (DRAW_TOOLS.indexOf(state.tool) === -1) return;
+    // 描画開始でcanvasにフォーカスを引き込む → Deleteキーがメインフレームのkeyboard_early.jsで確実に捕捉される
+    annot.focus({ preventScroll: true });
     // ドラッグ閾値まではクリックをスライドへ通す（スライドショーでのクリック送りが使える）
     drewThisPress = false;
     drawPending = { x: ev.clientX, y: ev.clientY };
@@ -601,7 +603,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.5.19</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.5.20</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
