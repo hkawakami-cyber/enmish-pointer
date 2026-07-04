@@ -46,7 +46,7 @@
     autoErase: 0,        // 自動で消える（レーザー）秒数。0でOFF
     recording: false,
     recMic: false,       // 録画時に自分のマイク音声も混ぜる（登壇録画向け。既定OFF）
-    recShotSec: 0,       // 録画中の自動スクショ間隔（秒）。0=OFF / 15 / 30 / 60
+    recShotSec: 30,      // 録画中の自動スクショ間隔（秒）。0=OFF / 15 / 30 / 60（既定30）
     mouse: { x: -999, y: -999, inStage: false },
   };
 

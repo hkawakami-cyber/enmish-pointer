@@ -96,6 +96,7 @@
       EF.options.render();
       EF.setStatus();
       EF.cursor.update();
+      if (EF.saveSettings) EF.saveSettings();
     },
 
     // インラインのテキスト入力欄。hit を渡すと既存テキストの再編集。
@@ -137,7 +138,7 @@
       const onBlur = () => close(true);
       inp.addEventListener("keydown", (e) => {
         e.stopPropagation();
-        if (e.key === "Enter") close(true);
+        if (e.key === "Enter" && !e.isComposing) close(true); // IME変換確定のEnterでは閉じない
         else if (e.key === "Escape") close(false);
       });
       inp.addEventListener("blur", onBlur);
@@ -476,9 +477,9 @@
       const groups = [];
       if (EF.state.appOn && EF.state.tool === "cursor") {
         groups.push(optGroup("カーソル", "cursorStyle", EF.state.cursorStyle,
-          [["ring", "◎", "リング"], ["arrow", "➤", "矢印"], ["dot", "●", "ドット"], ["ringdot", "◉", "両方"], ["halo", "✦", "ハロー"]]));
+          [["dot", "●", "ドット"], ["arrow", "➤", "矢印"], ["ring", "◎", "リング"], ["halo", "✦", "ハロー"]]));
         groups.push(optGroup("大きさ", "ringSize", EF.state.ring.size,
-          [[28, "", "極小"], [44, "", "小"], [60, "", "中"]]));
+          [[36, "", "小"], [52, "", "中"], [72, "", "大"]]));
       } else if (EF.state.appOn && EF.state.tool === "arrow") {
         groups.push(optGroup("矢じり", "arrowHead", EF.state.arrowHead,
           [["end", "→", "終点"], ["start", "←", "始点"], ["both", "↔", "両方"]]));
@@ -488,7 +489,7 @@
           [["band", "▭", "帯"], ["circle", "◯", "丸"]]));
         if (EF.state.spotShape === "band") {
           groups.push(optGroup("帯の高さ", "spotBand", EF.state.spotBand,
-            [[0.25, "", "25%"], [0.5, "", "50%"], [0.75, "", "75%"]]));
+            [[0.25, "", "25%"], [0.33, "", "33%"], [0.5, "", "50%"]]));
         }
       }
       if (!groups.length) { el.hidden = true; return; }

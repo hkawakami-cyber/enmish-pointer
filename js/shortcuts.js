@@ -13,7 +13,9 @@
         const mod = ev.metaKey || ev.ctrlKey;
 
         // Esc: ①大きいモード解除/モーダル閉じる → ②素のEsc（1回=カーソルへ / 450ms以内に2連打=全消去）
+        // 長押しのオートリピートは無視（ダブルEsc全消去の誤発動防止）
         if (ev.key === "Escape") {
+          if (ev.repeat) return;
           if (EF.app.handleEscape()) { EF.shortcuts._lastEsc = 0; ev.preventDefault(); return; }
           if (EF.state.appOn) {
             const now = Date.now();
@@ -32,7 +34,7 @@
         if ((ev.key === "Backspace" || ev.key === "Delete") && !mod && !ev.shiftKey) {
           const ae = document.activeElement;
           if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
-          if (EF.state.appOn) { ev.preventDefault(); EF.annot.engine.undo(); EF.toast("1つ戻しました"); }
+          if (EF.state.appOn) { ev.preventDefault(); if (EF.annot.engine.undo()) EF.toast("1つ戻しました"); }
           return;
         }
 

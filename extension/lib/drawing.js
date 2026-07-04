@@ -111,18 +111,21 @@
     this.redo.length = 0; this._cleared = null;
   };
 
+  // 戻り値: 実際に何か戻せたら true（空振りは false。トースト表示の判定に使う）
   DrawingEngine.prototype.undo = function () {
-    if (this.current) { this.current = null; return; }
+    if (this.current) { this.current = null; return true; }
     // 全消去の直後なら、まず消去をなかったことに（誤操作対策）
     if (!this.strokes.length && this._cleared && this._cleared.length) {
-      this.strokes = this._cleared.slice(); this._cleared = null; return;
+      this.strokes = this._cleared.slice(); this._cleared = null; return true;
     }
     const s = this.strokes.pop();
-    if (s) this.redo.push(s);
+    if (s) { this.redo.push(s); return true; }
+    return false;
   };
   DrawingEngine.prototype.redoLast = function () {
     const s = this.redo.pop();
-    if (s) this.strokes.push(s);
+    if (s) { this.strokes.push(s); return true; }
+    return false;
   };
   DrawingEngine.prototype.clear = function () {
     // 直前の状態を1段だけ保持し、undo で復元できるようにする

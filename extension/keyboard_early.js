@@ -28,8 +28,9 @@
 
     // Esc：iframe（Docs等）からは最上位フレームへ転送し、ダブルEsc全消去に合流させる。
     // 文字編集中でも転送する（Escは文字を消さないので安全）。preventDefault はしない。
+    // 長押しのオートリピートは転送しない（ダブルEsc全消去の誤発動防止）。
     if (ev.key === "Escape") {
-      if (inIframe) { try { window.top.postMessage({ __efType: "efKey", action: "esc" }, "*"); } catch (e) {} }
+      if (inIframe && !ev.repeat) { try { window.top.postMessage({ __efType: "efKey", action: "esc" }, "*"); } catch (e) {} }
       return;
     }
     if (ev.key !== "Delete" && ev.key !== "Backspace") return;
@@ -40,6 +41,10 @@
     var sae = host && host.shadowRoot && host.shadowRoot.activeElement;
     if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
     if (sae && (/^(INPUT|TEXTAREA)$/.test(sae.tagName) || sae.isContentEditable)) return;
+    // contentEditable（Docs/Gmail等の文字編集）は、注釈が無い限り横取りしない＝文字編集を壊さない。
+    // 注釈がある時だけ Delete=注釈を1つ戻す を優先（Slides編集モード対策。
+    // hasStrokes は content.js が同一フレームに定義する getter。iframe内は undefined=常に素通し）。
+    if (ae && ae.isContentEditable && !window.__efEarly.hasStrokes) return;
 
     // Ctrl+Shift+Delete / Cmd+Shift+Delete → 全消去
     if ((ev.metaKey || ev.ctrlKey) && ev.shiftKey) {

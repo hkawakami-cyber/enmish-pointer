@@ -1036,7 +1036,7 @@ kbd {
     autoErase: 0,        // 自動で消える（レーザー）秒数。0でOFF
     recording: false,
     recMic: false,       // 録画時に自分のマイク音声も混ぜる（登壇録画向け。既定OFF）
-    recShotSec: 0,       // 録画中の自動スクショ間隔（秒）。0=OFF / 15 / 30 / 60
+    recShotSec: 30,      // 録画中の自動スクショ間隔（秒）。0=OFF / 15 / 30 / 60（既定30）
     mouse: { x: -999, y: -999, inStage: false },
   };
 
@@ -1324,18 +1324,21 @@ kbd {
     this.redo.length = 0; this._cleared = null;
   };
 
+  // 戻り値: 実際に何か戻せたら true（空振りは false。トースト表示の判定に使う）
   DrawingEngine.prototype.undo = function () {
-    if (this.current) { this.current = null; return; }
+    if (this.current) { this.current = null; return true; }
     // 全消去の直後なら、まず消去をなかったことに（誤操作対策）
     if (!this.strokes.length && this._cleared && this._cleared.length) {
-      this.strokes = this._cleared.slice(); this._cleared = null; return;
+      this.strokes = this._cleared.slice(); this._cleared = null; return true;
     }
     const s = this.strokes.pop();
-    if (s) this.redo.push(s);
+    if (s) { this.redo.push(s); return true; }
+    return false;
   };
   DrawingEngine.prototype.redoLast = function () {
     const s = this.redo.pop();
-    if (s) this.strokes.push(s);
+    if (s) { this.strokes.push(s); return true; }
+    return false;
   };
   DrawingEngine.prototype.clear = function () {
     // 直前の状態を1段だけ保持し、undo で復元できるようにする
@@ -1868,7 +1871,9 @@ kbd {
         const mod = ev.metaKey || ev.ctrlKey;
 
         // Esc: ①大きいモード解除/モーダル閉じる → ②素のEsc（1回=カーソルへ / 450ms以内に2連打=全消去）
+        // 長押しのオートリピートは無視（ダブルEsc全消去の誤発動防止）
         if (ev.key === "Escape") {
+          if (ev.repeat) return;
           if (EF.app.handleEscape()) { EF.shortcuts._lastEsc = 0; ev.preventDefault(); return; }
           if (EF.state.appOn) {
             const now = Date.now();
@@ -1887,7 +1892,7 @@ kbd {
         if ((ev.key === "Backspace" || ev.key === "Delete") && !mod && !ev.shiftKey) {
           const ae = document.activeElement;
           if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) return;
-          if (EF.state.appOn) { ev.preventDefault(); EF.annot.engine.undo(); EF.toast("1つ戻しました"); }
+          if (EF.state.appOn) { ev.preventDefault(); if (EF.annot.engine.undo()) EF.toast("1つ戻しました"); }
           return;
         }
 
@@ -2370,6 +2375,7 @@ kbd {
       EF.options.render();
       EF.setStatus();
       EF.cursor.update();
+      if (EF.saveSettings) EF.saveSettings();
     },
 
     // インラインのテキスト入力欄。hit を渡すと既存テキストの再編集。
@@ -2411,7 +2417,7 @@ kbd {
       const onBlur = () => close(true);
       inp.addEventListener("keydown", (e) => {
         e.stopPropagation();
-        if (e.key === "Enter") close(true);
+        if (e.key === "Enter" && !e.isComposing) close(true); // IME変換確定のEnterでは閉じない
         else if (e.key === "Escape") close(false);
       });
       inp.addEventListener("blur", onBlur);
@@ -2750,9 +2756,9 @@ kbd {
       const groups = [];
       if (EF.state.appOn && EF.state.tool === "cursor") {
         groups.push(optGroup("カーソル", "cursorStyle", EF.state.cursorStyle,
-          [["ring", "◎", "リング"], ["arrow", "➤", "矢印"], ["dot", "●", "ドット"], ["ringdot", "◉", "両方"], ["halo", "✦", "ハロー"]]));
+          [["dot", "●", "ドット"], ["arrow", "➤", "矢印"], ["ring", "◎", "リング"], ["halo", "✦", "ハロー"]]));
         groups.push(optGroup("大きさ", "ringSize", EF.state.ring.size,
-          [[28, "", "極小"], [44, "", "小"], [60, "", "中"]]));
+          [[36, "", "小"], [52, "", "中"], [72, "", "大"]]));
       } else if (EF.state.appOn && EF.state.tool === "arrow") {
         groups.push(optGroup("矢じり", "arrowHead", EF.state.arrowHead,
           [["end", "→", "終点"], ["start", "←", "始点"], ["both", "↔", "両方"]]));
@@ -2762,7 +2768,7 @@ kbd {
           [["band", "▭", "帯"], ["circle", "◯", "丸"]]));
         if (EF.state.spotShape === "band") {
           groups.push(optGroup("帯の高さ", "spotBand", EF.state.spotBand,
-            [[0.25, "", "25%"], [0.5, "", "50%"], [0.75, "", "75%"]]));
+            [[0.25, "", "25%"], [0.33, "", "33%"], [0.5, "", "50%"]]));
         }
       }
       if (!groups.length) { el.hidden = true; return; }

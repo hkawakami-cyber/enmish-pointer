@@ -55,7 +55,7 @@
     * { box-sizing: border-box; font-family: "Helvetica Neue", Helvetica, Arial, "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif; }
     canvas, .ring, .badge, .toast, .hint { position: fixed; }
     .layer { inset: 0; width: 100vw; height: 100vh; pointer-events: none; }
-    #annot { pointer-events: none; }
+    #annot { pointer-events: none; outline: none; }
     #annot.live { pointer-events: auto; cursor: crosshair; }
     #annot.tool-cursor { cursor: none; }
     .ring { border-radius: 50%; transform: translate(-50%,-50%); border-style: solid; border-color: #6cbba5; pointer-events: none; }
@@ -603,7 +603,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.5.20</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.5.21</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -766,7 +766,7 @@
   const app = {
     setTool(t) {
       if (!state.appOn) app.toggle(true);
-      state.tool = t; syncUI(); renderOptions(); setBadge(); updateRing();
+      state.tool = t; syncUI(); renderOptions(); setBadge(); updateRing(); saveSettings();
     },
     setColor(c) { state.color = c; syncUI(); updateRing(); setBadge(); saveSettings(); },
     toggleMode(what) {
@@ -834,6 +834,7 @@
     },
     handleEscape() {
       // 大きいモードの解除のみ（ツール切替・全消去は素のEsc側で扱う）
+      if (state.optionsOpen) { app.action("options"); return true; } // 設定パネルを閉じる
       if (state.uiHidden) { app.toggleUI(); return true; }
       if (state.zoom) { state.zoom = false; applyZoom(); syncUI(); setBadge(); return true; }
       if (state.spotlight) { state.spotlight = false; syncUI(); setBadge(); return true; }
@@ -1156,7 +1157,7 @@
 
     // Esc+Tab：起動中のみオーバーレイを隠す/戻す
     if (code === "Tab" && escDown && state.appOn && !typing) { ev.preventDefault(); togglePeek(); return; }
-    if (ev.key === "Escape") { escDown = true; if (processEsc()) { ev.preventDefault(); ev.stopPropagation(); } return; }
+    if (ev.key === "Escape") { escDown = true; if (ev.repeat) return; if (processEsc()) { ev.preventDefault(); ev.stopPropagation(); } return; }
 
     if (mod && ev.shiftKey) {
       if (code === "KeyE") { ev.preventDefault(); app.toggle(); return; }
@@ -1167,14 +1168,14 @@
       if (code === "Digit6") { ev.preventDefault(); app.toggleMode("zoom"); return; }
       if (code === "KeyH") { ev.preventDefault(); app.toggleUI(); return; }
       if (ev.key === "Backspace" || ev.key === "Delete") { ev.preventDefault(); app.action("clear"); return; }
-      if (code === "KeyZ" && !typing) { ev.preventDefault(); engine.redoLast(); toast("1つ進めました"); return; }
+      if (code === "KeyZ" && !typing) { ev.preventDefault(); if (engine.redoLast()) toast("1つ進めました"); return; }
       return;
     }
 
     // Ctrl+Z → undo / Ctrl+Y → redo（typing中は横取りしない）
     if (mod && !ev.shiftKey && state.appOn && !typing) {
-      if (code === "KeyZ") { ev.preventDefault(); engine.undo(); toast("1つ戻しました"); return; }
-      if (code === "KeyY") { ev.preventDefault(); engine.redoLast(); toast("1つ進めました"); return; }
+      if (code === "KeyZ") { ev.preventDefault(); if (engine.undo()) toast("1つ戻しました"); return; }
+      if (code === "KeyY") { ev.preventDefault(); if (engine.redoLast()) toast("1つ進めました"); return; }
     }
 
     if (!state.appOn || typing) return;
@@ -1208,8 +1209,12 @@
   });
 
   if (window.__efEarly) {
-    window.__efEarly.cb = function() { engine.undo(); toast("1つ戻しました"); };
+    window.__efEarly.cb = function() { if (engine.undo()) toast("1つ戻しました"); };
     window.__efEarly.clearCb = function() { app.action("clear"); };
+    // keyboard_early.js が contentEditable での横取り判定に使う（同一フレーム＝同期で信頼できる）
+    try {
+      Object.defineProperty(window.__efEarly, "hasStrokes", { get: () => !engine.isEmpty(), configurable: true });
+    } catch (e) { /* noop */ }
   }
 
   // iframe 内の keyboard_early.js へ appOn 状態を配信する
@@ -1229,7 +1234,7 @@
     }
     // iframe からのキー操作
     if (ev.data.__efType === "efKey" && state.appOn) {
-      if (ev.data.action === "undo") { engine.undo(); toast("1つ戻しました"); }
+      if (ev.data.action === "undo") { if (engine.undo()) toast("1つ戻しました"); }
       if (ev.data.action === "clear") { app.action("clear"); }
       if (ev.data.action === "esc") { processEsc(); } // Docs等のiframe内Esc → ダブルEsc全消去
     }
