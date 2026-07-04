@@ -615,7 +615,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.5.22</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.5.23</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -1184,7 +1184,8 @@
 
     // Esc+Tab：起動中のみオーバーレイを隠す/戻す
     if (code === "Tab" && escDown && state.appOn && !typing) { ev.preventDefault(); togglePeek(); return; }
-    if (ev.key === "Escape") { escDown = true; if (ev.repeat) return; if (processEsc()) { ev.preventDefault(); ev.stopPropagation(); } return; }
+    // 入力中（テキスト注釈・ページの入力欄）のEscは入力側に任せる（入力欄のキャンセルが最優先）
+    if (ev.key === "Escape") { escDown = true; if (ev.repeat || typing) return; if (processEsc()) { ev.preventDefault(); ev.stopPropagation(); } return; }
 
     if (mod && ev.shiftKey) {
       if (code === "KeyE") { ev.preventDefault(); app.toggle(); return; }
