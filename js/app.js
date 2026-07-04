@@ -185,9 +185,12 @@
 
     // 画面録画ボタンの見た目を更新（録画中=赤・停止アイコン）
     _syncRecordBtn() {
+      const rec = !!EF.state.recording;
+      // 左下マークにも録画中ドットを出す（バーが隠れていても録画状態が分かる）
+      const power = document.getElementById("dock-power");
+      if (power) power.classList.toggle("rec", rec);
       const btn = document.querySelector('.tool[data-action="record"]');
       if (!btn) return;
-      const rec = !!EF.state.recording;
       btn.classList.toggle("recording", rec);
       const ico = btn.querySelector(".ico");
       if (ico) {

@@ -76,8 +76,8 @@
       display: grid; grid-template-columns: 1fr 1fr; gap: 3px; align-content: start; max-height: calc(100vh - 24px); overflow-y: auto;
       transition: transform .22s ease, opacity .22s ease;
     }
-    /* 仕切り線・カラー・設定・最小化は横いっぱい（2列をまたぐ） */
-    .toolbar > .sep, .toolbar > .colors,
+    /* 仕切り線・カラー・太さ・設定・最小化は横いっぱい（2列をまたぐ） */
+    .toolbar > .sep, .toolbar > .colors, .toolbar > .widths,
     .toolbar > .tool[data-action="options"], .toolbar > .tool[data-action="collapse"] { grid-column: 1 / -1; }
     /* 未起動でもツールは押せる（押すと自動的に起動して選択される）。視覚的にだけ少し淡く。 */
     .toolbar.app-off .tool[data-tool], .toolbar.app-off .tool[data-toggle], .toolbar.app-off .colors { opacity: .7; }
@@ -119,6 +119,12 @@
     /* 白・黒・どんな背景でも縁が分かるよう、内側ダーク＋外側ライトの二重縁 */
     .swatch { width: 14px; height: 14px; border-radius: 50%; border: 2px solid transparent; box-shadow: 0 0 0 1px rgba(0,0,0,.35), 0 0 0 2px rgba(255,255,255,.6); cursor: pointer; }
     .swatch.active { border-color: #fff; box-shadow: 0 0 0 1.5px rgba(0,0,0,.55); }
+    /* 線の太さ クイック切替（色の下） */
+    .widths { display: flex; justify-content: space-evenly; align-items: center; padding: 2px 0 1px; }
+    .wbtn { width: 28px; height: 20px; border: none; border-radius: 7px; background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+    .wbtn:hover { background: rgba(255,255,255,.18); }
+    .wbtn i { display: block; width: 16px; border-radius: 99px; background: #fff; box-shadow: 0 1px 1.5px rgba(0,0,0,.6); }
+    .wbtn.active { background: #6cbba5; } .wbtn.active i { box-shadow: none; }
 
     .stamp-bar {
       position: fixed; left: 12px; top: 50%; transform: translateY(-50%); width: 148px;
@@ -153,7 +159,11 @@
     .dock-btn { display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; background: rgba(255,255,255,.10); color: #c4ccda; line-height: 1; transition: background .15s, color .15s, box-shadow .2s; }
     .dock-btn .ico { display: inline-flex; }
     /* 左下マーク：OFF=紺の丸 / ON=緑＋緑グロー（色で状態が一目で分かる） */
-    .dock-power-mark { width: 46px; height: 46px; border-radius: 50%; padding: 0; background: #0c2c46; color: #e8ecf4; box-shadow: 0 6px 16px rgba(0,0,0,.25); }
+    .dock-power-mark { position: relative; width: 46px; height: 46px; border-radius: 50%; padding: 0; background: #0c2c46; color: #e8ecf4; box-shadow: 0 6px 16px rgba(0,0,0,.25); }
+    /* 録画中インジケータ：ツールバーが隠れていても左下マークで分かる */
+    .dock-power-mark .rec-dot { display: none; position: absolute; top: -2px; right: -2px; width: 14px; height: 14px; border-radius: 50%; background: #e23b3b; border: 2.5px solid #fff; animation: recblink 1.2s ease-in-out infinite; }
+    .dock-power-mark.rec .rec-dot { display: block; }
+    @keyframes recblink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
     .dock-power-mark:hover { background: #123a59; }
     #dock-power.on { background: #6cbba5; color: #06251c; box-shadow: 0 0 0 4px rgba(108,187,165,.30), 0 6px 18px rgba(108,187,165,.45); }
     #dock-power.on:hover { background: #7cc7b1; }
@@ -219,6 +229,7 @@
     ["action", "options", "⚙", "設定"],
     ["sep"],
     ["colors"],
+    ["widths"],
     ["sep"],
     ["action", "undo", "↶", "戻る"],
     ["action", "clear", "🗑", "全消去"],
@@ -254,6 +265,7 @@
     for (const b of TOOL_BTNS) {
       if (b[0] === "sep") { html += '<div class="sep"></div>'; continue; }
       if (b[0] === "colors") { html += '<div class="colors" id="colors"></div>'; continue; }
+      if (b[0] === "widths") { html += '<div class="widths" id="widths"></div>'; continue; }
       if (b[0] === "tools") { html += `<div class="tb-tools" id="tb-tools">${toolsHtml()}</div>`; continue; }
       html += toolBtnHtml(b[0], b[1], b[2], b[3]);
     }
@@ -272,7 +284,7 @@
     <div id="badge" class="badge" hidden></div>
     <div id="toast" class="toast" hidden></div>
     <div id="ef-dock" class="ef-dock">
-      <button class="dock-btn dock-power-mark" id="dock-power" title="ポインター ON/OFF (⌘⇧E)"><span class="ico">${(EF.iconSvg && EF.iconSvg("power", 18)) || "⏻"}</span></button>
+      <button class="dock-btn dock-power-mark" id="dock-power" title="ポインター ON/OFF (⌘⇧E)"><span class="ico">${(EF.iconSvg && EF.iconSvg("power", 18)) || "⏻"}</span><span class="rec-dot"></span></button>
     </div>
   `;
 
@@ -603,7 +615,7 @@
     // ツールバー編集（並べ替え・表示/非表示）
     groups.push(toolbarGroup());
     groups.push(profileGroup());
-    groups.push('<div class="opt-ver">Enmish Pointer v0.5.21</div>');
+    groups.push('<div class="opt-ver">Enmish Pointer v0.5.22</div>');
     if (!groups.length) { optEl.hidden = true; return; }
     optEl.innerHTML = groups.join(""); optEl.hidden = false;
   }
@@ -723,6 +735,7 @@
     $("#btn-spot").classList.toggle("toggled", state.spotlight);
     $("#btn-zoom").classList.toggle("toggled", state.zoom);
     root.querySelectorAll(".swatch").forEach((s) => s.classList.toggle("active", s.dataset.color === state.color));
+    root.querySelectorAll(".wbtn").forEach((b) => b.classList.toggle("active", parseFloat(b.dataset.w) === state.strokeWidth));
     canvasInteractive();
   }
 
@@ -890,9 +903,12 @@
     },
     // 録画ボタンの見た目を更新（録画中=赤・停止アイコン）
     _syncRecordBtn() {
+      const rec = !!state.recording;
+      // 左下マークにも録画中ドットを出す（バーが隠れていても録画状態が分かる）
+      const power = root.getElementById("dock-power");
+      if (power) power.classList.toggle("rec", rec);
       const btn = tb.querySelector('.tool[data-action="record"]');
       if (!btn) return;
-      const rec = !!state.recording;
       btn.classList.toggle("recording", rec);
       const ico = btn.querySelector(".ico");
       if (ico && EF.iconSvg) ico.innerHTML = EF.iconSvg(rec ? "stop" : "record");
@@ -1048,6 +1064,17 @@
   const colors = $("#colors");
   colors.innerHTML = PALETTE.map((c) => `<div class="swatch" data-color="${c}" style="background:${c}"></div>`).join("");
   colors.addEventListener("click", (e) => { const s = e.target.closest(".swatch"); if (s) app.setColor(s.dataset.color); });
+
+  // 線の太さ クイック切替（細4 / 中6 / 太10）
+  const WIDTHS = [[4, 2, "細"], [6, 4, "中"], [10, 7, "太"]]; // [線幅, 表示バーの高さpx, 名前]
+  const widthsEl = $("#widths");
+  widthsEl.innerHTML = WIDTHS.map((w) =>
+    `<button class="wbtn" data-w="${w[0]}" title="線の太さ：${w[2]}"><i style="height:${w[1]}px"></i></button>`).join("");
+  widthsEl.addEventListener("click", (e) => {
+    const b = e.target.closest(".wbtn"); if (!b) return;
+    state.strokeWidth = parseFloat(b.dataset.w);
+    syncUI(); renderOptions(); saveSettings();
+  });
 
   tb.addEventListener("click", (e) => {
     const b = e.target.closest("button"); if (!b) return;

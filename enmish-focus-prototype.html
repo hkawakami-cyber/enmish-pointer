@@ -220,8 +220,8 @@ body.ef-on.ef-autohide .scene-root { padding-right: 0; padding-left: 0; }
 .toolbar[data-collapsed="true"] .tb-handle { display: block; }
 
 .tb-body { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; width: 124px; align-content: start; }
-/* 仕切り線・カラー・設定・最小化・ツール群コンテナは横いっぱい（2列をまたぐ） */
-.tb-body > .tb-tools, .tb-body > .tb-sep, .tb-body > .tb-colors,
+/* 仕切り線・カラー・太さ・設定・最小化・ツール群コンテナは横いっぱい（2列をまたぐ） */
+.tb-body > .tb-tools, .tb-body > .tb-sep, .tb-body > .tb-colors, .tb-body > .tb-widths,
 .tb-body > [data-action="settings"], .tb-body > [data-action="hide-ui"] { grid-column: 1 / -1; }
 .tb-brand { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 2px 0 7px; }
 .tb-brand .ef-mark {
@@ -261,6 +261,14 @@ body.ef-on.ef-autohide .scene-root { padding-right: 0; padding-left: 0; }
 /* 白・黒・どんな背景でも縁が分かるよう、内側ダーク＋外側ライトの二重縁 */
 .swatch { width: 15px; height: 15px; border-radius: 50%; border: 2px solid transparent; box-shadow: 0 0 0 1px rgba(0,0,0,.35), 0 0 0 2px rgba(255,255,255,.6); cursor: pointer; }
 .swatch.active { border-color: #fff; box-shadow: 0 0 0 1.5px rgba(0,0,0,.55); }
+
+/* 線の太さ クイック切替（色の下） */
+.tb-widths { display: flex; justify-content: space-evenly; align-items: center; padding: 2px 0 1px; }
+.wbtn { width: 28px; height: 20px; border: none; border-radius: 7px; background: transparent; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+.wbtn:hover { background: rgba(255,255,255,.18); }
+.wbtn i { display: block; width: 16px; border-radius: 99px; background: #fff; box-shadow: 0 1px 1.5px rgba(0,0,0,.6); }
+.wbtn.active { background: var(--ef-green, #6cbba5); }
+.wbtn.active i { box-shadow: none; }
 
 /* アプリOFF時はツール群を無効化 */
 /* 機能OFF時はツールバー自体を隠す（操作は左下のマークから） */
@@ -569,7 +577,11 @@ kbd {
 }
 .dock-btn .ico { font-size: 15px; display: inline-flex; }
 /* 左下マーク：OFF=紺の丸 / ON=緑＋緑グロー */
-.dock-power-mark { width: 46px; height: 46px; border-radius: 50%; padding: 0; background: #0c2c46; color: #e8ecf4; box-shadow: 0 6px 16px rgba(0,0,0,.25); }
+.dock-power-mark { position: relative; width: 46px; height: 46px; border-radius: 50%; padding: 0; background: #0c2c46; color: #e8ecf4; box-shadow: 0 6px 16px rgba(0,0,0,.25); }
+/* 録画中インジケータ：ツールバーが隠れていても左下マークで分かる */
+.dock-power-mark .rec-dot { display: none; position: absolute; top: -2px; right: -2px; width: 14px; height: 14px; border-radius: 50%; background: #e23b3b; border: 2.5px solid #fff; animation: recblink 1.2s ease-in-out infinite; }
+.dock-power-mark.rec .rec-dot { display: block; }
+@keyframes recblink { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
 .dock-power-mark:hover { background: #123a59; }
 .dock-btn#dock-power.on { background: var(--ef-green); color: #06251c; box-shadow: 0 0 0 4px rgba(108,187,165,.30), 0 6px 18px rgba(108,187,165,.45); }
 .dock-btn#dock-power.on:hover { background: #7cc7b1; }
@@ -653,6 +665,9 @@ kbd {
 
       <!-- カラーパレット -->
       <div class="tb-colors" id="tb-colors"></div>
+
+      <!-- 線の太さ クイック切替 -->
+      <div class="tb-widths" id="tb-widths"></div>
 
       <div class="tb-sep"></div>
 
@@ -906,6 +921,7 @@ kbd {
   <div id="ef-dock" class="ef-dock">
     <button class="dock-btn dock-power-mark" id="dock-power" title="ポインター ON/OFF (⌘⇧E)">
       <span class="ico" data-ic="power" data-ic-size="18"></span>
+      <span class="rec-dot"></span>
     </button>
   </div>
 
@@ -1744,6 +1760,9 @@ kbd {
       // カラースウォッチ生成
       this.buildColors();
 
+      // 線の太さ クイック切替
+      this.buildWidths();
+
       // ツール群を動的生成（並べ替え・表示/非表示反映）
       this.buildTools();
 
@@ -1781,6 +1800,27 @@ kbd {
         sw.title = c.name;
         sw.addEventListener("click", () => EF.app.setColor(c.value));
         colors.appendChild(sw);
+      });
+      this.sync();
+    },
+
+    // 線の太さ クイック切替（細4 / 中6 / 太10）
+    buildWidths() {
+      const box = document.getElementById("tb-widths");
+      if (!box) return;
+      box.innerHTML = "";
+      [[4, 2, "細"], [6, 4, "中"], [10, 7, "太"]].forEach(([w, barH, name]) => {
+        const b = document.createElement("button");
+        b.className = "wbtn";
+        b.dataset.w = w;
+        b.title = "線の太さ：" + name;
+        b.innerHTML = `<i style="height:${barH}px"></i>`;
+        b.addEventListener("click", () => {
+          EF.state.strokeWidth = w;
+          this.sync();
+          if (EF.saveSettings) EF.saveSettings();
+        });
+        box.appendChild(b);
       });
       this.sync();
     },
@@ -1850,6 +1890,8 @@ kbd {
       document.querySelectorAll(".swatch").forEach((s) =>
         s.classList.toggle("active", s.dataset.color === EF.state.color));
 
+      document.querySelectorAll("#tb-widths .wbtn").forEach((b) =>
+        b.classList.toggle("active", parseFloat(b.dataset.w) === EF.state.strokeWidth));
     },
   };
 })();
@@ -2034,7 +2076,7 @@ kbd {
       this.bindRange("set-ring-width", "out-ring-width", (v) => { EF.state.ring.width = +v; EF.cursor.update(); }, (v) => v + "px");
       this.bindRange("set-ring-size", "out-ring-size", (v) => { EF.state.ring.size = +v; EF.cursor.update(); }, (v) => v + "px");
       this.bindRange("set-ring-opacity", "out-ring-opacity", (v) => { EF.state.ring.opacity = v / 100; EF.cursor.update(); }, (v) => v + "%");
-      this.bindRange("set-stroke-width", "out-stroke-width", (v) => { EF.state.strokeWidth = +v; }, (v) => v + "px");
+      this.bindRange("set-stroke-width", "out-stroke-width", (v) => { EF.state.strokeWidth = +v; EF.toolbar.sync(); }, (v) => v + "px");
 
       $("set-click-ripple").addEventListener("change", (e) => { EF.state.ring.ripple = e.target.checked; save(); });
 
@@ -2464,9 +2506,12 @@ kbd {
 
     // 画面録画ボタンの見た目を更新（録画中=赤・停止アイコン）
     _syncRecordBtn() {
+      const rec = !!EF.state.recording;
+      // 左下マークにも録画中ドットを出す（バーが隠れていても録画状態が分かる）
+      const power = document.getElementById("dock-power");
+      if (power) power.classList.toggle("rec", rec);
       const btn = document.querySelector('.tool[data-action="record"]');
       if (!btn) return;
-      const rec = !!EF.state.recording;
       btn.classList.toggle("recording", rec);
       const ico = btn.querySelector(".ico");
       if (ico) {

@@ -27,6 +27,9 @@
       // カラースウォッチ生成
       this.buildColors();
 
+      // 線の太さ クイック切替
+      this.buildWidths();
+
       // ツール群を動的生成（並べ替え・表示/非表示反映）
       this.buildTools();
 
@@ -64,6 +67,27 @@
         sw.title = c.name;
         sw.addEventListener("click", () => EF.app.setColor(c.value));
         colors.appendChild(sw);
+      });
+      this.sync();
+    },
+
+    // 線の太さ クイック切替（細4 / 中6 / 太10）
+    buildWidths() {
+      const box = document.getElementById("tb-widths");
+      if (!box) return;
+      box.innerHTML = "";
+      [[4, 2, "細"], [6, 4, "中"], [10, 7, "太"]].forEach(([w, barH, name]) => {
+        const b = document.createElement("button");
+        b.className = "wbtn";
+        b.dataset.w = w;
+        b.title = "線の太さ：" + name;
+        b.innerHTML = `<i style="height:${barH}px"></i>`;
+        b.addEventListener("click", () => {
+          EF.state.strokeWidth = w;
+          this.sync();
+          if (EF.saveSettings) EF.saveSettings();
+        });
+        box.appendChild(b);
       });
       this.sync();
     },
@@ -133,6 +157,8 @@
       document.querySelectorAll(".swatch").forEach((s) =>
         s.classList.toggle("active", s.dataset.color === EF.state.color));
 
+      document.querySelectorAll("#tb-widths .wbtn").forEach((b) =>
+        b.classList.toggle("active", parseFloat(b.dataset.w) === EF.state.strokeWidth));
     },
   };
 })();

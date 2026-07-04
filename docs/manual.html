@@ -219,7 +219,7 @@
     <svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><use href="#pulse"/></svg>
     <span class="nm">Enmish <b>Pointer</b></span>
     <span class="ey">取扱説明</span>
-    <span class="ver">v0.5.2</span>
+    <span class="ver">v0.5.22</span>
   </div>
 </header>
 
@@ -311,7 +311,7 @@
     </div>
     <ul class="setlist" style="margin-top:16px">
       <li><b>色</b>：ツールバー下のスウォッチでワンタップ切替（4色）。<span>明暗どちらの背景でも縁が見える二重リング。</span></li>
-      <li><b>線の太さ</b>：細 / 中 / 太 の3段階（設定）。</li>
+      <li><b>線の太さ</b>：色の下の 細 / 中 / 太 でワンタップ切替。</li>
       <li><b>テキスト</b>：サイズ・太さ・色を設定可。<span>文字の下に自動で下地チップを敷いて読みやすく。</span></li>
     </ul>
 
@@ -325,6 +325,8 @@
       <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 16h14"/><circle cx="9" cy="8" r="2" fill="#fff"/><circle cx="15" cy="16" r="2" fill="#fff"/></svg>設定</span>
       <span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 6l-6 6 6 6"/></svg>最小化</span>
     </div>
+
+    <div class="note" style="margin:4px 0 22px"><b>消し方はこの2つだけ：</b>描いたら <kbd>Delete</kbd>（1つ戻す）、迷ったら <kbd>Esc</kbd> 2連打（全消去）。文字入力中は <kbd>Delete</kbd> は文字の削除が優先されます。</div>
 
     <p class="subh">こまかい設定（⚙ 設定）</p>
     <p style="color:var(--muted);margin:0 0 18px;max-width:62ch">ツールバーの<b>「設定」</b>から開きます。下記がすべての項目（<span style="color:var(--green);font-weight:700">緑＝初期値</span>）。一部はそのツール選択中だけ出ます。</p>
@@ -400,7 +402,7 @@
       </div>
 
       <div class="note" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.16);border-left-color:var(--mint);color:#cfe6df;margin-top:22px">
-        <b style="color:#fff">文字起こしについて：</b>いまは音声つき動画を同梱するところまで。<code>video.webm</code> を Notta / tl;dv / Google Meetの字幕 等に渡すと文字起こしできます。
+        <b style="color:#fff">録画中のサイン：</b>左下の電源マークに赤い点が点滅します（バーが隠れていても録画中と分かる）。<br><b style="color:#fff">文字起こしについて：</b>いまは音声つき動画を同梱するところまで。<code>video.webm</code> を Notta / tl;dv / Google Meetの字幕 等に渡すと文字起こしできます。
       </div>
     </div>
   </section>
@@ -423,7 +425,8 @@
         <thead><tr><th>キー</th><th>動作</th></tr></thead>
         <tbody>
           <tr><td><kbd>⌘⇧E</kbd></td><td>ポインターの ON / OFF</td></tr>
-          <tr><td><kbd>Esc</kbd></td><td>描画の取り消し・オプションを閉じる</td></tr>
+          <tr><td><kbd>Esc</kbd></td><td>カーソルに戻す・パネルやモードを閉じる</td></tr>
+          <tr><td><kbd>Esc</kbd> 2連打</td><td>全消去（どのページでも効く）</td></tr>
           <tr><td><kbd>Esc</kbd>＋<kbd>Tab</kbd></td><td>オーバーレイを隠す／戻す（起動中）</td></tr>
           <tr><td><kbd>⌫</kbd> / <kbd>Delete</kbd></td><td>1つ戻す（<kbd>⌘⇧⌫</kbd> で全消去）</td></tr>
           <tr><td><kbd>[</kbd> <kbd>]</kbd></td><td>注目（スポットライト）の広さ</td></tr>
