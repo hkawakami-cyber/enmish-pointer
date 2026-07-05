@@ -8,6 +8,16 @@
 
   const DRAW_TOOLS = ["pen", "highlighter", "arrow", "hline", "ellipse", "rect", "text"];
 
+  // 同じhtmlを複数タブで開いている場合のON/OFF同期（localStorageのstorageイベントは他タブでのみ発火）
+  const LIVE_KEY = "enmishFocus.live.v1";
+  function broadcastLiveState() {
+    try { localStorage.setItem(LIVE_KEY, JSON.stringify({ appOn: EF.state.appOn })); } catch (e) { /* noop */ }
+  }
+  window.addEventListener("storage", (e) => {
+    if (e.key !== LIVE_KEY || e.newValue == null) return;
+    try { EF.app.setAppOnFromSync(!!JSON.parse(e.newValue).appOn); } catch (err) { /* noop */ }
+  });
+
   // ZIP（無圧縮 store。PNG/webmは既に圧縮済みなので十分）
   function efCrc32(buf) {
     let table = efCrc32._t;
@@ -399,6 +409,32 @@
         if (this._revealTimer) clearTimeout(this._revealTimer);
         this._revealTimer = setTimeout(() => { this._revealTimer = null; this.setReveal(false); }, 1700);
       }
+      broadcastLiveState(); // 他タブにもON/OFF状態を同期
+    },
+
+    // 他タブ（同じhtmlを開いている別タブ）からのON/OFF同期を受けて反映
+    setAppOnFromSync(next) {
+      if (EF.state.appOn === next) return;
+      EF.state.appOn = next;
+      document.body.classList.toggle("ef-on", next);
+      if (!next) {
+        EF.state.spotlight = false;
+        EF.state.zoom = false;
+        EF.zoom.refresh();
+        EF.state.uiHidden = false;
+        document.body.classList.remove("ef-ui-hidden");
+        document.getElementById("stage").classList.remove("armed", "tool-cursor");
+      } else {
+        document.getElementById("stage").classList.add(
+          EF.state.tool === "cursor" ? "tool-cursor" : "armed");
+      }
+      document.body.classList.toggle("bar-left", EF.state.barSide === "left");
+      EF.cursor.update();
+      EF.toolbar.sync();
+      EF.options.render();
+      EF.dock.update();
+      EF.setStatus();
+      this.refreshAutoHide();
     },
 
     // バーの配置（ツールバー左右・ドック位置）を反映

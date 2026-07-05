@@ -33,4 +33,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     });
     return true; // 非同期レスポンス
   }
+  // 1つのタブでのON/OFFを他の全タブへ中継（「終了」したら他タブも終了する）
+  if (msg && msg.type === "ef-sync") {
+    const senderTabId = sender.tab ? sender.tab.id : null;
+    chrome.tabs.query({}, (tabs) => {
+      tabs.forEach((t) => {
+        if (t.id != null && t.id !== senderTabId) {
+          chrome.tabs.sendMessage(t.id, msg, () => void chrome.runtime.lastError);
+        }
+      });
+    });
+  }
 });
