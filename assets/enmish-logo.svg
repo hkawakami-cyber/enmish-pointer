@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Enmish ブランドロックアップ（プロトタイプ用の準拠デザイン）。
+     公式ロゴSVGは社内Driveにあり、本番ではそちらに差し替える想定。
+     カラーはブランド規定: グリーン #6cbba5 / ブラック #032841 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" width="360" height="96" role="img" aria-label="enmish">
+  <!-- 円形マーク（エンミッシュグリーンのリング＋内側スウォッシュ） -->
+  <g transform="translate(48,48)">
+    <circle r="40" fill="#6cbba5"/>
+    <path d="M -16 6 C -16 -14 0 -22 16 -16 C 6 -18 -6 -10 -8 4 C -9 14 -2 22 12 20 C 2 26 -16 22 -16 6 Z" fill="#ffffff"/>
+    <circle cx="14" cy="-12" r="7" fill="#032841"/>
+  </g>
+  <!-- ワードマーク -->
+  <text x="104" y="62" font-family="'Helvetica Neue',Helvetica,Arial,sans-serif" font-size="52" font-weight="700" letter-spacing="-1" fill="#032841">enmish</text>
+</svg>

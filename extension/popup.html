@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root { color-scheme: light; }
+  body { margin: 0; width: 232px; font-family: -apple-system, "Hiragino Sans", "Helvetica Neue", Arial, sans-serif; background: #fff; color: #1b2330; }
+  .hd { display: flex; align-items: center; gap: 9px; padding: 12px 14px 10px; border-bottom: 1px solid #eef0f4; }
+  .hd .mk { width: 22px; height: 22px; border-radius: 50%; background: #0c2c46; color: #e8ecf4; display: inline-flex; align-items: center; justify-content: center; transition: background .15s; }
+  .hd .mk.on { background: #6cbba5; color: #06251c; box-shadow: 0 0 0 3px rgba(108,187,165,.28); }
+  .hd .mk svg { width: 13px; height: 13px; }
+  .hd .nm { font-weight: 700; font-size: 13px; letter-spacing: .2px; }
+  .hd .ver { margin-left: auto; font-size: 10px; color: #9aa3b2; }
+  .menu { padding: 6px; }
+  .item { display: flex; align-items: center; gap: 11px; width: 100%; border: none; background: none; cursor: pointer; padding: 9px 10px; border-radius: 8px; font-size: 13px; color: #26303f; text-align: left; }
+  .item:hover { background: #eef4f2; }
+  .item .ic { width: 18px; display: inline-flex; align-items: center; justify-content: center; color: #5b6478; }
+  .item .ic svg { width: 16px; height: 16px; }
+  .item .st { margin-left: auto; font-size: 11px; font-weight: 700; color: #9aa3b2; }
+  .item .st.on { color: #2f7d68; }
+  .sep { height: 1px; background: #eef0f4; margin: 5px 8px; }
+  .quit { color: #c0392b; }
+  .quit .ic { color: #c0392b; }
+  .quit:hover { background: #fdecea; }
+  .note { padding: 12px 14px; font-size: 12px; line-height: 1.5; color: #8a93a3; }
+  .reload-btn { display: block; width: 100%; margin-top: 10px; padding: 8px 0; border: none; border-radius: 8px; background: #eef4f2; color: #2f7d68; font-size: 13px; font-weight: 700; cursor: pointer; }
+  .reload-btn:hover { background: #d6ede7; }
+</style>
+</head>
+<body>
+  <div class="hd"><span class="mk" id="mk"></span><span class="nm">Enmish Pointer</span><span class="ver">v0.5.24</span></div>
+  <div class="menu" id="menu">
+    <button class="item" data-cmd="toggle"><span class="ic" data-ic="power"></span><span>ポインター</span><span class="st" id="st">—</span></button>
+    <button class="item" data-cmd="minimize"><span class="ic" data-ic="collapse"></span><span>ツールバー表示 / 最小化</span></button>
+    <button class="item" data-cmd="clear"><span class="ic" data-ic="clear"></span><span>注釈を全消去</span></button>
+    <button class="item" data-cmd="options"><span class="ic" data-ic="options"></span><span>設定を開く</span></button>
+    <div class="sep"></div>
+    <button class="item quit" data-cmd="off"><span class="ic" data-ic="power"></span><span>終了（オフにする）</span></button>
+  </div>
+  <div class="note" id="note-reload" hidden>拡張の更新後はタブのリロードが必要です。<button class="reload-btn" id="reload-btn">このタブをリロード</button></div>
+  <div class="note" id="note-internal" hidden>このページでは使えません。<br>Meet / Google スライド / 通常のサイトのタブで開いてください。</div>
+  <script src="lib/icons.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

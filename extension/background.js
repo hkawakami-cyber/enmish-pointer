@@ -1,0 +1,47 @@
+/* ============================================================
+   background.js — Service Worker
+   ・ショートカット / ツールバーボタン → コンテンツへ ON/OFF 通知
+   ・スクショ要求 → 表示中タブをキャプチャして保存
+   ============================================================ */
+
+function sendToActive(msg) {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs[0] && tabs[0].id != null) {
+      chrome.tabs.sendMessage(tabs[0].id, msg, () => void chrome.runtime.lastError);
+    }
+  });
+}
+
+chrome.commands.onCommand.addListener((cmd) => {
+  if (cmd === "toggle-app") sendToActive({ type: "ef-toggle" });
+});
+
+chrome.action.onClicked.addListener((tab) => {
+  if (tab.id != null) chrome.tabs.sendMessage(tab.id, { type: "ef-toggle" }, () => void chrome.runtime.lastError);
+});
+
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg && msg.type === "ef-capture") {
+    const winId = sender.tab ? sender.tab.windowId : chrome.windows.WINDOW_ID_CURRENT;
+    chrome.tabs.captureVisibleTab(winId, { format: "png" }, (dataUrl) => {
+      if (chrome.runtime.lastError || !dataUrl) {
+        sendResponse({ ok: false, error: (chrome.runtime.lastError && chrome.runtime.lastError.message) || "capture failed" });
+        return;
+      }
+      // 画像データを content へ返し、<a download> で保存させる（日本語ファイル名対応）
+      sendResponse({ ok: true, dataUrl });
+    });
+    return true; // 非同期レスポンス
+  }
+  // 1つのタブでのON/OFFを他の全タブへ中継（「終了」したら他タブも終了する）
+  if (msg && msg.type === "ef-sync") {
+    const senderTabId = sender.tab ? sender.tab.id : null;
+    chrome.tabs.query({}, (tabs) => {
+      tabs.forEach((t) => {
+        if (t.id != null && t.id !== senderTabId) {
+          chrome.tabs.sendMessage(t.id, msg, () => void chrome.runtime.lastError);
+        }
+      });
+    });
+  }
+});

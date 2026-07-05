@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Enmish Pointer — 画面共有支援プロトタイプ</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%20width%3D%2264%22%20height%3D%2264%22%20role%3D%22img%22%20aria-label%3D%22Enmish%20Pointer%22%3E%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2226%22%20fill%3D%22none%22%20stroke%3D%22%2334d3a6%22%20stroke-width%3D%224.5%22%20opacity%3D%220.4%22%2F%3E%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2216%22%20fill%3D%22none%22%20stroke%3D%22%2334d3a6%22%20stroke-width%3D%224.5%22%20opacity%3D%220.78%22%2F%3E%20%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%227%22%20fill%3D%22%2334d3a6%22%2F%3E%20%3C%2Fsvg%3E" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <!-- ============ デモ用「共有画面」 ============ -->
+  <!-- 実機では任意のアプリ上に透明オーバーレイを重ねる。Webプロトタイプでは -->
+  <!-- 疑似共有画面を用意し、その上に注釈・カーソル強調・スポットライト等を再現する。 -->
+  <div id="stage" class="stage">
+    <!-- ズーム対象（コンテンツ＋注釈レイヤー）をまとめてズームできるようにする -->
+    <div id="zoomable" class="zoomable">
+      <div id="scene-root" class="scene-root"><!-- シーンはJSで描画 --></div>
+      <!-- 注釈描画レイヤー -->
+      <canvas id="annot-canvas" class="annot-canvas"></canvas>
+    </div>
+
+    <!-- スポットライト用の暗転レイヤー -->
+    <canvas id="spotlight-canvas" class="overlay-canvas"></canvas>
+
+    <!-- カーソル強調リング -->
+    <div id="cursor-ring" class="cursor-ring" hidden><i class="cr-dot"></i><svg class="cr-arrow" viewBox="0 0 24 24"><path d="M3 2 L3 21 L8 16 L11.5 23.5 L14.5 22 L11 15 L18 15 Z" stroke="#fff" stroke-width="1.1" stroke-linejoin="round"></path></svg></div>
+
+    <!-- ズームレンズ枠の縁取り -->
+    <div id="zoom-frame" class="zoom-frame" hidden></div>
+
+  </div>
+
+  <!-- ============ 常駐ミニツールバー ============ -->
+  <div id="toolbar" class="toolbar" data-collapsed="false">
+    <button class="tb-handle" id="tb-handle" title="ツールバーを展開/収納">⋮</button>
+    <div class="tb-body">
+      <!-- ツール群（並べ替え・表示/非表示は設定で。JSで動的生成） -->
+      <div id="tb-tools" class="tb-tools"></div>
+
+      <div class="tb-sep"></div>
+
+      <!-- カラーパレット -->
+      <div class="tb-colors" id="tb-colors"></div>
+
+      <!-- 線の太さ クイック切替 -->
+      <div class="tb-widths" id="tb-widths"></div>
+
+      <div class="tb-sep"></div>
+
+      <button class="tool" data-action="undo" title="元に戻す (⌘Z)">
+        <span class="ico" data-ic="undo"></span><span class="lbl">戻す</span>
+      </button>
+      <button class="tool" data-action="clear" title="全消去 (⌘⇧⌫)">
+        <span class="ico" data-ic="clear"></span><span class="lbl">全消去</span>
+      </button>
+      <button class="tool" data-action="screenshot" title="注釈付きスクショ保存">
+        <span class="ico" data-ic="save"></span><span class="lbl">保存</span>
+      </button>
+      <button class="tool" data-action="copy" title="注釈付きスクショをクリップボードにコピー">
+        <span class="ico" data-ic="copy"></span><span class="lbl">コピー</span>
+      </button>
+      <button class="tool" data-action="record" title="画面録画 (webm保存)">
+        <span class="ico" data-ic="record"></span><span class="lbl">録画</span>
+      </button>
+      <button class="tool" data-action="settings" title="設定 / プリセット">
+        <span class="ico" data-ic="options"></span><span class="lbl">設定</span>
+      </button>
+
+      <div class="tb-sep"></div>
+
+      <button class="tool" data-action="hide-ui" id="btn-collapse" title="ツールバーを最小化">
+        <span class="ico" data-ic="collapse"></span><span class="lbl">最小化</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 最小化中の再表示タブ -->
+  <button id="reopen" class="reopen" hidden title="ツールバーを表示"><span class="ico" data-ic="collapse"></span></button>
+  <!-- 自動表示モードのヒント（右端の細い帯） -->
+  <div id="edge-hint" class="edge-hint" hidden></div>
+
+  <!-- ============ ツール別オプション（カーソル形状/矢じり向き/注目の帯） ============ -->
+  <div id="tool-options" class="tool-options" hidden></div>
+
+  <!-- ============ シーン切替（デモ用） ============ -->
+  <div id="scene-switch" class="scene-switch">
+    <span class="ss-label">共有画面:</span>
+    <button class="ss-btn" data-scene="proposal">提案資料</button>
+    <button class="ss-btn" data-scene="kpi">KPI表</button>
+    <button class="ss-btn" data-scene="salesforce">商談画面</button>
+  </div>
+
+  <!-- ============ 設定 ============ -->
+  <div id="settings" class="modal" hidden>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>設定</h2>
+        <button class="modal-close" data-action="close-settings">✕</button>
+      </div>
+
+      <section class="modal-section">
+        <h3>カラーパレット</h3>
+        <div class="palette-edit" id="palette-edit"></div>
+        <p class="note">クリックして色を変更できます。変更内容は自動で保存されます。</p>
+      </section>
+
+      <section class="modal-section">
+        <h3>ツールバー</h3>
+        <div id="set-tools" class="set-tools"></div>
+        <p class="note">行をドラッグして並べ替え、チェックで表示/非表示を切り替えます。アプリ起動・カラー・元に戻す・全消去・保存・設定は固定です。</p>
+      </section>
+
+      <section class="modal-section">
+        <h3>表示</h3>
+        <label class="checkfield">
+          <input type="checkbox" id="set-show-options" /> ツール選択時にオプションを画面に表示する
+        </label>
+        <p class="note">オフにすると、カーソル形状・矢印向き・注目の帯などの操作パネルを画面に出しません（投影中もすっきり）。ここ（設定）からいつでも変更できます。</p>
+      </section>
+
+      <section class="modal-section">
+        <h3>カーソル強調</h3>
+        <label class="field" style="display:block">カーソルの形
+          <div class="seg seg-wrap" id="set-cursor-style">
+            <button data-cursor="dot">ドット</button>
+            <button data-cursor="arrow">矢印</button>
+            <button data-cursor="ring">リング</button>
+            <button data-cursor="halo">ハロー</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">大きさ
+          <div class="seg seg-wrap" id="set-cursor-size" style="margin-top:8px">
+            <button data-size="36">小</button>
+            <button data-size="52">中</button>
+            <button data-size="72">大</button>
+          </div>
+        </label>
+        <label class="field">リングの太さ
+          <input type="range" id="set-ring-width" min="2" max="14" step="1" />
+          <output id="out-ring-width"></output>
+        </label>
+        <label class="field">リングのサイズ
+          <input type="range" id="set-ring-size" min="20" max="90" step="2" />
+          <output id="out-ring-size"></output>
+        </label>
+        <label class="field">透明度
+          <input type="range" id="set-ring-opacity" min="20" max="100" step="5" />
+          <output id="out-ring-opacity"></output>
+        </label>
+        <label class="checkfield">
+          <input type="checkbox" id="set-click-ripple" /> クリック時に波紋を表示
+        </label>
+      </section>
+
+      <section class="modal-section">
+        <h3>矢印の向き</h3>
+        <div class="seg" id="set-arrow-head">
+          <button data-head="end">→ 終点</button>
+          <button data-head="start">← 始点</button>
+          <button data-head="both">↔ 両方</button>
+        </div>
+      </section>
+
+      <section class="modal-section">
+        <h3>注目（スポットライト）</h3>
+        <label class="field" style="display:block">形
+          <div class="seg seg-wrap" id="set-spot-shape" style="margin-top:8px">
+            <button data-shape="band">帯</button>
+            <button data-shape="circle">丸</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">帯の高さ
+          <div class="seg seg-wrap" id="set-spot-band" style="margin-top:8px">
+            <button data-band="0.25">25%</button>
+            <button data-band="0.33">33%</button>
+            <button data-band="0.5">50%</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">暗さ
+          <div class="seg seg-wrap" id="set-spot-dim" style="margin-top:8px">
+            <button data-dim="0.55">薄い</button>
+            <button data-dim="0.72">標準</button>
+            <button data-dim="0.88">濃い</button>
+          </div>
+        </label>
+      </section>
+
+      <section class="modal-section">
+        <h3>ズーム倍率</h3>
+        <div class="seg seg-wrap" id="set-zoom-scale">
+          <button data-zoom="1.5">×1.5</button>
+          <button data-zoom="2">×2</button>
+          <button data-zoom="3">×3</button>
+        </div>
+      </section>
+
+      <section class="modal-section">
+        <h3>テキスト</h3>
+        <label class="field" style="display:block">大きさ
+          <div class="seg seg-wrap" id="set-text-size" style="margin-top:8px">
+            <button data-size="20">小</button>
+            <button data-size="28">中</button>
+            <button data-size="44">大</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">太さ
+          <div class="seg seg-wrap" id="set-text-weight" style="margin-top:8px">
+            <button data-weight="normal">標準</button>
+            <button data-weight="bold">太字</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">色
+          <div class="tb-colors palette-row" id="set-text-color" style="margin-top:8px"></div>
+        </label>
+      </section>
+
+      <section class="modal-section">
+        <h3>線の太さ</h3>
+        <label class="field">
+          <input type="range" id="set-stroke-width" min="2" max="20" step="1" />
+          <output id="out-stroke-width"></output>
+        </label>
+      </section>
+
+      <section class="modal-section">
+        <h3>バーの配置</h3>
+        <label class="field" style="display:block">ラベル表示（OFFで記号だけ）
+          <div class="seg seg-wrap" id="set-show-labels" style="margin-top:8px">
+            <button data-labels="on">ON</button>
+            <button data-labels="off">OFF</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">自動で消える（レーザー）
+          <div class="seg seg-wrap" id="set-laser" style="margin-top:8px">
+            <button data-laser="on">ON</button>
+            <button data-laser="off">OFF</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">自動表示（マウスを端に近づけると出る）
+          <div class="seg seg-wrap" id="set-auto-hide" style="margin-top:8px">
+            <button data-auto="on">ON</button>
+            <button data-auto="off">OFF</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">録画でマイクも録る
+          <div class="seg seg-wrap" id="set-rec-mic" style="margin-top:8px">
+            <button data-recmic="on">ON</button>
+            <button data-recmic="off">OFF</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">録画中の自動スクショ
+          <div class="seg seg-wrap" id="set-rec-shot" style="margin-top:8px">
+            <button data-recshot="0">OFF</button>
+            <button data-recshot="15">15秒</button>
+            <button data-recshot="30">30秒</button>
+            <button data-recshot="60">1分</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">ツールバー
+          <div class="seg seg-wrap" id="set-bar-side" style="margin-top:8px">
+            <button data-side="left">左</button>
+            <button data-side="right">右</button>
+          </div>
+        </label>
+        <label class="field" style="display:block">ドック（ポインター/バー操作）
+          <div class="seg seg-wrap" id="set-dock-pos" style="margin-top:8px">
+            <button data-pos="bottom-left">左下</button>
+            <button data-pos="bottom-right">右下</button>
+            <button data-pos="top-left">左上</button>
+            <button data-pos="top-right">右上</button>
+          </div>
+        </label>
+      </section>
+
+      <section class="modal-section">
+        <h3>プロファイル</h3>
+        <div class="prof-row">
+          <span class="prof-name">設定1</span>
+          <button class="prof-btn" data-prof="c1" data-pact="apply">適用</button>
+          <button class="prof-btn save" data-prof="c1" data-pact="save">保存</button>
+        </div>
+        <div class="prof-row">
+          <span class="prof-name">設定2</span>
+          <button class="prof-btn" data-prof="c2" data-pact="apply">適用</button>
+          <button class="prof-btn save" data-prof="c2" data-pact="save">保存</button>
+        </div>
+        <div class="prof-row">
+          <span class="prof-name">設定3</span>
+          <button class="prof-btn" data-prof="c3" data-pact="apply">適用</button>
+          <button class="prof-btn save" data-prof="c3" data-pact="save">保存</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- 常駐ドック：ポインター機能のON/OFF（色で状態が分かる・常に表示） -->
+  <div id="ef-dock" class="ef-dock">
+    <button class="dock-btn dock-power-mark" id="dock-power" title="ポインター ON/OFF (⌘⇧E)">
+      <span class="ico" data-ic="power" data-ic-size="18"></span>
+      <span class="rec-dot"></span>
+    </button>
+  </div>
+
+  <!-- 状態バッジ（現在のツール/モード表示） -->
+  <div id="status-badge" class="status-badge" hidden></div>
+
+  <!-- トースト -->
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="js/vendor/html2canvas.min.js"></script>
+  <script src="js/icons.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/scenes.js"></script>
+  <script src="js/drawing.js"></script>
+  <script src="js/cursor.js"></script>
+  <script src="js/spotlight.js"></script>
+  <script src="js/zoom.js"></script>
+  <script src="js/toolbar.js"></script>
+  <script src="js/shortcuts.js"></script>
+  <script src="js/screenshot.js"></script>
+  <script src="js/presets.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
